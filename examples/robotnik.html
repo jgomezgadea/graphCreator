@@ -4,9 +4,13 @@
 <head>
   <meta charset="utf-8" />
 
-  <script src="https://static.robotwebtools.org/EaselJS/current/easeljs.js"></script>
-  <script src="https://static.robotwebtools.org/EventEmitter2/current/eventemitter2.min.js"></script>
-  <script src="https://static.robotwebtools.org/roslibjs/current/roslib.js"></script>
+  <!--script src="https://static.robotwebtools.org/EaselJS/current/easeljs.js"></script-->
+  <!--script src="https://static.robotwebtools.org/EventEmitter2/current/eventemitter2.min.js"></script-->
+  <!--script src="https://static.robotwebtools.org/roslibjs/current/roslib.js"></script-->
+  <script src="../build/easeljs.js"></script>
+  <script src="../build/eventemitter2.js"></script>
+  <script src="../build/roslib.js"></script>
+
   <script src="../build/ros2d.js"></script>
 
   <script>
@@ -26,8 +30,8 @@
       // Create the main viewer.
       viewer = new ROS2D.Viewer({
         divID: 'map',
-        width: 308,
-        height: 250
+        width: 800/*308*/,
+        height: 1000/*250*/
       });
 
       // Setup the map client.
@@ -42,6 +46,61 @@
         viewer.scaleToDimensions(gridClient.currentGrid.width, gridClient.currentGrid.height);
         viewer.shift(gridClient.currentGrid.pose.position.x, gridClient.currentGrid.pose.position.y);
       });
+
+      // Callback functions when there is mouse interaction with a point
+      var clickedPoint = false;
+      var selectedPointIndex = null;
+
+      var pointCallBack = function (type, event, index) {
+        if (type === 'mousedown') {
+          if (event.nativeEvent.shiftKey === true) {
+            polygon.remPoint(index);
+          } else {
+            selectedPointIndex = index;
+          }
+        }
+        clickedPoint = true;
+      };
+
+      var lineCallBack = function (type, event, index) {
+        if (type === 'mousedown') {
+          if (event.nativeEvent.ctrlKey === true) {
+            polygon.splitLine(index);
+          }
+        }
+        clickedPoint = true;
+      }
+
+      // Create the polygon
+      var polygon = new ROS2D.PolygonMarker({
+        lineColor: createjs.Graphics.getRGB(100, 100, 255, 1),
+        pointCallBack: pointCallBack,
+        lineCallBack: lineCallBack
+      });
+
+      // Add the polygon to the viewer
+      viewer.scene.addChild(polygon);
+
+      viewer.scene.addEventListener('stagemousemove', function (event) {
+        // Move point when it's dragged
+        if (selectedPointIndex !== null) {
+          var pos = viewer.scene.globalToRos(event.stageX, event.stageY);
+          polygon.movePoint(selectedPointIndex, pos);
+        }
+      });
+
+      viewer.scene.addEventListener('stagemouseup', function (event) {
+        // Add point when not clicked on the polygon
+        if (selectedPointIndex !== null) {
+          selectedPointIndex = null;
+        }
+        else if (viewer.scene.mouseInBounds === true && clickedPoint === false && event.nativeEvent.shiftKey === false) {
+          var pos = viewer.scene.globalToRos(event.stageX, event.stageY);
+          polygon.addPoint(pos);
+        }
+        clickedPoint = false;
+      });
+
     }
   </script>
 </head>

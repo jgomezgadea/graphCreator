@@ -19,6 +19,8 @@
      */
     var ros;
     var viewer;
+    var panView;
+    var zoomView;
     var gridClient;
 
     function init() {
@@ -30,9 +32,17 @@
       // Create the main viewer.
       viewer = new ROS2D.Viewer({
         divID: 'map',
-        width: 800/*308*/,
-        height: 1000/*250*/
+        width: 308,
+        height: 250
       });
+
+      panView = new ROS2D.PanView({
+        rootObject: viewer.scene
+      })
+
+      zoomView = new ROS2D.ZoomView({
+        rootObject: viewer.scene
+      })
 
       // Setup the map client.
       gridClient = new ROS2D.OccupancyGridClient({
@@ -50,6 +60,9 @@
       // Callback functions when there is mouse interaction with a point
       var clickedPoint = false;
       var selectedPointIndex = null;
+      var canMoveMap = false;
+      var movedMouse = false;
+      var clickedPos = new ROSLIB.Vector3({ x: 0, y: 0 });
 
       var pointCallBack = function (type, event, index) {
         if (type === 'mousedown') {
@@ -82,41 +95,74 @@
       viewer.scene.addChild(polygon);
 
       viewer.scene.addEventListener('stagemousemove', function (event) {
+        movedMouse = true;
+        // Move map when it's dragged and ctrl pressed
+        if (event.nativeEvent.ctrlKey === true && canMoveMap === true) {
+          panView.pan(event.stageX - clickedPos.x, event.stageY - clickedPos.y);
+        }
         // Move point when it's dragged
-        if (selectedPointIndex !== null) {
+        else if (selectedPointIndex !== null) {
           var pos = viewer.scene.globalToRos(event.stageX, event.stageY);
           polygon.movePoint(selectedPointIndex, pos);
         }
       });
 
       viewer.scene.addEventListener('stagemouseup', function (event) {
-        // Add point when not clicked on the polygon
+        // Stop moving point when mouse up
         if (selectedPointIndex !== null) {
           selectedPointIndex = null;
         }
-        else if (viewer.scene.mouseInBounds === true && clickedPoint === false && event.nativeEvent.shiftKey === false) {
-          var pos = viewer.scene.globalToRos(event.stageX, event.stageY);
-          polygon.addPoint(pos);
+        // If we was moving the map
+        else if (canMoveMap === true) {
+          clickedPos.x = event.stageX - clickedPos.x;
+          clickedPos.y = event.stageY - clickedPos.y;
+          canMoveMap = false;
+        }
+        // Add point when not clicked on the polygon ...
+        else if (viewer.scene.mouseInBounds === true && clickedPoint === false) {
+          // ... only if we aren't doing any other action
+          if (event.nativeEvent.shiftKey === false && movedMouse === false) {
+            var pos = viewer.scene.globalToRos(event.stageX, event.stageY);
+            polygon.addPoint(pos);
+          }
         }
         clickedPoint = false;
       });
+
+      viewer.scene.addEventListener('stagemousedown', function (event) {
+        movedMouse = false;
+        // If ctrl pressed, we can move the map with drag and drop
+        if (event.nativeEvent.ctrlKey === true && viewer.scene.mouseInBounds === true) {
+          clickedPos.x = event.stageX - clickedPos.x;
+          clickedPos.y = event.stageY - clickedPos.y;
+          canMoveMap = true;
+        }
+      })
 
     }
   </script>
 </head>
 
 <body onload="init()">
-  <h1>Continuous Map Example</h1>
+  <h1>Robotnik 2D map</h1>
   <p>
-    Use any method to publish continuous updates to topic /map and use this page to visualize updates. Follow these
-    commands:
+    How to launch:
   </p>
   <ol>
     <li><tt>roscore</tt></li>
-    <li><tt>(method of choice to publish to /map)</tt></li>
+    <li><tt>rosrun map_server map_server /path</tt></li>
     <li><tt>roslaunch rosbridge_server rosbridge_websocket.launch</tt></li>
   </ol>
   <div id="map"></div>
+  <p>
+    How to use the map:
+  </p>
+  <ol>
+    <li><tt>Click to create a point</tt></li>
+    <li><tt>Click and drag to move a point</tt></li>
+    <li><tt>Shift+click to delete a point</tt></li>
+    <li><tt>Ctrl+click and drag to move the map</tt></li>
+  </ol>
 </body>
 
 </html>

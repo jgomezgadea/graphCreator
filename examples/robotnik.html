@@ -69,7 +69,7 @@
       var pointCallBack = function (type, event, index) {
         if (type === 'mousedown') {
           if (event.nativeEvent.shiftKey === true) {
-            polygon.remPoint(index);
+            graph.remPoint(index);
           } else {
             selectedPointIndex = index;
           }
@@ -77,36 +77,25 @@
         clickedPoint = true;
       };
 
-      var lineCallBack = function (type, event, index) {
-        if (type === 'mousedown') {
-          if (event.nativeEvent.ctrlKey === true) {
-            polygon.splitLine(index);
-          }
-        }
-        clickedPoint = true;
-      }
-
-      // Create the polygon
-      var polygon = new ROS2D.PolygonMarker({
-        lineColor: createjs.Graphics.getRGB(100, 100, 255, 1),
+      // Create the graph
+      var graph = new ROS2D.Graph({
         pointCallBack: pointCallBack,
-        lineCallBack: lineCallBack
       });
 
-      // Add the polygon to the viewer
-      viewer.scene.addChild(polygon);
+      // Add the graph to the viewer
+      viewer.scene.addChild(graph);
 
       viewer.scene.addEventListener('stagemousemove', function (event) {
         movedMouse = true;
         pos = { x: event.stageX, y: event.stageY };
         posRos = viewer.scene.globalToRos(pos.x, pos.y);
-        // Move map when it's dragged and ctrl pressed
-        if (event.nativeEvent.ctrlKey === true && movingMap === true) {
-          panView.pan(pos.x - mapPos.x, pos.y - mapPos.y);
+        // Move point when it's dragged and ctrl pressed
+        if (selectedPointIndex !== null && event.nativeEvent.ctrlKey === true) {
+          graph.movePoint(selectedPointIndex, posRos);
         }
-        // Move point when it's dragged
-        else if (selectedPointIndex !== null) {
-          polygon.movePoint(selectedPointIndex, posRos);
+        // Move map when it's dragged
+        else if (movingMap === true) {
+          panView.pan(pos.x - mapPos.x, pos.y - mapPos.y);
         }
       });
 
@@ -119,11 +108,11 @@
           mapPos.y = pos.y - mapPos.y;
           movingMap = false;
         }
-        // Add point when not clicked on the polygon ...
+        // Add point when not clicked on the graph ...
         else if (viewer.scene.mouseInBounds === true && clickedPoint === false) {
           // ... only if we aren't doing any other action
           if (event.nativeEvent.shiftKey === false && movedMouse === false) {
-            polygon.addPoint(posRos);
+            graph.addPoint(posRos);
           }
         }
         clickedPoint = false;
@@ -131,8 +120,8 @@
 
       viewer.scene.addEventListener('stagemousedown', function (event) {
         movedMouse = false;
-        // If ctrl pressed, we can move the map with drag and drop
-        if (event.nativeEvent.ctrlKey === true && viewer.scene.mouseInBounds === true) {
+        // We can move the map with drag and drop
+        if (event.nativeEvent.ctrlKey !== true && viewer.scene.mouseInBounds === true) {
           mapPos.x = pos.x - mapPos.x;
           mapPos.y = pos.y - mapPos.y;
           movingMap = true;
@@ -146,10 +135,10 @@
           // Add zoom
           if (event.deltaY < 0) {
             // Zoom in
-            zoomView.zoom(1.1, 1.1);
+            zoomView.zoom(1.05, 1.05);
           } else {
             // Zoom out
-            zoomView.zoom(0.9, 0.9);
+            zoomView.zoom(0.95, 0.95);
           }
           event.preventDefault();
         }
@@ -166,7 +155,7 @@
   </p>
   <ol>
     <li><tt>roscore</tt></li>
-    <li><tt>rosrun map_server map_server /path</tt></li>
+    <li><tt>rosrun map_server map_server path</tt></li>
     <li><tt>roslaunch rosbridge_server rosbridge_websocket.launch</tt></li>
   </ol>
   <div id="map"></div>
@@ -174,10 +163,10 @@
     How to use the map:
   </p>
   <ol>
-    <li><tt>Click to create a point</tt></li>
-    <li><tt>Click and drag a point to move it</tt></li>
+    <li><tt>Ctrl+click to create a point</tt></li>
+    <li><tt>Ctrl+click and drag a point to move it</tt></li>
     <li><tt>Shift+click to delete a point</tt></li>
-    <li><tt>Ctrl+click and drag to move the map</tt></li>
+    <li><tt>Click and drag to move the map</tt></li>
     <li><tt>Use the mouse wheel to zoom the map</tt></li>
   </ol>
 </body>

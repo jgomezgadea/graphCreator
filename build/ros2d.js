@@ -1,9 +1,10 @@
 /**
  * @author Russell Toris - rctoris@wpi.edu
+ * @author Jose Gómez - jgomez@robotnik.es
  */
 
 var ROS2D = ROS2D || {
-  REVISION: '0.9.0'
+  REVISION: '0.9.1'
 };
 
 // convert the given global Stage coordinates to ROS coordinates
@@ -915,6 +916,111 @@ ROS2D.PolygonMarker.prototype.drawFill = function () {
 
 
 ROS2D.PolygonMarker.prototype.__proto__ = createjs.Container.prototype;
+
+/**
+ * @author Jose Gómez - jgomez@robotnik.es
+ */
+
+/**
+ * A graph that can be edited by an end user
+ *
+ * @constructor
+ * @param options - object with following keys:
+ *   * pose (optional) - the first pose of the trace
+ *   * pointSize (optional) - the size of the points
+ *   * pointColor (optional) - the createjs color of the points
+ *   * pointCallBack (optional) - callback function for mouse interaction with a point
+ */
+ROS2D.Graph = function (options) {
+  //	var that = this;
+  options = options || {};
+  this.pointSize = options.pointSize || 10;
+  this.pointColor = options.pointColor || createjs.Graphics.getRGB(255, 0, 0, 0.66);
+  this.pointCallBack = options.pointCallBack;
+
+  // Array of point shapes
+  //	this.points = [];
+  this.pointContainer = new createjs.Container();
+
+  // Container with all the graph data
+  createjs.Container.call(this);
+
+  this.addChild(this.pointContainer);
+};
+
+/**
+ * Internal use only
+ */
+ROS2D.Graph.prototype.createPointShape = function (pos) {
+  var point = new createjs.Shape();
+  point.graphics.beginFill(this.pointColor);
+  point.graphics.drawCircle(0, 0, this.pointSize);
+  point.x = pos.x;
+  point.y = -pos.y;
+
+  var that = this;
+  point.addEventListener('mousedown', function (event) {
+    if (that.pointCallBack !== null && typeof that.pointCallBack !== 'undefined') {
+      that.pointCallBack('mousedown', event, that.pointContainer.getChildIndex(event.target));
+    }
+  });
+
+  return point;
+};
+
+/**
+ * Adds a point to the graph
+ *
+ * @param position of type ROSLIB.Vector3
+ */
+ROS2D.Graph.prototype.addPoint = function (pos) {
+  var point = this.createPointShape(pos);
+  this.pointContainer.addChild(point);
+};
+
+/**
+ * Removes a point from the graph
+ *
+ * @param obj either an index (integer) or a point shape of the graph
+ */
+ROS2D.Graph.prototype.remPoint = function (obj) {
+  var index;
+  //	var point;
+  if (obj instanceof createjs.Shape) {
+    index = this.pointContainer.getChildIndex(obj);
+    //		point = obj;
+  }
+  else {
+    index = obj;
+    //		point = this.pointContainer.getChildAt(obj);
+  }
+
+  this.pointContainer.removeChildAt(index);
+  //	this.points.splice(index, 1);
+};
+
+/**
+ * Moves a point of the graph
+ *
+ * @param obj either an index (integer) or a point shape of the graph
+ * @param position of type ROSLIB.Vector3
+ */
+ROS2D.Graph.prototype.movePoint = function (obj, newPos) {
+  var index;
+  var point;
+  if (obj instanceof createjs.Shape) {
+    index = this.pointContainer.getChildIndex(obj);
+    point = obj;
+  }
+  else {
+    index = obj;
+    point = this.pointContainer.getChildAt(index);
+  }
+  point.x = newPos.x;
+  point.y = -newPos.y;
+};
+
+ROS2D.Graph.prototype.__proto__ = createjs.Container.prototype;
 
 /**
  * @author Bart van Vliet - bart@dobots.nl

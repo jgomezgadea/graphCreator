@@ -4,147 +4,45 @@
 <head>
   <meta charset="utf-8" />
 
-  <!--script src="https://static.robotwebtools.org/EaselJS/current/easeljs.js"></script-->
-  <!--script src="https://static.robotwebtools.org/EventEmitter2/current/eventemitter2.min.js"></script-->
-  <!--script src="https://static.robotwebtools.org/roslibjs/current/roslib.js"></script-->
-  <script src="../build/easeljs.js"></script>
-  <script src="../build/eventemitter2.js"></script>
-  <script src="../build/roslib.js"></script>
+  <script src="../build/ros2d/easeljs.js"></script>
+  <script src="../build/ros2d/eventemitter2.js"></script>
+  <script src="../build/ros2d/roslib.js"></script>
+  <script src="../build/ros2d/ros2d.js"></script>
+  <script src="../build/mapView.js"></script>
 
-  <script src="../build/ros2d.js"></script>
+  <script src="../build/vis/vis.js"></script>
+  <script src="../build/graphView.js"></script>
 
   <script>
     /**
      * Setup all visualization elements when the page is loaded.
      */
-    var ros;
-    var viewer;
-    var panView;
-    var zoomView;
-    var gridClient;
+    var mapView;
 
     function init() {
-      // Connect to ROS.
-      ros = new ROSLIB.Ros({
-        url: 'ws://localhost:9090'
-      });
 
-      // Create the main viewer.
-      viewer = new ROS2D.Viewer({
+      mapView = new MAPVIEW.MapView({
+        ros_url: 'ws://localhost:9090',
         divID: 'map',
         width: 308,
         height: 250
       });
 
-      panView = new ROS2D.PanView({
-        rootObject: viewer.scene
-      })
-
-      zoomView = new ROS2D.ZoomView({
-        rootObject: viewer.scene
-      })
-
-      // Setup the map client.
-      gridClient = new ROS2D.OccupancyGridClient({
-        ros: ros,
-        rootObject: viewer.scene,
-        // Use this property in case of continuous updates			
-        continuous: true
+      graphView = new GRAPHVIEW.GraphView({
+        divID: 'graph',
+        width: 600,
+        height: 400
       });
-      // Scale the canvas to fit to the map
-      gridClient.on('change', function () {
-        viewer.scaleToDimensions(gridClient.currentGrid.width, gridClient.currentGrid.height);
-        viewer.shift(gridClient.currentGrid.pose.position.x, gridClient.currentGrid.pose.position.y);
-      });
-
-      // Callback functions when there is mouse interaction with a point
-      var clickedPoint = false;
-      var selectedPointIndex = null;
-      var movingMap = false;       // We are moving the map
-      var movedMouse = false;      // Moved mouse since last click
-      var mapPos = { x: 0, y: 0 }; // map position relative to canvas
-      var posRos; // Mouse position relative to ros
-      var pos;    // Mouse position on canvas
-
-      var pointCallBack = function (type, event, index) {
-        if (type === 'mousedown') {
-          if (event.nativeEvent.shiftKey === true) {
-            graph.remPoint(index);
-          } else {
-            selectedPointIndex = index;
-          }
-        }
-        clickedPoint = true;
-      };
-
-      // Create the graph
-      var graph = new ROS2D.Graph({
-        pointCallBack: pointCallBack,
-      });
-
-      // Add the graph to the viewer
-      viewer.scene.addChild(graph);
-
-      viewer.scene.addEventListener('stagemousemove', function (event) {
-        movedMouse = true;
-        pos = { x: event.stageX, y: event.stageY };
-        posRos = viewer.scene.globalToRos(pos.x, pos.y);
-        // Move point when it's dragged and ctrl pressed
-        if (selectedPointIndex !== null && event.nativeEvent.ctrlKey === true) {
-          graph.movePoint(selectedPointIndex, posRos);
-        }
-        // Move map when it's dragged
-        else if (movingMap === true) {
-          panView.pan(pos.x - mapPos.x, pos.y - mapPos.y);
-        }
-      });
-
-      viewer.scene.addEventListener('stagemouseup', function (event) {
-        // Stop moving point when mouse up
-        selectedPointIndex = null;
-        // If we were moving the map, save new map position
-        if (movingMap === true) {
-          mapPos.x = pos.x - mapPos.x;
-          mapPos.y = pos.y - mapPos.y;
-          movingMap = false;
-        }
-        // Add point when not clicked on the graph ...
-        else if (viewer.scene.mouseInBounds === true && clickedPoint === false) {
-          // ... only if we aren't doing any other action
-          if (event.nativeEvent.shiftKey === false && movedMouse === false) {
-            graph.addPoint(posRos);
-          }
-        }
-        clickedPoint = false;
-      });
-
-      viewer.scene.addEventListener('stagemousedown', function (event) {
-        movedMouse = false;
-        // We can move the map with drag and drop
-        if (event.nativeEvent.ctrlKey !== true && viewer.scene.mouseInBounds === true) {
-          mapPos.x = pos.x - mapPos.x;
-          mapPos.y = pos.y - mapPos.y;
-          movingMap = true;
-        }
-      })
-
-      document.getElementById('map').addEventListener('wheel', function (event) {
-        if (viewer.scene.mouseInBounds === true) {
-          // Start zoom from mouse position
-          zoomView.startZoom(pos.x, pos.y);
-          // Add zoom
-          if (event.deltaY < 0) {
-            // Zoom in
-            zoomView.zoom(1.05, 1.05);
-          } else {
-            // Zoom out
-            zoomView.zoom(0.95, 0.95);
-          }
-          event.preventDefault();
-        }
-      })
 
     }
+
+    function viewMap() {
+      console.log("Preessed viewMap button");
+    }
+    function viewGraph() {
+      console.log("Preessed viewGraph button");
+    }
+
   </script>
 </head>
 
@@ -158,7 +56,15 @@
     <li><tt>rosrun map_server map_server path</tt></li>
     <li><tt>roslaunch rosbridge_server rosbridge_websocket.launch</tt></li>
   </ol>
+
   <div id="map"></div>
+  <div id="graph"></div>
+
+  <div>
+    <button type="button" onclick="viewMap()">View the map</button>
+    <button type="button" onclick="viewGraph()">View the graph</button>
+  </div>
+
   <p>
     How to use the map:
   </p>

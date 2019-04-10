@@ -9,6 +9,18 @@ var GRAPHVIEW = GRAPHVIEW || {
 GRAPHVIEW.GraphView = function (options) {
   options = options || {}
   this.divID = options.divID || 'graph';
+
+  // If we use ROS, 
+  if (options.ros_url !== undefined) {
+
+    // TODO llenar options.nodes/edges por ROS
+    this.rosTopic = new ROSLIB.Topic({
+      ros: options.ros_url || 'ws://localhost:9090',
+      name: options.topic || '/robotnik_fms_routes_node/graph_marker_array',
+      messageType: options.messageType || 'visualization_msgs/MarkerArray'
+    })
+  }
+
   this.nodes = options.nodes || new vis.DataSet();
   this.edges = options.edges || new vis.DataSet();
   this.nextID = 1 + this.nodes.length;

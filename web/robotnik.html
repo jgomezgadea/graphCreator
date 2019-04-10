@@ -25,7 +25,7 @@
 
     function init() {
 
-      nodes = new vis.DataSet([
+      /*nodes = new vis.DataSet([
         // Example
         { id: 1, label: 'Node 1' },
         { id: 2, label: 'Node 2' },
@@ -45,7 +45,7 @@
         { from: 2, to: 5, arrows: 'to, middle, from' },
         { from: 5, to: 6, arrows: { to: { scaleFactor: 2 } } },
         { from: 6, to: 7, arrows: { middle: { scaleFactor: 0.5 }, from: true } }
-      ]);
+      ]);*/
 
       mapView = new MAPVIEW.MapView({
         ros_url: 'ws://localhost:9090',
@@ -55,14 +55,18 @@
       });
 
       graphView = new GRAPHVIEW.GraphView({
+        ros_url: 'ws://localhost:9090',
         divID: 'graph',
-        nodes: nodes,
-        edges: edges
+        name: '/robotnik_fms_routes_node/graph_marker_array',
+        messageType: 'visualization_msgs/MarkerArray'
+        //nodes: nodes,
+        //edges: edges
       });
 
       graph.hidden = true;
     }
 
+    // Change between map and graph
     function toggleView() {
       if (map.hidden) {
         graph.hidden = true;
@@ -77,7 +81,7 @@
       }
     }
 
-    // Scale the canvas to fit to the map
+    // Scale the canvas to web
     function resizedCanvas() {
       mapView.scene.canvas.height = (canvas_views.clientWidth * 9) / 16;
       mapView.scene.canvas.width = canvas_views.clientWidth;

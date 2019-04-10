@@ -1,7 +1,7 @@
 body {
     background-color: ivory;
 }
-#canvas {
+#canvas_views {
     /*width: 600px;
     height: 400px;*/
     border: 1px solid lightgray;
@@ -16,6 +16,7 @@ h4 {
 }
 #map {
     position: relative;
+    background-color: rgb(127, 127, 127);
 }
 #graph {
     position: relative;

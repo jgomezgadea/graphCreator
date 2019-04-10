@@ -50,8 +50,8 @@
       mapView = new MAPVIEW.MapView({
         ros_url: 'ws://localhost:9090',
         divID: 'map',
-        width: 308, // TODO: Put the size of the view
-        height: 250
+        width: canvas_views.clientWidth - 14,
+        height: ((canvas_views.clientWidth - 14) * 9) / 16
       });
 
       graphView = new GRAPHVIEW.GraphView({
@@ -65,20 +65,15 @@
 
     function toggleView() {
       if (map.hidden) {
-        console.log("View map");
         graph.hidden = true;
         map.hidden = false;
+        toggle_views.innerHTML = "View graph";
       } else {
-        console.log("View graph");
         map.hidden = true;
         graph.hidden = false;
-        graphView = new GRAPHVIEW.GraphView({
-          divID: 'graph',
-          width: 600,
-          height: 400,
-          nodes: nodes,
-          edges: edges
-        });
+        graphView.stabilize();
+        toggle_views.innerHTML = "View map";
+        graphView.graph.setSize(canvas_views.clientWidth, (canvas_views.clientWidth * 9) / 16);
       }
     }
 
@@ -86,6 +81,7 @@
     function resizedCanvas() {
       mapView.scene.canvas.height = (canvas_views.clientWidth * 9) / 16;
       mapView.scene.canvas.width = canvas_views.clientWidth;
+      graphView.graph.setSize(canvas_views.clientWidth, (canvas_views.clientWidth * 9) / 16);
     }
 
   </script>
@@ -93,6 +89,14 @@
 
 <body onload="init()" onresize="resizedCanvas()">
   <h1>Robotnik 2D map</h1>
+
+  <button id="toggle_views" type="button" onclick="toggleView()">View graph</button>
+
+  <div id="canvas_views">
+    <div id="map"></div>
+    <div id="graph"></div>
+  </div>
+
   <p>
     How to launch:
   </p>
@@ -101,13 +105,6 @@
     <li><tt>rosrun map_server map_server path</tt></li>
     <li><tt>roslaunch rosbridge_server rosbridge_websocket.launch</tt></li>
   </ol>
-
-  <div id="canvas_views">
-    <div id="map"></div>
-    <div id="graph"></div>
-  </div>
-
-  <button id="toggle_views" type="button" onclick="toggleView()">View graph</button>
 
   <p>
     How to use the map:

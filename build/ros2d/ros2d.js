@@ -1171,7 +1171,7 @@ ROS2D.Viewer = function (options) {
   var divID = options.divID;
   this.width = options.width;
   this.height = options.height;
-  var background = options.background || '#111111';
+  var background = options.background || '#7f7f7f';
 
   // create the canvas to render to
   var canvas = document.createElement('canvas');

@@ -8,15 +8,10 @@ var MAPVIEW = MAPVIEW || {
 
 MAPVIEW.MapView = function (options) {
   options = options || {}
-  var ros_url = options.ros_url || 'ws://localhost:9090';
+  var ros = options.ros;
   var divID = options.divID || 'map';
   var width = options.width || 308;
   var height = options.height || 250;
-
-  // Connect to ROS
-  var ros = new ROSLIB.Ros({
-    url: ros_url
-  });
 
   // Create the main viewer
   var viewer = new ROS2D.Viewer({

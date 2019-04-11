@@ -10,10 +10,11 @@ GRAPHVIEW.GraphView = function (options) {
   options = options || {}
   this.divID = options.divID || 'graph';
 
-  // If we use ROS, 
-  if (options.ros !== undefined) {
+  if (options.ros !== undefined) { // If we use ROS
 
-    // TODO llenar options.nodes/edges por ROS
+    this.message = undefined;
+    this.nodes = new vis.DataSet();
+    this.edges = new vis.DataSet();
 
     this.rosGraph = new ROSLIB.Topic({
       ros: options.ros,
@@ -21,18 +22,35 @@ GRAPHVIEW.GraphView = function (options) {
       messageType: options.messageType || 'visualization_msgs/MarkerArray'
     })
 
+    var self = this;
     this.rosGraph.subscribe(function (message) {
-      console.log(message.data);
-      //this.rosGraph.unsubscribe();
+
+      if (self.hasChanged(message)) {
+
+        // Delete actual graph
+        self.deleteGraph();
+
+        // Fill graph with received nodes
+        message.markers.forEach(node => {
+          self.addNode(node.text);
+        });
+
+        self.stabilize();
+        //self.rosGraph.unsubscribe();
+      }
+
     });
+
+  } else { // Get data if is not getted from ros
+
+    this.nodes = options.nodes || new vis.DataSet();
+    this.edges = options.edges || new vis.DataSet();
+
   }
 
-  // Get data if is not getted from ros
-  this.nodes = options.nodes || new vis.DataSet();
-  this.edges = options.edges || new vis.DataSet();
   this.nextID = 1 + this.nodes.length;
 
-  // Create a graph
+  // Create the graph
   this.container = document.getElementById(this.divID);
   this.data = {
     nodes: this.nodes,
@@ -42,10 +60,48 @@ GRAPHVIEW.GraphView = function (options) {
   this.graph = new vis.Network(this.container, this.data, this.options);
 };
 
+
+// Definition of methods
+
 GRAPHVIEW.GraphView.prototype.addNode = function (name) {
   this.nodes.add({ id: this.nextID, label: name || "Node " + this.nextID })
   this.nextID++;
 };
+
+GRAPHVIEW.GraphView.prototype.deleteGraph = function () {
+  this.nodes.clear();
+  this.edges.clear();
+  this.nextID = 1;
+};
+
+GRAPHVIEW.GraphView.prototype.stabilize = function () {
+  this.graph.stabilize();
+}
+
+/**
+ * Compare between graph and message
+ * 
+ * @param callback - function with the following params:
+ *   * message - the published message with the graph
+ * @returns bool - true if the graph has changed
+ */
+GRAPHVIEW.GraphView.prototype.hasChanged = function (message) {
+  var changed = false;
+  // If has different lengths
+  if (message.markers.length !== this.nodes.length) {
+    changed = true;
+  }
+  // If any node is different
+  message.markers.forEach(node => {
+
+    if (this.nodes.getDataSet().get(node.id) == null ||
+      node.text !== this.nodes.getDataSet().get(node.id).label) {
+      changed = true;
+    }
+  });
+  // Else, if the two graphs are equal
+  return changed;
+}
 
 GRAPHVIEW.GraphView.prototype.resetAllNodes = function () {
   var nodes_aux = this.nodes.get();
@@ -58,7 +114,7 @@ GRAPHVIEW.GraphView.prototype.resetAllNodes = function () {
 
 GRAPHVIEW.GraphView.prototype.resetAllNodesStabilize = function () {
   this.resetAllNodes();
-  this.graph.stabilize();
+  this.stabilize();
 };
 
 GRAPHVIEW.GraphView.prototype.stabilize = function () {

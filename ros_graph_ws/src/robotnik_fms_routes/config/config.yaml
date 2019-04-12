@@ -1,0 +1,6 @@
+max_robots: 3
+demo: true
+
+RobotStatusTopicName:   [/robotnik_fms_robot_0/robot_status,/robotnik_fms_robot_1/robot_status]
+
+

@@ -1,0 +1,2 @@
+graph_bringup:robotnik_fms_routes
+-DCATKIN_DEVEL_PREFIX=/home/jose/graphCreator/ros_graph_ws/devel -DCMAKE_INSTALL_PREFIX=/home/jose/graphCreator/ros_graph_ws/install -G Unix Makefiles

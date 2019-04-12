@@ -1,0 +1,861 @@
+<CGraph>
+  <m_NodeList>
+
+   <CNode>
+      <m_iNumber>0</m_iNumber>
+      <m_Position>
+        <X>0.0</X>
+        <Y>0.0</Y>
+        <Z>0.000000</Z>
+        <Theta>NAN</Theta>	
+        <Frame>rb1_base_map</Frame> 
+      </m_Position>
+      <m_bStop>1</m_bStop>
+      <m_bLoad>1</m_bLoad>
+      <m_sName>Node 0</m_sName>      
+      <m_ArcList>
+        <CArc>
+          <m_iNodeDst>1</m_iNodeDst>
+        </CArc>                 
+      </m_ArcList>
+   </CNode>
+
+   <CNode>
+      <m_iNumber>1</m_iNumber>
+      <m_Position>
+        <X>10.0</X>
+        <Y>0.0</Y>
+        <Z>0.000000</Z>
+        <Theta>NAN</Theta>	
+        <Frame>rb1_base_map</Frame> 
+      </m_Position>
+      <m_bStop>1</m_bStop>
+      <m_bLoad>1</m_bLoad>
+      <m_sName>Node 1</m_sName>      
+      <m_ArcList>
+        <CArc>
+          <m_iNodeDst>2</m_iNodeDst>
+        </CArc>                 
+      </m_ArcList>
+   </CNode>
+
+   <CNode>
+      <m_iNumber>2</m_iNumber>
+      <m_Position>
+        <X>20.0</X>
+        <Y>0.0</Y>
+        <Z>0.000000</Z>
+        <Theta>NAN</Theta>	
+        <Frame>rb1_base_map</Frame> 
+      </m_Position>
+      <m_bStop>1</m_bStop>
+      <m_bLoad>1</m_bLoad>
+      <m_sName>Node 2</m_sName>      
+      <m_ArcList>
+        <CArc>
+          <m_iNodeDst>3</m_iNodeDst>
+        </CArc>
+        <CArc>
+          <m_iNodeDst>30</m_iNodeDst>
+        </CArc>                         
+      </m_ArcList>
+   </CNode>
+
+   <CNode>
+      <m_iNumber>3</m_iNumber>
+      <m_Position>
+        <X>20.0</X>
+        <Y>10.0</Y>
+        <Z>0.000000</Z>
+        <Theta>NAN</Theta>	
+        <Frame>rb1_base_map</Frame> 
+      </m_Position>
+      <m_bStop>1</m_bStop>
+      <m_bLoad>1</m_bLoad>
+      <m_sName>Node 3</m_sName>      
+      <m_ArcList>
+        <CArc>
+          <m_iNodeDst>4</m_iNodeDst>
+        </CArc>                 
+      </m_ArcList>
+   </CNode>
+
+   <CNode>
+      <m_iNumber>4</m_iNumber>
+      <m_Position>
+        <X>20.0</X>
+        <Y>20.0</Y>
+        <Z>0.000000</Z>
+        <Theta>NAN</Theta>	
+        <Frame>rb1_base_map</Frame> 
+      </m_Position>
+      <m_bStop>1</m_bStop>
+      <m_bLoad>1</m_bLoad>
+      <m_sName>Node 4</m_sName>      
+      <m_ArcList>
+        <CArc>
+          <m_iNodeDst>5</m_iNodeDst>
+        </CArc>                 
+      </m_ArcList>
+   </CNode>
+   
+   <CNode>
+      <m_iNumber>5</m_iNumber>
+      <m_Position>
+        <X>20.0</X>
+        <Y>30.0</Y>
+        <Z>0.000000</Z>
+        <Theta>NAN</Theta>	
+        <Frame>rb1_base_map</Frame> 
+      </m_Position>
+      <m_bStop>1</m_bStop>
+      <m_bLoad>1</m_bLoad>
+      <m_sName>Node 5</m_sName>      
+      <m_ArcList>
+        <CArc>
+          <m_iNodeDst>6</m_iNodeDst>
+        </CArc>                 
+      </m_ArcList>
+   </CNode>
+   
+   <CNode>
+      <m_iNumber>6</m_iNumber>
+      <m_Position>
+        <X>20.0</X>
+        <Y>40.0</Y>
+        <Z>0.000000</Z>
+        <Theta>NAN</Theta>	
+        <Frame>rb1_base_map</Frame> 
+      </m_Position>
+      <m_bStop>1</m_bStop>
+      <m_bLoad>1</m_bLoad>
+      <m_sName>Node 6</m_sName>      
+      <m_ArcList>
+        <CArc>
+          <m_iNodeDst>7</m_iNodeDst>
+        </CArc>                 
+      </m_ArcList>
+   </CNode>
+   
+   <CNode>
+      <m_iNumber>7</m_iNumber>
+      <m_Position>
+        <X>10.0</X>
+        <Y>40.0</Y>
+        <Z>0.000000</Z>
+        <Theta>NAN</Theta>	
+        <Frame>rb1_base_map</Frame> 
+      </m_Position>
+      <m_bStop>1</m_bStop>
+      <m_bLoad>1</m_bLoad>
+      <m_sName>Node 7</m_sName>      
+      <m_ArcList>
+        <CArc>
+          <m_iNodeDst>8</m_iNodeDst>
+        </CArc>                 
+      </m_ArcList>
+   </CNode>
+
+   <CNode>
+      <m_iNumber>8</m_iNumber>
+      <m_Position>
+        <X>0.0</X>
+        <Y>40.0</Y>
+        <Z>0.000000</Z>
+        <Theta>NAN</Theta>	
+        <Frame>rb1_base_map</Frame> 
+      </m_Position>
+      <m_bStop>1</m_bStop>
+      <m_bLoad>1</m_bLoad>
+      <m_sName>Node 8</m_sName>      
+      <m_ArcList>
+        <CArc>
+          <m_iNodeDst>9</m_iNodeDst>
+        </CArc>                 
+      </m_ArcList>
+   </CNode>
+
+   <CNode>
+      <m_iNumber>9</m_iNumber>
+      <m_Position>
+        <X>-10.0</X>
+        <Y>40.0</Y>
+        <Z>0.000000</Z>
+        <Theta>NAN</Theta>	
+        <Frame>rb1_base_map</Frame> 
+      </m_Position>
+      <m_bStop>1</m_bStop>
+      <m_bLoad>1</m_bLoad>
+      <m_sName>Node 9</m_sName>      
+      <m_ArcList>
+        <CArc>
+          <m_iNodeDst>10</m_iNodeDst>
+        </CArc>                 
+      </m_ArcList>
+   </CNode>
+
+   <CNode>
+      <m_iNumber>10</m_iNumber>
+      <m_Position>
+        <X>-20.0</X>
+        <Y>40.0</Y>
+        <Z>0.000000</Z>
+        <Theta>NAN</Theta>	
+        <Frame>rb1_base_map</Frame> 
+      </m_Position>
+      <m_bStop>1</m_bStop>
+      <m_bLoad>1</m_bLoad>
+      <m_sName>Node 10</m_sName>      
+      <m_ArcList>
+        <CArc>
+          <m_iNodeDst>11</m_iNodeDst>
+        </CArc>                 
+      </m_ArcList>
+   </CNode>
+   
+   <CNode>
+      <m_iNumber>11</m_iNumber>
+      <m_Position>
+        <X>-20.0</X>
+        <Y>30.0</Y>
+        <Z>0.000000</Z>
+        <Theta>NAN</Theta>	
+        <Frame>rb1_base_map</Frame> 
+      </m_Position>
+      <m_bStop>1</m_bStop>
+      <m_bLoad>1</m_bLoad>
+      <m_sName>Node 11</m_sName>      
+      <m_ArcList>
+        <CArc>
+          <m_iNodeDst>12</m_iNodeDst>
+        </CArc>                 
+      </m_ArcList>
+   </CNode>
+
+   <CNode>
+      <m_iNumber>12</m_iNumber>
+      <m_Position>
+        <X>-20.0</X>
+        <Y>20.0</Y>
+        <Z>0.000000</Z>
+        <Theta>NAN</Theta>	
+        <Frame>rb1_base_map</Frame> 
+      </m_Position>
+      <m_bStop>1</m_bStop>
+      <m_bLoad>1</m_bLoad>
+      <m_sName>Node 12</m_sName>      
+      <m_ArcList>
+        <CArc>
+          <m_iNodeDst>13</m_iNodeDst>
+        </CArc>                 
+      </m_ArcList>
+   </CNode>
+
+   <CNode>
+      <m_iNumber>13</m_iNumber>
+      <m_Position>
+        <X>-20.0</X>
+        <Y>10.0</Y>
+        <Z>0.000000</Z>
+        <Theta>NAN</Theta>	
+        <Frame>rb1_base_map</Frame> 
+      </m_Position>
+      <m_bStop>1</m_bStop>
+      <m_bLoad>1</m_bLoad>
+      <m_sName>Node º3</m_sName>      
+      <m_ArcList>
+        <CArc>
+          <m_iNodeDst>14</m_iNodeDst>
+        </CArc>                 
+      </m_ArcList>
+   </CNode>
+
+   <CNode>
+      <m_iNumber>14</m_iNumber>
+      <m_Position>
+        <X>-20.0</X>
+        <Y>0.0</Y>
+        <Z>0.000000</Z>
+        <Theta>NAN</Theta>	
+        <Frame>rb1_base_map</Frame> 
+      </m_Position>
+      <m_bStop>1</m_bStop>
+      <m_bLoad>1</m_bLoad>
+      <m_sName>Node 14</m_sName>      
+      <m_ArcList>
+        <CArc>
+          <m_iNodeDst>15</m_iNodeDst>
+        </CArc>                 
+      </m_ArcList>
+   </CNode>
+   
+   <CNode>
+      <m_iNumber>15</m_iNumber>
+      <m_Position>
+        <X>-10.0</X>
+        <Y>0.0</Y>
+        <Z>0.000000</Z>
+        <Theta>NAN</Theta>	
+        <Frame>rb1_base_map</Frame> 
+      </m_Position>
+      <m_bStop>1</m_bStop>
+      <m_bLoad>1</m_bLoad>
+      <m_sName>Node 15</m_sName>      
+      <m_ArcList>
+        <CArc>
+          <m_iNodeDst>0</m_iNodeDst>
+        </CArc>
+        <CArc>
+          <m_iNodeDst>16</m_iNodeDst>
+        </CArc>                 
+      </m_ArcList>
+   </CNode>
+   
+   <CNode>
+      <m_iNumber>16</m_iNumber>
+      <m_Position>
+        <X>-10.0</X>
+        <Y>-10.0</Y>
+        <Z>0.000000</Z>
+        <Theta>NAN</Theta>	
+        <Frame>rb1_base_map</Frame> 
+      </m_Position>
+      <m_bStop>1</m_bStop>
+      <m_bLoad>1</m_bLoad>
+      <m_sName>Node 16</m_sName>      
+      <m_ArcList>
+        <CArc>
+          <m_iNodeDst>17</m_iNodeDst>
+        </CArc>                 
+      </m_ArcList>
+   </CNode>
+
+   <CNode>
+      <m_iNumber>17</m_iNumber>
+      <m_Position>
+        <X>-10.0</X>
+        <Y>-20.0</Y>
+        <Z>0.000000</Z>
+        <Theta>NAN</Theta>	
+        <Frame>rb1_base_map</Frame> 
+      </m_Position>
+      <m_bStop>1</m_bStop>
+      <m_bLoad>1</m_bLoad>
+      <m_sName>Node 17</m_sName>      
+      <m_ArcList>
+        <CArc>
+          <m_iNodeDst>18</m_iNodeDst>
+        </CArc>                 
+      </m_ArcList>
+   </CNode>
+   
+   <CNode>
+      <m_iNumber>18</m_iNumber>
+      <m_Position>
+        <X>-10.0</X>
+        <Y>-30.0</Y>
+        <Z>0.000000</Z>
+        <Theta>NAN</Theta>	
+        <Frame>rb1_base_map</Frame> 
+      </m_Position>
+      <m_bStop>1</m_bStop>
+      <m_bLoad>1</m_bLoad>
+      <m_sName>Node 18</m_sName>      
+      <m_ArcList>
+        <CArc>
+          <m_iNodeDst>19</m_iNodeDst>
+        </CArc>                 
+      </m_ArcList>
+   </CNode>
+   
+   <CNode>
+      <m_iNumber>19</m_iNumber>
+      <m_Position>
+        <X>-10.0</X>
+        <Y>-40.0</Y>
+        <Z>0.000000</Z>
+        <Theta>NAN</Theta>	
+        <Frame>rb1_base_map</Frame> 
+      </m_Position>
+      <m_bStop>1</m_bStop>
+      <m_bLoad>1</m_bLoad>
+      <m_sName>Node 19</m_sName>      
+      <m_ArcList>
+        <CArc>
+          <m_iNodeDst>20</m_iNodeDst>
+        </CArc>                 
+      </m_ArcList>
+   </CNode>
+   
+   <CNode>
+      <m_iNumber>20</m_iNumber>
+      <m_Position>
+        <X>-20.0</X>
+        <Y>-40.0</Y>
+        <Z>0.000000</Z>
+        <Theta>NAN</Theta>	
+        <Frame>rb1_base_map</Frame> 
+      </m_Position>
+      <m_bStop>1</m_bStop>
+      <m_bLoad>1</m_bLoad>
+      <m_sName>Node 20</m_sName>      
+      <m_ArcList>
+        <CArc>
+          <m_iNodeDst>21</m_iNodeDst>
+        </CArc>                 
+      </m_ArcList>
+   </CNode>
+   
+   <CNode>
+      <m_iNumber>21</m_iNumber>
+      <m_Position>
+        <X>-30.0</X>
+        <Y>-40.0</Y>
+        <Z>0.000000</Z>
+        <Theta>NAN</Theta>	
+        <Frame>rb1_base_map</Frame> 
+      </m_Position>
+      <m_bStop>1</m_bStop>
+      <m_bLoad>1</m_bLoad>
+      <m_sName>Node 21</m_sName>      
+      <m_ArcList>
+        <CArc>
+          <m_iNodeDst>22</m_iNodeDst>
+        </CArc>                 
+      </m_ArcList>
+   </CNode> 
+   
+   <CNode>
+      <m_iNumber>22</m_iNumber>
+      <m_Position>
+        <X>-40.0</X>
+        <Y>-40.0</Y>
+        <Z>0.000000</Z>
+        <Theta>NAN</Theta>	
+        <Frame>rb1_base_map</Frame> 
+      </m_Position>
+      <m_bStop>1</m_bStop>
+      <m_bLoad>1</m_bLoad>
+      <m_sName>Node 22</m_sName>      
+      <m_ArcList>
+        <CArc>
+          <m_iNodeDst>23</m_iNodeDst>
+        </CArc>                 
+      </m_ArcList>
+   </CNode>
+   
+   <CNode>
+      <m_iNumber>23</m_iNumber>
+      <m_Position>
+        <X>-50.0</X>
+        <Y>-40.0</Y>
+        <Z>0.000000</Z>
+        <Theta>NAN</Theta>	
+        <Frame>rb1_base_map</Frame> 
+      </m_Position>
+      <m_bStop>1</m_bStop>
+      <m_bLoad>1</m_bLoad>
+      <m_sName>Node 23</m_sName>      
+      <m_ArcList>
+        <CArc>
+          <m_iNodeDst>24</m_iNodeDst>
+        </CArc>                 
+      </m_ArcList>
+   </CNode>
+   
+   <CNode>
+      <m_iNumber>24</m_iNumber>
+      <m_Position>
+        <X>-50.0</X>
+        <Y>-30.0</Y>
+        <Z>0.000000</Z>
+        <Theta>NAN</Theta>	
+        <Frame>rb1_base_map</Frame> 
+      </m_Position>
+      <m_bStop>1</m_bStop>
+      <m_bLoad>1</m_bLoad>
+      <m_sName>Node 24</m_sName>      
+      <m_ArcList>
+        <CArc>
+          <m_iNodeDst>25</m_iNodeDst>
+        </CArc>                 
+      </m_ArcList>
+   </CNode>
+   
+   <CNode>
+      <m_iNumber>25</m_iNumber>
+      <m_Position>
+        <X>-50.0</X>
+        <Y>-20.0</Y>
+        <Z>0.000000</Z>
+        <Theta>NAN</Theta>	
+        <Frame>rb1_base_map</Frame> 
+      </m_Position>
+      <m_bStop>1</m_bStop>
+      <m_bLoad>1</m_bLoad>
+      <m_sName>Node 25</m_sName>      
+      <m_ArcList>
+        <CArc>
+          <m_iNodeDst>26</m_iNodeDst>
+        </CArc>                 
+      </m_ArcList>
+   </CNode>
+   
+   <CNode>
+      <m_iNumber>26</m_iNumber>
+      <m_Position>
+        <X>-50.0</X>
+        <Y>-10.0</Y>
+        <Z>0.000000</Z>
+        <Theta>NAN</Theta>	
+        <Frame>rb1_base_map</Frame> 
+      </m_Position>
+      <m_bStop>1</m_bStop>
+      <m_bLoad>1</m_bLoad>
+      <m_sName>Node 26</m_sName>      
+      <m_ArcList>
+        <CArc>
+          <m_iNodeDst>27</m_iNodeDst>
+        </CArc>                 
+      </m_ArcList>
+   </CNode>
+   
+   <CNode>
+      <m_iNumber>27</m_iNumber>
+      <m_Position>
+        <X>-50.0</X>
+        <Y>0.0</Y>
+        <Z>0.000000</Z>
+        <Theta>NAN</Theta>	
+        <Frame>rb1_base_map</Frame> 
+      </m_Position>
+      <m_bStop>1</m_bStop>
+      <m_bLoad>1</m_bLoad>
+      <m_sName>Node 27</m_sName>      
+      <m_ArcList>
+        <CArc>
+          <m_iNodeDst>28</m_iNodeDst>
+        </CArc>                 
+      </m_ArcList>
+   </CNode>
+   
+   <CNode>
+      <m_iNumber>28</m_iNumber>
+      <m_Position>
+        <X>-40.0</X>
+        <Y>0.0</Y>
+        <Z>0.000000</Z>
+        <Theta>NAN</Theta>	
+        <Frame>rb1_base_map</Frame> 
+      </m_Position>
+      <m_bStop>1</m_bStop>
+      <m_bLoad>1</m_bLoad>
+      <m_sName>Node 28</m_sName>      
+      <m_ArcList>
+        <CArc>
+          <m_iNodeDst>29</m_iNodeDst>
+        </CArc>                 
+      </m_ArcList>
+   </CNode>
+   
+   <CNode>
+      <m_iNumber>29</m_iNumber>
+      <m_Position>
+        <X>-30.0</X>
+        <Y>0.0</Y>
+        <Z>0.000000</Z>
+        <Theta>NAN</Theta>	
+        <Frame>rb1_base_map</Frame> 
+      </m_Position>
+      <m_bStop>1</m_bStop>
+      <m_bLoad>1</m_bLoad>
+      <m_sName>Node 29</m_sName>      
+      <m_ArcList>
+        <CArc>
+          <m_iNodeDst>14</m_iNodeDst>
+        </CArc>                 
+      </m_ArcList>
+   </CNode>
+   
+   <CNode>
+      <m_iNumber>30</m_iNumber>
+      <m_Position>
+        <X>30.0</X>
+        <Y>0.0</Y>
+        <Z>0.000000</Z>
+        <Theta>NAN</Theta>	
+        <Frame>rb1_base_map</Frame> 
+      </m_Position>
+      <m_bStop>1</m_bStop>
+      <m_bLoad>1</m_bLoad>
+      <m_sName>Node 30</m_sName>      
+      <m_ArcList>
+        <CArc>
+          <m_iNodeDst>31</m_iNodeDst>
+        </CArc>                 
+      </m_ArcList>
+   </CNode>
+   
+   <CNode>
+      <m_iNumber>31</m_iNumber>
+      <m_Position>
+        <X>40.0</X>
+        <Y>0.0</Y>
+        <Z>0.000000</Z>
+        <Theta>NAN</Theta>	
+        <Frame>rb1_base_map</Frame> 
+      </m_Position>
+      <m_bStop>1</m_bStop>
+      <m_bLoad>1</m_bLoad>
+      <m_sName>Node 31</m_sName>      
+      <m_ArcList>
+        <CArc>
+          <m_iNodeDst>32</m_iNodeDst>
+        </CArc>                 
+      </m_ArcList>
+   </CNode>
+   
+   <CNode>
+      <m_iNumber>32</m_iNumber>
+      <m_Position>
+        <X>50.0</X>
+        <Y>0.0</Y>
+        <Z>0.000000</Z>
+        <Theta>NAN</Theta>	
+        <Frame>rb1_base_map</Frame> 
+      </m_Position>
+      <m_bStop>1</m_bStop>
+      <m_bLoad>1</m_bLoad>
+      <m_sName>Node 32</m_sName>      
+      <m_ArcList>
+        <CArc>
+          <m_iNodeDst>33</m_iNodeDst>
+        </CArc>                 
+      </m_ArcList>
+   </CNode>
+   
+   <CNode>
+      <m_iNumber>33</m_iNumber>
+      <m_Position>
+        <X>50.0</X>
+        <Y>-10.0</Y>
+        <Z>0.000000</Z>
+        <Theta>NAN</Theta>	
+        <Frame>rb1_base_map</Frame> 
+      </m_Position>
+      <m_bStop>1</m_bStop>
+      <m_bLoad>1</m_bLoad>
+      <m_sName>Node 33</m_sName>      
+      <m_ArcList>
+        <CArc>
+          <m_iNodeDst>34</m_iNodeDst>
+        </CArc>                 
+      </m_ArcList>
+   </CNode>
+   
+   <CNode>
+      <m_iNumber>34</m_iNumber>
+      <m_Position>
+        <X>50.0</X>
+        <Y>-20.0</Y>
+        <Z>0.000000</Z>
+        <Theta>NAN</Theta>	
+        <Frame>rb1_base_map</Frame> 
+      </m_Position>
+      <m_bStop>1</m_bStop>
+      <m_bLoad>1</m_bLoad>
+      <m_sName>Node 34</m_sName>      
+      <m_ArcList>
+        <CArc>
+          <m_iNodeDst>35</m_iNodeDst>
+        </CArc>                 
+      </m_ArcList>
+   </CNode>
+   
+   <CNode>
+      <m_iNumber>35</m_iNumber>
+      <m_Position>
+        <X>50.0</X>
+        <Y>-30.0</Y>
+        <Z>0.000000</Z>
+        <Theta>NAN</Theta>	
+        <Frame>rb1_base_map</Frame> 
+      </m_Position>
+      <m_bStop>1</m_bStop>
+      <m_bLoad>1</m_bLoad>
+      <m_sName>Node 35</m_sName>      
+      <m_ArcList>
+        <CArc>
+          <m_iNodeDst>36</m_iNodeDst>
+        </CArc>                 
+      </m_ArcList>
+   </CNode>
+   
+   <CNode>
+      <m_iNumber>36</m_iNumber>
+      <m_Position>
+        <X>50.0</X>
+        <Y>-40.0</Y>
+        <Z>0.000000</Z>
+        <Theta>NAN</Theta>	
+        <Frame>rb1_base_map</Frame> 
+      </m_Position>
+      <m_bStop>1</m_bStop>
+      <m_bLoad>1</m_bLoad>
+      <m_sName>Node 36</m_sName>      
+      <m_ArcList>
+        <CArc>
+          <m_iNodeDst>37</m_iNodeDst>
+        </CArc>                 
+      </m_ArcList>
+   </CNode>
+   
+   <CNode>
+      <m_iNumber>37</m_iNumber>
+      <m_Position>
+        <X>40.0</X>
+        <Y>-40.0</Y>
+        <Z>0.000000</Z>
+        <Theta>NAN</Theta>	
+        <Frame>rb1_base_map</Frame> 
+      </m_Position>
+      <m_bStop>1</m_bStop>
+      <m_bLoad>1</m_bLoad>
+      <m_sName>Node 37</m_sName>      
+      <m_ArcList>
+        <CArc>
+          <m_iNodeDst>38</m_iNodeDst>
+        </CArc>                 
+      </m_ArcList>
+   </CNode>
+   
+   <CNode>
+      <m_iNumber>38</m_iNumber>
+      <m_Position>
+        <X>30.0</X>
+        <Y>-40.0</Y>
+        <Z>0.000000</Z>
+        <Theta>NAN</Theta>	
+        <Frame>rb1_base_map</Frame> 
+      </m_Position>
+      <m_bStop>1</m_bStop>
+      <m_bLoad>1</m_bLoad>
+      <m_sName>Node 38</m_sName>      
+      <m_ArcList>
+        <CArc>
+          <m_iNodeDst>39</m_iNodeDst>
+        </CArc>                 
+      </m_ArcList>
+   </CNode>
+   
+   <CNode>
+      <m_iNumber>39</m_iNumber>
+      <m_Position>
+        <X>20.0</X>
+        <Y>-40.0</Y>
+        <Z>0.000000</Z>
+        <Theta>NAN</Theta>	
+        <Frame>rb1_base_map</Frame> 
+      </m_Position>
+      <m_bStop>1</m_bStop>
+      <m_bLoad>1</m_bLoad>
+      <m_sName>Node 39</m_sName>      
+      <m_ArcList>
+        <CArc>
+          <m_iNodeDst>40</m_iNodeDst>
+        </CArc>                 
+      </m_ArcList>
+   </CNode>
+   
+   <CNode>
+      <m_iNumber>40</m_iNumber>
+      <m_Position>
+        <X>10.0</X>
+        <Y>-40.0</Y>
+        <Z>0.000000</Z>
+        <Theta>NAN</Theta>	
+        <Frame>rb1_base_map</Frame> 
+      </m_Position>
+      <m_bStop>1</m_bStop>
+      <m_bLoad>1</m_bLoad>
+      <m_sName>Node 40</m_sName>      
+      <m_ArcList>
+        <CArc>
+          <m_iNodeDst>41</m_iNodeDst>
+        </CArc>                 
+      </m_ArcList>
+   </CNode>
+   
+   <CNode>
+      <m_iNumber>41</m_iNumber>
+      <m_Position>
+        <X>10.0</X>
+        <Y>-30.0</Y>
+        <Z>0.000000</Z>
+        <Theta>NAN</Theta>	
+        <Frame>rb1_base_map</Frame> 
+      </m_Position>
+      <m_bStop>1</m_bStop>
+      <m_bLoad>1</m_bLoad>
+      <m_sName>Node 41</m_sName>      
+      <m_ArcList>
+        <CArc>
+          <m_iNodeDst>42</m_iNodeDst>
+        </CArc>                 
+      </m_ArcList>
+   </CNode>
+   
+   <CNode>
+      <m_iNumber>42</m_iNumber>
+      <m_Position>
+        <X>10.0</X>
+        <Y>-20.0</Y>
+        <Z>0.000000</Z>
+        <Theta>NAN</Theta>	
+        <Frame>rb1_base_map</Frame> 
+      </m_Position>
+      <m_bStop>1</m_bStop>
+      <m_bLoad>1</m_bLoad>
+      <m_sName>Node 42</m_sName>      
+      <m_ArcList>
+        <CArc>
+          <m_iNodeDst>43</m_iNodeDst>
+        </CArc>                 
+      </m_ArcList>
+   </CNode>
+   
+   <CNode>
+      <m_iNumber>43</m_iNumber>
+      <m_Position>
+        <X>10.0</X>
+        <Y>-10.0</Y>
+        <Z>0.000000</Z>
+        <Theta>NAN</Theta>	
+        <Frame>rb1_base_map</Frame> 
+      </m_Position>
+      <m_bStop>1</m_bStop>
+      <m_bLoad>1</m_bLoad>
+      <m_sName>Node 43</m_sName>      
+      <m_ArcList>
+        <CArc>
+          <m_iNodeDst>1</m_iNodeDst>
+        </CArc>                 
+      </m_ArcList>
+   </CNode>
+
+   </m_NodeList> 
+
+
+   <CZone>
+	<m_iIDZone> 12 </m_iIDZone>
+	<m_bManeuver> 0 </m_bManeuver>
+	<m_iNodeDest> -1 </m_iNodeDest>
+	<m_iMaxRobots> 1 </m_iMaxRobots>  	
+	<m_iNode> 0 </m_iNode>
+	<m_iNode> 1 </m_iNode>
+	<m_iNode> 2 </m_iNode>
+	<m_iNode> 14 </m_iNode>
+	<m_iNode> 15 </m_iNode>
+   </CZone>
+	
+  </CGraph>

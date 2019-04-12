@@ -3,3 +3,5 @@
 node_modules
 doc
 bower_components
+ros_graph_ws/build*
+ros_graph_ws/devel*

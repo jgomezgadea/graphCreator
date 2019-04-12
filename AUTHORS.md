@@ -1,11 +1,11 @@
-Original Authors
+Authors
 ----------------
 
- * [Russell Toris](http://users.wpi.edu/~rctoris/) (rctoris@wpi.edu)
+ * [Jose Gómez] (jgomez@robotnik.es)
 
 Contributors
 ------------
 
+ * Russell Toris (rctoris@wpi.edu)
  * Jihoon Lee (jihoonlee.in@gmail.com)
  * Brandon Alexander (balexander@willowgarage.com)
- 

@@ -1,8 +1,0 @@
-prefix=/home/jose/graphCreator/ros_graph_ws/install
-
-Name: robotnik_fms_routes
-Description: Description of robotnik_fms_routes
-Version: 0.0.0
-Cflags: 
-Libs: -L/home/jose/graphCreator/ros_graph_ws/install/lib -lxerces-c
-Requires: 

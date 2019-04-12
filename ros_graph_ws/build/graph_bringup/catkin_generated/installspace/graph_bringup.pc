@@ -1,8 +1,0 @@
-prefix=/home/jose/graphCreator/ros_graph_ws/install
-
-Name: graph_bringup
-Description: Description of graph_bringup
-Version: 0.0.0
-Cflags: 
-Libs: -L/home/jose/graphCreator/ros_graph_ws/install/lib 
-Requires: 

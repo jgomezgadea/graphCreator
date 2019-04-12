@@ -62,8 +62,8 @@
       graphView = new GRAPHVIEW.GraphView({
         divID: 'graph',
         ros: ros,
-        name: '/robotnik_fms_routes_node/graph_marker_array',
-        messageType: 'visualization_msgs/MarkerArray'
+        rosNodesTopic: '/robotnik_fms_routes_node/graph',
+        rosNodesMsg: 'robotnik_fms_msgs/NodesInfo'
         //nodes: nodes,
         //edges: edges
       });
@@ -111,8 +111,9 @@
   </p>
   <ol>
     <li><tt>roscore</tt></li>
-    <li><tt>rosrun map_server map_server path</tt></li>
+    <li><tt>rosrun map_server map_server graphCreator/maps/map.yaml</tt></li>
     <li><tt>roslaunch rosbridge_server rosbridge_websocket.launch</tt></li>
+    <li><tt>roslaunch telefonica_bringup robotnik_fms_routes_telefonica.launch</tt></li>
   </ol>
 
   <p>

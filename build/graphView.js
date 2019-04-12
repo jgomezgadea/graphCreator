@@ -16,14 +16,14 @@ GRAPHVIEW.GraphView = function (options) {
     this.nodes = new vis.DataSet();
     this.edges = new vis.DataSet();
 
-    this.rosGraph = new ROSLIB.Topic({
+    this.rosNodes = new ROSLIB.Topic({
       ros: options.ros,
-      name: options.topic || '/robotnik_fms_routes_node/graph_marker_array',
-      messageType: options.messageType || 'visualization_msgs/MarkerArray'
+      name: options.rosNodesTopic || '/robotnik_fms_routes_node/graph',
+      messageType: options.rosNodesMsg || 'robotnik_fms_msgs/NodesInfo'
     })
 
     var self = this;
-    this.rosGraph.subscribe(function (message) {
+    this.rosNodes.subscribe(function (message) {
 
       if (self.hasChanged(message)) {
 
@@ -31,12 +31,12 @@ GRAPHVIEW.GraphView = function (options) {
         self.deleteGraph();
 
         // Fill graph with received nodes
-        message.markers.forEach(node => {
-          self.addNode(node.text);
+        message.Nodes.forEach(node => {
+          self.addNode(node.name);
         });
 
         self.stabilize();
-        //self.rosGraph.unsubscribe();
+        //self.rosNodes.unsubscribe();
       }
 
     });
@@ -48,7 +48,7 @@ GRAPHVIEW.GraphView = function (options) {
 
   }
 
-  this.nextID = 1 + this.nodes.length;
+  this.nextID = 0 + this.nodes.length;
 
   // Create the graph
   this.container = document.getElementById(this.divID);
@@ -71,7 +71,7 @@ GRAPHVIEW.GraphView.prototype.addNode = function (name) {
 GRAPHVIEW.GraphView.prototype.deleteGraph = function () {
   this.nodes.clear();
   this.edges.clear();
-  this.nextID = 1;
+  this.nextID = 0;
 };
 
 GRAPHVIEW.GraphView.prototype.stabilize = function () {
@@ -88,14 +88,15 @@ GRAPHVIEW.GraphView.prototype.stabilize = function () {
 GRAPHVIEW.GraphView.prototype.hasChanged = function (message) {
   var changed = false;
   // If has different lengths
-  if (message.markers.length !== this.nodes.length) {
+  if (message.Nodes.length !== this.nodes.length) {
     changed = true;
   }
   // If any node is different
-  message.markers.forEach(node => {
+  message.Nodes.forEach(node => {
 
-    if (this.nodes.getDataSet().get(node.id) == null ||
-      node.text !== this.nodes.getDataSet().get(node.id).label) {
+    if (this.nodes.getDataSet().get(node.id) == null) {
+      changed = true;
+    } else if (node.name !== this.nodes.getDataSet().get(node.id).label) {
       changed = true;
     }
   });

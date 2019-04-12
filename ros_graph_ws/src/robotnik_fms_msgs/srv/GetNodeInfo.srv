@@ -1,0 +1,5 @@
+int32 node_id
+---
+robotnik_fms_msgs/NodeInfo node_info
+bool ret
+string msg

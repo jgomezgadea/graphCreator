@@ -1,0 +1,14 @@
+int32 id
+int32 robot_id
+bool charge
+bool load
+bool unload
+bool canceled
+string error_msg
+int32[] node_or
+int32[] node_dest
+string node_or_action
+string node_dest_action
+string time_start
+string time_insert
+string time_end

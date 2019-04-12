@@ -1,0 +1,5 @@
+int32 robot_id
+---
+robotnik_fms_msgs/PlannerRobotStatus[] robot_status
+bool ret
+string msg

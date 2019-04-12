@@ -1,0 +1,10 @@
+bool open
+bool close
+int32 door_id
+string zone
+
+---
+
+bool success
+bool error
+string msg

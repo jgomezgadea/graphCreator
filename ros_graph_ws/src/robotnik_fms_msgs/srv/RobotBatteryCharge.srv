@@ -1,0 +1,7 @@
+# Robot id to command
+int32 robot_id
+int32 charging_node
+---
+bool success
+string message
+int32 id

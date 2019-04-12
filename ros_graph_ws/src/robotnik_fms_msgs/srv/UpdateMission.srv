@@ -1,0 +1,6 @@
+int32 id_mission
+int32 id_robot
+string msg
+---
+bool ret
+string msg

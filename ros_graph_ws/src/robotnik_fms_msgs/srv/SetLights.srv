@@ -1,0 +1,10 @@
+bool setRed
+bool setGreen
+bool blinkRed
+bool blinkGreen
+
+---
+
+bool success
+bool error
+string msg

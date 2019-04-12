@@ -1,0 +1,7 @@
+int32[] node_id
+int32 robot_id
+bool block
+bool reserve
+---
+bool ret
+string msg

@@ -1,0 +1,6 @@
+string line
+string product
+bool ignore_photocells
+---
+bool success
+string msg

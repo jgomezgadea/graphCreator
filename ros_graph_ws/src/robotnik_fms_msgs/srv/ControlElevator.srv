@@ -1,0 +1,24 @@
+# Control true: get control false: leave control
+bool control
+
+# elevator: id of Elevator to control
+int32 elevator
+
+# agent: id of agent to control elevator once this agent has control  
+#   other agent cannot control this elevator until an order of leave control 
+int32 agent
+
+# floor >= 0 send to floor
+int32 floor
+
+# dooropen true: open door
+bool dooropen
+
+# doorclose true: close door
+bool doorclose
+
+---
+
+bool success
+bool error
+string msg

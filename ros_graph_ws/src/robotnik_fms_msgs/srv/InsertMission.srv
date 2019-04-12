@@ -1,0 +1,5 @@
+robotnik_fms_msgs/Mission mission
+---
+int32 id
+bool ret
+string msg

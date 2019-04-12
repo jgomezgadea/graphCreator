@@ -1,0 +1,8 @@
+int32 id
+int32 robot_id
+bool not_pick_place
+bool not_go_to
+---
+robotnik_fms_msgs/Mission[] missions
+bool ret
+string msg

@@ -1,0 +1,8 @@
+# Robot id to command
+int32 robot_id
+# List of goals 
+int32[] goals
+---
+bool success
+string message
+int32 id

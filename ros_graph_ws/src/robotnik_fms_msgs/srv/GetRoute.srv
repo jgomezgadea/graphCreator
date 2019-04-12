@@ -1,0 +1,21 @@
+int32 from_node
+int32 to_node
+---
+# list of nodes
+robotnik_fms_msgs/NodeInfo[] nodes
+
+# velocity between every node
+float64[] velocities
+# list of magnets
+int32[] magnets
+# position of the magnets
+geometry_msgs/Pose2D[] magnet_positions
+
+# ret
+bool ret
+# msg
+string msg
+
+
+
+

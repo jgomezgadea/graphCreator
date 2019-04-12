@@ -1,0 +1,10 @@
+int32 robot_id
+
+int32 mission_id
+int32 task_id
+---
+robotnik_fms_msgs/RobotStatus robot_status
+robot_local_control_msgs/Status rlc_status
+bool rlc_connected
+bool ret
+string msg

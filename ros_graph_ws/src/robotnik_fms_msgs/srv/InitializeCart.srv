@@ -1,0 +1,8 @@
+string position
+int32 cart_id
+string product
+
+---
+
+bool success
+string msg

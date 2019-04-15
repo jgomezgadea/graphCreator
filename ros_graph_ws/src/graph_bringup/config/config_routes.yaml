@@ -1,8 +1,8 @@
-max_robots: 3
+max_robots: 1
 demo: false
 
 graph_markers_scale: 1.0
 
-RobotStatusTopicName:   [/robotnik_fms_robot_0/robot_status,/robotnik_fms_robot_1/robot_status,/robotnik_fms_robot_2/robot_status]
+RobotStatusTopicName:   [/robotnik_fms_robot_0/robot_status]
 
 

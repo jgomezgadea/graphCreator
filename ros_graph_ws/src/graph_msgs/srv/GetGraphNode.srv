@@ -1,0 +1,6 @@
+int32 node_id
+---
+graph_msgs/GraphNode node
+
+bool ret
+string msg

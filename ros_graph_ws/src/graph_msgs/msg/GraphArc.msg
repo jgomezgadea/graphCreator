@@ -1,0 +1,2 @@
+int32 node_dest
+float32 max_speed

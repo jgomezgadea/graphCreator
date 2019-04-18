@@ -57,7 +57,7 @@ Graph::Graph(const char *xmlFile)
     strcpy(cXMLFile, xmlFile);
     dijkstraGraph = new Dijkstra();
     bInitialized = false;
-    nodes = 0;
+    nodes = zones = 0;
 }
 
 /*! \fn Graph::~Graph()
@@ -241,8 +241,8 @@ int Graph::deserialize(std::string *msg)
     }
 
     //
-    //  Extract the DOM tree, get the list of all the elements and report the
-    //  length as the count of elements.
+    // Extract the DOM tree, get the list of all the elements and report the
+    // length as the count of elements.
     if (errorHandler.getSawErrors())
     {
         // XERCES_STD_QUALIFIER cout << "\nErrors occurred, no output available\n" << XERCES_STD_QUALIFIER endl;
@@ -258,8 +258,9 @@ int Graph::deserialize(std::string *msg)
             // Importante procesar antes magnets que nodos, puesto que los arcos de los nodos, referencian magnets
 
             nodes = processNodesFromXML(doc);
-            ROS_INFO("Graph::deserialize: Processing XML Found %d Nodes", nodes);
-            *msg = "Graph::deserialize: Processing XML Found " + std::to_string(nodes) + " Nodes";
+            zones = processZonesFromXML(doc);
+            ROS_INFO("Graph::Deserialize: Processing XML Found %d Nodes, %d Zones", nodes, zones);
+            *msg = "Graph::Deserialize: Processing XML Found " + std::to_string(nodes) + " Nodes," + std::to_string(zones) + " Zones";
         }
     }
 
@@ -275,7 +276,87 @@ int Graph::deserialize(std::string *msg)
         return OK;
 }
 
-/*! \fn int Graph::ProcessNodesFromXML(DOMDocument *doc)
+/*! \fn int Graph::processZonesFromXML(DOMDocument *doc)
+ * 	\brief
+*/
+int Graph::processZonesFromXML(DOMDocument *doc)
+{
+    DOMNode *zone, *zoneElement;
+    XMLCh *tmpstr;
+    int ilen = 0, ilenZoneElements = 0;
+    int iZoneNumber = 0;
+    int iZoneMaxRobots = 0;
+    int iComplementary = -1;
+
+    int Nodes[200];
+
+    DOMNodeList *listZoneElements, *list;
+
+    tmpstr = XMLString::transcode("CZone");
+    list = doc->getElementsByTagName(tmpstr);
+    ilen = list->getLength();
+
+    //CMAGNETS
+    for (int i = 0; i < ilen; i++)
+    {
+        int iNumNodes = 0;
+        bool bMan = false;
+        int iNodeDest = -1;
+        iComplementary = -1;
+
+        zone = list->item(i);
+        listZoneElements = zone->getChildNodes();
+        ilenZoneElements = listZoneElements->getLength();
+        //Elements of CMagnet
+        for (int j = 0; j < ilenZoneElements; j++)
+        {
+            zoneElement = listZoneElements->item(j);
+            //
+            // NUMBER
+            if (XMLString::equals(XMLString::transcode(zoneElement->getNodeName()), "m_iIDZone"))
+            {
+                iZoneNumber = XMLString::parseInt(zoneElement->getTextContent());
+            }
+            else if (XMLString::equals(XMLString::transcode(zoneElement->getNodeName()), "m_iMaxRobots"))
+            {
+
+                iZoneMaxRobots = atof(XMLString::transcode(zoneElement->getTextContent()));
+            }
+            else if (XMLString::equals(XMLString::transcode(zoneElement->getNodeName()), "m_iCompZone"))
+            {
+                iComplementary = atoi(XMLString::transcode(zoneElement->getTextContent()));
+            }
+            else if (XMLString::equals(XMLString::transcode(zoneElement->getNodeName()), "m_bManeuver"))
+            {
+                bMan = atof(XMLString::transcode(zoneElement->getTextContent()));
+            }
+            else if (XMLString::equals(XMLString::transcode(zoneElement->getNodeName()), "m_iNodeDest"))
+            {
+
+                iNodeDest = atof(XMLString::transcode(zoneElement->getTextContent()));
+            }
+            else if (XMLString::equals(XMLString::transcode(zoneElement->getNodeName()), "m_iNode"))
+            {
+
+                Nodes[iNumNodes] = atof(XMLString::transcode(zoneElement->getTextContent()));
+
+                iNumNodes++;
+            }
+        }
+
+        dijkstraGraph->addZone(iZoneNumber, iZoneMaxRobots, bMan, iNodeDest, iComplementary);
+        for (int i = 0; i < iNumNodes; i++)
+        {
+            ROS_INFO(" Adding Node:%d to Zone:%d,Compl:%d", Nodes[i], iZoneNumber, iComplementary);
+            dijkstraGraph->addNodeToZone(Nodes[i], iZoneNumber, bMan);
+            ROS_INFO(" Added Node:%d to Zone:%d,Compl:%d", Nodes[i], iZoneNumber, iComplementary);
+        }
+    }
+
+    return ilen;
+}
+
+/*! \fn int Graph::processNodesFromXML(DOMDocument *doc)
  * 	\brief
 */
 int Graph::processNodesFromXML(DOMDocument *doc)
@@ -285,7 +366,7 @@ int Graph::processNodesFromXML(DOMDocument *doc)
     int len = 0, lenNodeElements = 0, lenArcs = 0, lenArcElements = 0;
     int i, j, k, l, m;
     double x = 0.0, y = 0.0, z = 0.0, speed = 0.0;
-    int nodeNumber = 0, nodeDst = 0;
+    int nodeNumber = 0, nodeDst = 0, nodeZone = 0;
     char *nodeName; //[50]= "\0";
     DOMNodeList *listNodeElements, *list, *listArcs, *listArcElements;
 
@@ -355,6 +436,10 @@ int Graph::processNodesFromXML(DOMDocument *doc)
             else if (XMLString::equals(XMLString::transcode(nodeElement->getNodeName()), "m_sName"))
             { // NODE NAME
                 nodeName = XMLString::transcode(nodeElement->getTextContent());
+            }
+            else if (XMLString::equals(XMLString::transcode(nodeElement->getNodeName()), "m_iZone"))
+            { // ZONE
+                nodeZone = XMLString::parseInt(nodeElement->getTextContent());
             }
 
             else if (XMLString::equals(XMLString::transcode(nodeElement->getNodeName()), "m_ArcList"))
@@ -434,6 +519,30 @@ int Graph::getNodes()
 int Graph::getRoute(int from, int to, vector<int> *route)
 {
     return dijkstraGraph->getRoute(from, to, route);
+}
+
+/*! \fn int Graph::GetNodesUsed(vector<Node *> *route)
+ * 	\brief Gets the list of nodes used
+*/
+bool Graph::getNodesUsed(std::vector<Node *> *route)
+{
+    return dijkstraGraph->getNodesUsed(route);
+}
+
+/*! \fn int Graph::ReserveNode(int iRobot,int iIDNode)
+ * 	\brief Reserve Node
+*/
+bool Graph::reserveNode(int iRobot, int iIDNode)
+{
+    return dijkstraGraph->reserveNode(iRobot, iIDNode);
+}
+
+/*! \fn int Graph::UnBlockAll(int iRobot)
+ * 	\brief UnBlock all nodes
+*/
+bool Graph::unBlockAll(int iRobot)
+{
+    return dijkstraGraph->unBlockAll(iRobot);
 }
 
 /*! \fn int Graph::getRoute(int from, int to, vector<geometry_msgs::Pose2D> *nodes){
@@ -554,6 +663,36 @@ int Graph::getNodePosition(int num_node, geometry_msgs::Pose2D *pos)
         return 0;
     }
     return -1;
+}
+
+/*! \fn Node* Dijkstra::CheckNodeFree(int idNode, int idRobot)
+ * true if node Free, false if used or reserved by a robot
+*/
+bool Graph::checkNodeFree(int idNode, int idRobot)
+{
+    return dijkstraGraph->checkNodeFree(idNode, idRobot);
+}
+
+/*! \fn Node* Dijkstra::CheckNodesFree(std::vector<int> idNode, int idRobot)
+ * true if node Free, false if used or reserved by a robot
+*/
+bool Graph::checkNodesFree(std::vector<int> vNodesId, int idRobot)
+{
+    bool bfree = true;
+    for (int i = 0; i < vNodesId.size(); i++)
+    {
+        if (!dijkstraGraph->checkNodeFree(vNodesId[i], idRobot))
+            bfree = false;
+    }
+    return bfree;
+}
+
+/*! \fn Node* Dijkstra::CheckZoneFree(int idZone, int idRobot)
+ * true if Zone Free, false if used or reserved by a robot
+*/
+bool Graph::checkZoneFree(int idZone, int idRobot)
+{
+    return dijkstraGraph->checkZoneFree(idZone, idRobot);
 }
 
 /*! \fn Node* Dijkstra::getNode(unsigned int nodeID)

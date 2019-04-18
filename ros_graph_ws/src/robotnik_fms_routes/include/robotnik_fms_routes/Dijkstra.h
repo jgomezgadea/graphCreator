@@ -92,6 +92,8 @@ class Node
 	bool bUsed;
 	//! vector de arcos a nodos adyacentes
 	std::vector<Arc> vAdjacent;
+	//! vector de Zonas
+	std::vector<int> viZones;
 	//! Coordenadas del nodo
 	double dX, dY, dZ;
 	//! Theta
@@ -100,6 +102,10 @@ class Node
 	std::string sFrame_id;
 	//! Nombre del nodo
 	char cName[MAX_STRING_LENGTH];
+	//! iRobot
+	int iRobot;
+	//! iRobot Reserved
+	int iResRobot;
 
   public:
 	//! Constructor
@@ -109,6 +115,8 @@ class Node
 
 		iNode = node;
 		iParent = NO_PARENT;
+		iRobot = -1;
+		iResRobot = -1;
 
 		dX = x;
 		dY = y;
@@ -300,6 +308,20 @@ class Node
 	{
 		return cName;
 	}
+
+	//! Adds a new Zone
+	//! return -1 if the node already exists
+	//! return 0 if OK
+	int addZoneToNode(int iZone)
+	{
+		for (int i = 0; i < (int)viZones.size(); i++)
+		{
+			if (viZones[i] == iZone)
+				return -1;
+		}
+		viZones.push_back(iZone);
+		return 0;
+	}
 };
 
 //! Class Dijkstra
@@ -488,6 +510,75 @@ class Dijkstra
 		}
 	};
 
+	//! Class Zone
+	class Zone
+	{
+	  public:
+		//! ID Zone
+		int iIDZone;
+		//! Max Robots in Zone
+		int iMaxRobots;
+		//! Zone Type
+		//! =0 o 1 Zona Exclusion Normal
+		//! =2 No Maniobra, Movimientos con origen y destino dentro de la misma zona generaran una ruta con un paso
+		//!     intermedio por el nodo destino zona.
+		//! =3 ambos casos
+		bool bMan;
+		//! Node Dest Zone cuando de devuelva un carro a la zona primero se envia aqui, tambien sera el nodo intermedio
+		//! para los movimientos con origen y destino dentro de la misma zona de no maniobra
+		int iNodeDest;
+
+		//! complementary Zone
+		//!
+		int iComplementary;
+		//! Vector Lista Nodos que contiene la zona
+		std::vector<Node *> vpNodes;
+
+		Zone(int iZ)
+		{
+			iIDZone = iZ;
+			iMaxRobots = 1;
+			bMan = false;
+			iNodeDest = -1;
+		}
+
+		Zone(int iZ, int iMaxR)
+		{
+			iIDZone = iZ;
+			iMaxRobots = iMaxR;
+			bMan = false;
+			iNodeDest = -1;
+		}
+
+		Zone(int iZ, int iMaxR, bool bMan, int iNodeD, int iComp)
+		{
+			iIDZone = iZ;
+			iMaxRobots = iMaxR;
+			bMan = false;
+			iNodeDest = iNodeD;
+			iComplementary = iComp;
+		}
+
+		~Zone()
+		{
+		}
+
+		//! Adds a new Zone
+		//! return -1 if the node already exists
+		//! return 0 if OK
+		int addNodeToZone(Node *pNode, bool bMan)
+		{
+			for (int i = 0; i < (int)vpNodes.size(); i++)
+			{
+				if (vpNodes[i]->iNode == pNode->iNode)
+					return -1;
+			}
+			vpNodes.push_back(pNode);
+			pNode->addZoneToNode(this->iIDZone);
+			return 0;
+		}
+	};
+
 	//! Class PointerNode se utiliza para poder meter las referencias de los nodos en una cola con prioridad
 	class PointerNode
 	{
@@ -533,6 +624,9 @@ class Dijkstra
 	//! Vector con los nodos del grafo
 	std::vector<Node> vNodes;
 
+	//! Zones Vector
+	std::vector<Zone> vZones;
+
   public:
 	//! Public constructor
 	Dijkstra();
@@ -558,8 +652,13 @@ class Dijkstra
 	//! Get list of nodes used or blocked
 	bool getNodesUsed(std::vector<Node *> *route);
 
+	bool reserveNode(int iRobot, int iIDNode);
+
 	//! GetNearestNode
 	int getNearestNodeID(double x, double y, string frame);
+
+	//! bool unBlockAll(int iRobot)
+	bool unBlockAll(int iRobot);
 
 	//! Adds a new node
 	int addNode(int node, double x, double y, double z, double theta, std::string frame, char *name);
@@ -582,8 +681,12 @@ class Dijkstra
 	Node *getNode(unsigned int node_id);
 	//! Add Node to Zone
 	int addNodeToZone(int iIDNode, int iIDZone, bool bMan);
+	//! Add Zone to Graph
+	int addZone(int iIDZone, int iMaxRobots, bool bMan, int iNodeDest, int iComp);
 
 	bool checkNodeFree(int iIDNode, int iIDRobot);
+	bool checkZoneFree(int iIDZone, int iIDRobot);
+	bool checkCompZoneFree(int iIDZone, int iIDRobot);
 
 	//! Get Node From ID
 	Node *getNodeFromID(int iIDNode);

@@ -184,21 +184,47 @@ class GraphNode
     //! Reads params from params server
     void rosReadParams();
 
+    //! Get Nodes Used
+    bool getNodesUsed(std::vector<Node *> *route);
+
+    //! True if it is posible to block/free node idNode by Robot iRobot
+    bool checkNode(bool bBlock, int idNode, int iRobot, string *msg);
+
+    //! Idem CheckNode but blocking/unblocking node
+    bool blockNode(bool bBlock, int idNode, int iRobot, string *msg);
+
+    //! Idem CheckNode but blocking/unblocking node
+    bool reserveNode(bool bReserve, int idNode, int iRobot, string *msg);
+
     void copyNodeToMessage(Node *Or, robotnik_fms_msgs::NodeInfo *Dest);
     void copyMessageToNode(robotnik_fms_msgs::NodeInfo *Or, Node *Dest);
 
     // Examples
     // void topicCallback(const std_msgs::StringConstPtr& message); // Callback for a subscriptor
-    bool routeServiceServerCb(robotnik_fms_msgs::GetRoute::Request &request, robotnik_fms_msgs::GetRoute::Response &response);             // Callback for a service server
-    bool reloadGraphServiceServerCb(robotnik_fms_msgs::ReloadGraph::Request &request, robotnik_fms_msgs::ReloadGraph::Response &response); // Callback for reloading the Graph
-    bool getNodeInfoServiceServerCb(robotnik_fms_msgs::GetNodeInfo::Request &request, robotnik_fms_msgs::GetNodeInfo::Response &response); // Callback for getting the node info
+    bool routeServiceServerCb(robotnik_fms_msgs::GetRoute::Request &request, robotnik_fms_msgs::GetRoute::Response &response);                      // Callback for a service server
+    bool reloadGraphServiceServerCb(robotnik_fms_msgs::ReloadGraph::Request &request, robotnik_fms_msgs::ReloadGraph::Response &response);          // Callback for reloading the Graph
+    bool getNodeInfoServiceServerCb(robotnik_fms_msgs::GetNodeInfo::Request &request, robotnik_fms_msgs::GetNodeInfo::Response &response);          // Callback for getting the node info
+    bool blockNodeServiceServerCb(robotnik_fms_msgs::BlockNode::Request &request, robotnik_fms_msgs::BlockNode::Response &response);                // Callback for getting the node info
+    bool getBlockedNodeServiceServerCb(robotnik_fms_msgs::GetBlockedNode::Request &request, robotnik_fms_msgs::GetBlockedNode::Response &response); // Callback for getting the node info
+
+    void status_subscriberCB(robotnik_fms_msgs::RobotStatus msg);
 
     void timerPublishCallback(const ros::TimerEvent &);
 
     // Status Publisher
+    ros::Publisher NodeUsedPublisher;
+    ros::Publisher NodeIDUsedPublisher;
     ros::Publisher GraphPublisher;
 
+    std::vector<ros::Subscriber> vRobotStatusSubs;
+    std::vector<robotnik_fms_msgs::RobotStatus> vRobotStatus;
+    std::vector<std::string> vRobotStatusTopicName;
+
+    int iMaxRobots;
+
+    ros::Publisher markers_pub_nodes_used;
     ros::Publisher markers_pub_graph;
+    ros::Publisher markers_pub_robots;
 
     //! Diagnostic updater callback
     void diagnosticUpdate(diagnostic_updater::DiagnosticStatusWrapper &stat);
@@ -375,6 +401,17 @@ GraphNode::GraphNode(ros::NodeHandle h) : nh_(h), pnh_("~")
     state = robotnik_msgs::State::INIT_STATE;
     // Realizar para cada una de las clases derivadas
     component_name.assign("GraphNode");
+
+    vRobotStatusSubs.resize(iMaxRobots);
+    vRobotStatus.resize(iMaxRobots);
+
+    for (int i = 0; i < iMaxRobots; i++)
+    {
+        vRobotStatus[i].id = -1;
+    }
+
+    vRobotStatusTopicName.resize(iMaxRobots);
+    vLastNodeDemoMode.resize(iMaxRobots);
 
     pthread_mutex_init(&mutexGraph, NULL);
 }
@@ -690,6 +727,8 @@ int GraphNode::rosSetup()
 
     // Publishers
     state_publisher_ = pnh_.advertise<robotnik_fms_msgs::State>("state", 1);
+    NodeUsedPublisher = pnh_.advertise<robotnik_fms_msgs::NodesInfo>("nodes_used", 1);
+    NodeIDUsedPublisher = pnh_.advertise<robotnik_fms_msgs::NodesID>("nodes_id_used", 1);
     GraphPublisher = pnh_.advertise<robotnik_fms_msgs::NodesInfo>("graph", 1);
     graph_scale_publisher_ = pnh_.advertise<std_msgs::Float32>("graph_marker_scale", 1);
 
@@ -699,10 +738,14 @@ int GraphNode::rosSetup()
     route_service_server_ = pnh_.advertiseService("get_route", &GraphNode::routeServiceServerCb, this);
     reload_graph_service_server_ = pnh_.advertiseService("reload_graph", &GraphNode::reloadGraphServiceServerCb, this);
     get_node_info_service_server_ = pnh_.advertiseService("get_node_info", &GraphNode::getNodeInfoServiceServerCb, this);
+    block_node_service_server_ = pnh_.advertiseService("block_node", &GraphNode::blockNodeServiceServerCb, this);
+    check_blocked_node_service_server_ = pnh_.advertiseService("get_blocked_node", &GraphNode::getBlockedNodeServiceServerCb, this);
 
     timerPublish = pnh_.createTimer(ros::Duration(dGraphFreq_), &GraphNode::timerPublishCallback, this);
 
+    markers_pub_nodes_used = pnh_.advertise<visualization_msgs::MarkerArray>("graph_nodes_used_marker_array", 10);
     markers_pub_graph = pnh_.advertise<visualization_msgs::MarkerArray>("graph_marker_array", 10);
+    markers_pub_robots = pnh_.advertise<visualization_msgs::MarkerArray>("graph_marker_robots", 10);
 
     // Sets up the diagnostic updater
     diagnostic_ = new diagnostic_updater::Updater();
@@ -714,7 +757,29 @@ int GraphNode::rosSetup()
     alarm_pub_ = pnh_.advertise<robotnik_msgs::alarmsmonitor>("/monitoring_alarms/alarms", 1);
     timerAlarms = pnh_.createTimer(ros::Duration(0.2), &GraphNode::timerPublishAlarms, this);
 
+    for (int i = 0; i < iMaxRobots; i++)
+    {
+        std::string msg = " Suscribing to" + vRobotStatusTopicName[i];
+        PUSH_EVENT(msg);
+        vRobotStatusSubs[i] = pnh_.subscribe<robotnik_fms_msgs::RobotStatus>(vRobotStatusTopicName[i].c_str(), 1, &GraphNode::status_subscriberCB, this);
+    }
+
     return OK;
+}
+
+void GraphNode::status_subscriberCB(robotnik_fms_msgs::RobotStatus msg)
+{
+    //ROS_INFO("Received %d",msg.id);
+    if ((msg.id >= 0) && (msg.id < iMaxRobots))
+    {
+        vRobotStatus[msg.id] = msg;
+        graph_route->reserveNode(msg.id, msg.node);
+        //ROS_INFO("id:%d node:%d topic:%s",msg.id,msg.node,);
+    }
+    else
+    {
+        PUSH_ERROR("Received msg from Robot:" + std::to_string(msg.id) + " Check robot configuration launcher");
+    }
 }
 
 /*!	\fn void GraphNode::rosReadParams
@@ -726,6 +791,10 @@ void GraphNode::rosReadParams()
     pnh_.param<string>("graph_file", graph_file_, "route.xml");
     pnh_.param("display_alarm_monitor", iDisplay_Alarm_Monitor_, 7);
     ROS_INFO("GraphNode::rosReadParams: graph file = %s", graph_file_.c_str());
+
+    pnh_.getParam("RobotStatusTopicName", vRobotStatusTopicName);
+    pnh_.param("max_robots", iMaxRobots, 1);
+    pnh_.param("max_robots", iMaxRobots, 1);
 
     pnh_.param("graph_public_freq", dGraphFreq_, 2.0);
 
@@ -775,6 +844,106 @@ void GraphNode::rosPublish()
 
     visualization_msgs::MarkerArray marker_array_robots_msg;
 
+    for (int i = 0; i < vRobotStatus.size(); i++)
+    {
+
+        robotnik_fms_msgs::RobotStatus RS = vRobotStatus[i];
+
+        //marker_array_robots_msg.markers.resize(iMaxRobots);
+        //marker_array_robots_msg.markers.clear();
+
+        visualization_msgs::Marker MRobot;
+
+        if (RS.id >= 0)
+        {
+            MRobot.header.stamp = ros::Time::now();
+            MRobot.header.frame_id = RS.map;
+            MRobot.ns = "basic_shapes";
+            MRobot.id = i;
+            MRobot.type = visualization_msgs::Marker::ARROW;
+            MRobot.color.r = 0.0f;
+            MRobot.color.g = 1.0f;
+            MRobot.color.b = 1.0f;
+            MRobot.color.a = 1.0f;
+
+            MRobot.action = visualization_msgs::Marker::ADD;
+            MRobot.pose.position.x = RS.position.position.x / fGraph_markers_scale;
+            MRobot.pose.position.y = RS.position.position.y / fGraph_markers_scale;
+            MRobot.pose.position.z = RS.position.position.z;
+
+            MRobot.pose.orientation = tf::createQuaternionMsgFromYaw(RS.theta);
+            //MRobot.pose.orientation.x = 0.0;
+            //MRobot.pose.orientation.y = 0.0;
+            //MRobot.pose.orientation.z = 0.0;
+            //MRobot.pose.orientation.w = 1.0;
+
+            MRobot.scale.x = 0.4;
+            MRobot.scale.y = 0.4;
+            MRobot.scale.z = 0.4;
+
+            MRobot.lifetime = ros::Duration((1.0 / dGraphFreq_) * 10.0);
+
+            stringstream streamx;
+            streamx << fixed << setprecision(2) << RS.position.position.x;
+            string x = streamx.str();
+
+            stringstream streamy;
+            streamy << fixed << setprecision(2) << RS.position.position.y;
+            string y = streamy.str();
+
+            stringstream streamt;
+            streamt << fixed << setprecision(2) << RS.theta;
+            string T = streamt.str();
+
+            stringstream streamb;
+            streamb << fixed << setprecision(2) << RS.battery;
+            string B = streamb.str();
+
+            std::string txt = "R:" + std::to_string(i) + "X" + x +
+                              "Y" + y +
+                              "T" + T +
+                              "N" + std::to_string(RS.node) +
+                              "B" + B;
+
+            if (!RS.connected)
+                txt = txt + "-NC-";
+
+            //" N:" + std::to_string(graph_route->dijkstraGraph->GetNearestNodeID(RS.position.position.x,RS.position.position.y,RS.map));
+
+            //ROS_INFO("----------%s",txt.c_str());
+
+            visualization_msgs::Marker MText;
+            MText.header.stamp = ros::Time::now();
+            MText.header.frame_id = RS.map;
+            MText.ns = "basic_shapes";
+            MText.id = i + 1000;
+            MText.type = visualization_msgs::Marker::TEXT_VIEW_FACING;
+            MText.action = visualization_msgs::Marker::ADD;
+            MText.text = txt;
+            MText.pose.position.x = RS.position.position.x / fGraph_markers_scale;
+            MText.pose.position.y = RS.position.position.y / fGraph_markers_scale;
+            MText.pose.position.z = RS.position.position.z + 1.5 + RS.id * 0.5;
+
+            MText.pose.orientation.x = 0.0;
+            MText.pose.orientation.y = 0.0;
+            MText.pose.orientation.z = 0.0;
+            MText.pose.orientation.w = 1.0;
+            MText.scale.x = 0.3;
+            MText.scale.y = 0.3;
+            MText.scale.z = 0.3;
+            MText.color.r = 1.0f;
+            MText.color.g = 0.0f;
+            MText.color.b = 0.5f;
+            MText.color.a = 1.0f;
+            MText.lifetime = ros::Duration((1.0 / dGraphFreq_) * 10.0);
+
+            marker_array_robots_msg.markers.push_back(MRobot);
+            marker_array_robots_msg.markers.push_back(MText);
+        }
+    }
+
+    markers_pub_robots.publish(marker_array_robots_msg);
+
     robotnik_fms_msgs::State msg;
 
     // STATE
@@ -799,7 +968,11 @@ void GraphNode::rosPublish()
     robotnik_fms_msgs::NodesInfo Nodes;
     robotnik_fms_msgs::NodesID NodesId;
 
+    graph_route->getNodesUsed(&route);
+
     //ROS_INFO(" ROUTE ------------ Size:%d",route.size());
+
+    std::string text_nodes_used;
 
     if (route.size() > 0)
     {
@@ -816,6 +989,16 @@ void GraphNode::rosPublish()
             Nodes.Nodes.push_back(Node_inf);
             std::string sID = "ID:" + std::to_string(nod->iNode);
 
+            if (nod->iRobot >= 0)
+            {
+                sID = sID + "/R:" + std::to_string(nod->iRobot);
+                text_nodes_used = text_nodes_used + sID;
+            }
+            if (nod->iResRobot >= 0)
+            {
+                sID = sID + "/Res:" + std::to_string(nod->iResRobot);
+                text_nodes_used = text_nodes_used + sID;
+            }
             NodesId.id.push_back(sID);
         }
 
@@ -834,6 +1017,7 @@ void GraphNode::rosPublish()
             marker_array_msg.markers[i].id = i + 2000;
             marker_array_msg.markers[i].type = shape;
             marker_array_msg.markers[i].color.r = 0.0f + nod->iNode;
+            marker_array_msg.markers[i].color.g = 1.0f + nod->iRobot;
             marker_array_msg.markers[i].color.b = 0.0f + nod->iNode;
             marker_array_msg.markers[i].color.a = 1.0f + nod->iNode;
 
@@ -851,11 +1035,47 @@ void GraphNode::rosPublish()
             marker_array_msg.markers[i].scale.z = 0.2;
 
             marker_array_msg.markers[i].lifetime = ros::Duration((1.0 / dGraphFreq_) * 10.0);
+
+            if (nod->iRobot >= 0)
+            {
+                std::string txt = "";
+
+                visualization_msgs::Marker MText;
+                MText.header.stamp = ros::Time::now();
+                MText.header.frame_id = nod->sFrame_id;
+                MText.ns = "basic_shapes";
+                MText.id = i + 1000;
+                MText.type = visualization_msgs::Marker::TEXT_VIEW_FACING;
+                MText.action = visualization_msgs::Marker::ADD;
+                MText.text = txt + std::to_string(nod->iRobot);
+                MText.pose.position.x = nod->dX / fGraph_markers_scale;
+                MText.pose.position.y = nod->dY / fGraph_markers_scale;
+                MText.pose.position.z = nod->dZ + .3;
+
+                MText.pose.orientation.x = 0.0;
+                MText.pose.orientation.y = 0.0;
+                MText.pose.orientation.z = 0.0;
+                MText.pose.orientation.w = 1.0;
+                MText.scale.x = 0.3;
+                MText.scale.y = 0.3;
+                MText.scale.z = 0.3;
+                MText.color.r = 1.0f;
+                MText.color.g = 0.0f;
+                MText.color.b = 1.0f;
+                MText.color.a = 1.0f;
+                MText.lifetime = ros::Duration((1.0 / dGraphFreq_) * 10.0);
+                marker_array_msg.markers.push_back(MText);
+            }
         }
+        markers_pub_nodes_used.publish(marker_array_msg);
+
+        NodeUsedPublisher.publish(Nodes);
+        NodeIDUsedPublisher.publish(NodesId);
     }
     else
     {
         NodesId.id.push_back("-");
+        NodeIDUsedPublisher.publish(NodesId);
     }
     visualization_msgs::MarkerArray marker_array_msg;
     //visualization_msgs::MarkerArray marker_array_arrow_msg;
@@ -871,6 +1091,13 @@ void GraphNode::rosPublish()
         {
             robotnik_fms_msgs::NodeInfo Node_inf;
             Node nod = graph_route->dijkstraGraph->vNodes[i];
+
+            std::string sZones = "Z";
+            for (int j = 0; j < nod.viZones.size(); j++)
+            {
+                Node_inf.zones.push_back(nod.viZones[j]);
+                sZones = sZones + std::to_string(nod.viZones[j]);
+            }
 
             copyNodeToMessage(&nod, &Node_inf);
 
@@ -906,6 +1133,16 @@ void GraphNode::rosPublish()
             float fB = 1.0;
             float fA = 1.0;
 
+            /* TODO Change color depending on action
+
+            if (nod.bLoad)
+                fR = 0.5;
+            if (nod.bUnload)
+                fG = 0.5;
+            if (nod.bCharge)
+                fB = 0.5;
+                */
+
             M.scale.x = scale;      //+0.1*nod.bStop;
             M.scale.y = scale;      //+0.1*nod.bStop;
             M.scale.z = scale * .2; //+0.1*nod.bStop;
@@ -917,6 +1154,14 @@ void GraphNode::rosPublish()
             marker_array_msg.markers.push_back(M);
             iID++;
 
+            std::string txt;
+            if (sZones.length() > 1)
+                txt = sZones + ":";
+            else
+                txt = "";
+
+            if (txt != "")
+                txt = txt + ":";
             visualization_msgs::Marker MText;
             MText.header.stamp = ros::Time::now();
             MText.header.frame_id = nod.sFrame_id;
@@ -924,7 +1169,11 @@ void GraphNode::rosPublish()
             MText.id = iID;
             MText.type = visualization_msgs::Marker::TEXT_VIEW_FACING;
             MText.action = visualization_msgs::Marker::ADD;
-            std::string txt = std::string(nod.cName); //std::to_string(nod.iNode);
+            txt = txt + std::string(nod.cName); //std::to_string(nod.iNode);
+            if (nod.iResRobot >= 0)
+                txt = txt + " Res:" + std::to_string(nod.iResRobot);
+            if (nod.iRobot >= 0)
+                txt = txt + " R:" + std::to_string(nod.iRobot);
             MText.text = txt;
             //ROS_INFO("%s NodesUsed:%s",txt.c_str(),text_nodes_used.c_str());
             MText.pose.position.x = nod.dX / fGraph_markers_scale;
@@ -956,8 +1205,10 @@ void GraphNode::rosPublish()
                 if (nodDest != NULL)
                 {
                     //ROS_INFO("Adding Arc:%d from Node:%d[%f,%f]F:%s name:%s to Node:%d[%f,%f]F:%s name:%s",j,nod.iNode,nod.dX,nod.dY,nod.sFrame_id.c_str(),std::string(nod.cName).c_str(),nodDest->iNode,nodDest->dX,nodDest->dY,nodDest->sFrame_id.c_str(),std::string(nodDest->cName).c_str());
+
                     if (nod.sFrame_id == nodDest->sFrame_id)
                     {
+
                         visualization_msgs::Marker M;
 
                         // tf::TransformListener listener;
@@ -1038,6 +1289,8 @@ void GraphNode::copyNodeToMessage(Node *Or, robotnik_fms_msgs::NodeInfo *Dest)
     Dest->coord_z = Or->dZ;
     Dest->position.pose.theta = Or->dTheta;
     Dest->position.header.frame_id = Or->sFrame_id;
+    Dest->robot = Or->iRobot;
+    Dest->robot_reserved = Or->iResRobot;
     Dest->name = std::string(Or->cName);
 }
 
@@ -1056,7 +1309,17 @@ void GraphNode::copyMessageToNode(robotnik_fms_msgs::NodeInfo *Or, Node *Dest)
     Dest->dZ = Or->coord_z;
     Dest->dTheta = Or->position.pose.theta;
     Dest->sFrame_id = Or->position.header.frame_id;
+    Dest->iRobot = Or->robot;
+    Dest->iResRobot = Or->robot_reserved;
     strcpy(Dest->cName, Or->name.c_str());
+}
+
+/*! \fn bool GetNodesUsed(std::vector<Node*>*route)
+ *  \brief Get Nodes Used
+ */
+bool GraphNode::getNodesUsed(std::vector<Node *> *route)
+{
+    return graph_route->getNodesUsed(route);
 }
 
 /*!	\fn void GraphNode::diagnosticUpdate(diagnostic_updater::DiagnosticStatusWrapper &stat)
@@ -1186,6 +1449,289 @@ bool GraphNode::reloadGraphServiceServerCb(robotnik_fms_msgs::ReloadGraph::Reque
     return true;
 }
 
+//! True if it is posible to block/free node idNode by Robot iRobot
+bool GraphNode::checkNode(bool bBlock, int idNode, int iRobot, string *msg)
+{
+    Node *node_info = NULL;
+    node_info = graph_route->getNode(idNode);
+    if (node_info == NULL)
+    {
+        *msg = "NOT FOUND Node:" + std::to_string(idNode);
+        return false;
+    }
+
+    if (bBlock)
+    {
+
+        if (!graph_route->checkNodeFree(idNode, iRobot))
+        {
+            *msg = "Node:" + std::to_string(idNode) + " ALREADY used by other Robot:" + std::to_string(node_info->iRobot);
+            return false;
+        }
+
+        //if (node_info->bBlocked){
+        if (node_info->iRobot >= 0)
+        {
+            if (node_info->iRobot == iRobot)
+            {
+                // Already Blocked by this robot
+                *msg = "Node:" + std::to_string(idNode) + " ALREADY Blocked by Robot:" + std::to_string(iRobot);
+                return true;
+            }
+            else
+            {
+                // Already Blocked by other robot
+                *msg = "Node:" + std::to_string(idNode) + " ALREADY Blocked by other Robot:" + std::to_string(node_info->iRobot);
+                return false;
+            }
+        }
+        else
+        {
+            // Block OK
+            *msg = "Node:" + std::to_string(idNode) + " Block Possible by Robot:" + std::to_string(node_info->iRobot);
+            return true;
+        }
+    }
+    else
+    {
+        //if (node_info->bBlocked){
+        if (node_info->iRobot >= 0)
+        {
+            // Unblock OK
+            if (node_info->iRobot == iRobot)
+            {
+                *msg = "Node:" + std::to_string(idNode) + " Unblock Possible by Robot:%d " + std::to_string(node_info->iRobot);
+                return true;
+            }
+            else
+            {
+                // Not Blocked by this robot
+                *msg = "Trying to Unblock Node:" + std::to_string(idNode) + " by Robot " + std::to_string(iRobot) + " but BLOCKED by Robot:" + std::to_string(node_info->iRobot);
+                return false;
+            }
+        }
+        else
+        {
+            // Not Blocked
+            *msg = "Trying to Unblock Node:" + std::to_string(idNode) + "by Robot " + std::to_string(iRobot) + "but Already Unblocked ";
+            return true;
+        }
+    }
+}
+
+bool GraphNode::reserveNode(bool bReserve, int idNode, int iRobot, string *msg)
+{
+    Node *node_info = NULL;
+    node_info = graph_route->getNode(idNode);
+    if (node_info == NULL)
+    {
+        *msg = "NOT FOUND Node:" + std::to_string(idNode);
+        return false;
+    }
+    if (bReserve)
+    {
+
+        if (!graph_route->checkNodeFree(idNode, iRobot))
+        {
+            *msg = "Not Possible to Reserve Node:" + std::to_string(idNode) + " ALREADY used by other Robot:" + std::to_string(node_info->iRobot);
+            return false;
+        }
+        //if (node_info->bReserved){
+        if (node_info->iResRobot >= 0)
+        {
+            if (node_info->iResRobot == iRobot)
+            {
+                // Already Reserved by this robot
+                *msg = "Node:" + std::to_string(idNode) + " ALREADY Reserved by Robot:" + std::to_string(node_info->iRobot);
+                return true;
+            }
+            else
+            {
+                // Already Reserved by other robot
+                *msg = "Node:" + std::to_string(idNode) + " ALREADY Reserved by other Robot:" + std::to_string(node_info->iRobot);
+                return false;
+            }
+        }
+        else
+        {
+            // Reserved OK
+            *msg = "Node:" + std::to_string(idNode) + " Reserved OK by Robot:" + std::to_string(iRobot);
+            graph_route->reserveNode(iRobot, idNode);
+            return true;
+        }
+    }
+    else
+    {
+        //if (node_info->bReserved){
+        if (node_info->iResRobot >= 0)
+        {
+            // Unblock OK
+            if (node_info->iRobot == iRobot)
+            {
+                *msg = "Node:" + std::to_string(idNode) + " Unreserved OK by Robot:%d " + std::to_string(iRobot);
+                graph_route->reserveNode(-1, idNode);
+                //node_info->bReserved=false;
+                return true;
+            }
+            else
+            {
+                // Not Reserved by this robot
+                *msg = "Trying to Reserve Node:" + std::to_string(idNode) + " by Robot " + std::to_string(iRobot) + " but Reserved by Robot:" + std::to_string(node_info->iRobot);
+                return false;
+            }
+        }
+        else
+        {
+            // Not Reserved
+            *msg = "Trying to Unreserve Node:" + std::to_string(idNode) + "by Robot " + std::to_string(iRobot) + "but Already Unreserved ";
+            return true;
+        }
+    }
+}
+
+bool GraphNode::blockNode(bool bBlock, int idNode, int iRobot, string *msg)
+{
+    Node *node_info = NULL;
+
+    /*
+    if (idNode==-1) {
+        graph_route->UnBlockAll(iRobot);
+        return true;
+    }*/
+
+    node_info = graph_route->getNode(idNode);
+    if (node_info == NULL)
+    {
+        *msg = "NOT FOUND Node:" + std::to_string(idNode);
+        return false;
+    }
+    if (bBlock)
+    {
+        if (!graph_route->checkNodeFree(idNode, iRobot))
+        {
+            *msg = "Not Possible to Block Node:" + std::to_string(idNode) + " ALREADY used by other Robot:" + std::to_string(node_info->iRobot);
+            return false;
+        }
+        if (node_info->iRobot >= 0)
+        {
+            //if (node_info->bBlocked){
+            if (node_info->iRobot == iRobot)
+            {
+                // Already Blocked by this robot
+                *msg = "Node:" + std::to_string(idNode) + " ALREADY Blocked by Robot:" + std::to_string(node_info->iRobot);
+                return true;
+            }
+            else
+            {
+                // Already Blocked by other robot
+                *msg = "Node:" + std::to_string(idNode) + " ALREADY Blocked by other Robot:" + std::to_string(node_info->iRobot);
+                return false;
+            }
+        }
+        else
+        {
+            // Block OK
+            *msg = "Node:" + std::to_string(idNode) + " Blocked OK by Robot:" + std::to_string(iRobot);
+            node_info->iRobot = iRobot;
+            //    node_info->bBlocked=true;
+            vLastNodeDemoMode[iRobot] = idNode;
+            if (bDemo_)
+                graph_route->reserveNode(iRobot, idNode);
+            return true;
+        }
+    }
+    else
+    {
+        //if (node_info->bBlocked){
+        if (node_info->iRobot >= 0)
+        {
+            // Unblock OK
+            if (node_info->iRobot == iRobot)
+            {
+                *msg = "Node:" + std::to_string(idNode) + " Unblocked OK by Robot:%d " + std::to_string(iRobot);
+                node_info->iRobot = -1;
+                //node_info->bBlocked=false;
+                return true;
+            }
+            else
+            {
+                // Not Blocked by this robot
+                *msg = "Trying to Unblock Node:" + std::to_string(idNode) + " by Robot " + std::to_string(iRobot) + " but BLOCKED by Robot:" + std::to_string(node_info->iRobot);
+                return false;
+            }
+        }
+        else
+        {
+            // Not Blocked
+            *msg = "Trying to Unblock Node:" + std::to_string(idNode) + "by Robot " + std::to_string(iRobot) + "but Already Unblocked ";
+            return true;
+        }
+    }
+}
+
+// Callback handler for the service server
+bool GraphNode::blockNodeServiceServerCb(robotnik_fms_msgs::BlockNode::Request &request, robotnik_fms_msgs::BlockNode::Response &response)
+{
+    std::string msg = "BlockNodeService Robot:" + std::to_string(request.robot_id) +
+                      " to block:" + std::to_string(request.block) /*+
+            " to reserve:" + std::to_string(request.reserve)*/
+                      + " Nodes:";
+    std::string nodes = "";
+    for (int i = 0; i < request.node_id.size(); i++)
+        nodes = nodes + std::to_string(request.node_id[i]) + ",";
+    msg = msg + nodes;
+
+    pthread_mutex_lock(&mutexGraph);
+
+    for (int i = 0; i < request.node_id.size(); i++)
+    {
+        std::string msg_local;
+        bool bret = checkNode(request.block, request.node_id[i], request.robot_id, &msg_local);
+        if (!bret)
+        {
+            response.ret = false;
+            response.msg = msg + " Not Possible:" + msg_local;
+            PUSH_ERROR(response.msg);
+
+            pthread_mutex_unlock(&mutexGraph);
+            return false;
+        }
+    }
+
+    for (int i = 0; i < request.node_id.size(); i++)
+    {
+        std::string msg_local;
+        bool bret = blockNode(request.block, request.node_id[i], request.robot_id, &msg_local);
+        if (!bret)
+        {
+            response.ret = false;
+            response.msg = msg + " Not Possible:" + msg_local;
+            PUSH_ERROR(response.msg);
+            pthread_mutex_unlock(&mutexGraph);
+            return false;
+        }
+        else
+        {
+            msg = msg + " " + msg_local;
+            //ROS_INFO("%s",msg.c_str());
+        }
+    }
+    response.ret = true;
+    response.msg = msg;
+    //PUSH_EVENT(response.msg);
+    pthread_mutex_unlock(&mutexGraph);
+    return true;
+}
+
+// Callback handler for the service server
+bool GraphNode::getBlockedNodeServiceServerCb(robotnik_fms_msgs::GetBlockedNode::Request &request, robotnik_fms_msgs::GetBlockedNode::Response &response)
+{
+    pthread_mutex_lock(&mutexGraph);
+    response.blocked = !graph_route->checkNodesFree(request.node_id, request.robot_id);
+    pthread_mutex_unlock(&mutexGraph);
+    return true;
+}
+
 // Callback handler for the service server
 bool GraphNode::getNodeInfoServiceServerCb(robotnik_fms_msgs::GetNodeInfo::Request &request, robotnik_fms_msgs::GetNodeInfo::Response &response)
 {
@@ -1207,6 +1753,7 @@ bool GraphNode::getNodeInfoServiceServerCb(robotnik_fms_msgs::GetNodeInfo::Reque
     response.ret = true;
     response.msg = "Node found";
 
+    response.node_info.used = graph_route->checkNodeFree(request.node_id, -1);
     pthread_mutex_unlock(&mutexGraph);
     return true;
 }

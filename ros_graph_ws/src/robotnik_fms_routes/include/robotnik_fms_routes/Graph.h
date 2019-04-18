@@ -98,6 +98,7 @@ class Graph
 	//! Controls if has been initialized succesfully
 	bool bInitialized;
 	int nodes;
+	int zones;
 
   public:
 	//! Grafo con los nodos y arcos del sistema
@@ -124,17 +125,29 @@ class Graph
 	int getRoute(int from, int to, vector<Node> *detailed_nodes, vector<double> *speed_between_nodes);
 	//! Obtiene la posición del nodo indicado
 	int getNodePosition(int num_node, geometry_msgs::Pose2D *pos);
+	//! Get list of Used Nodes
+	bool getNodesUsed(std::vector<Node *> *route);
+	//! Reserve a node
+	bool reserveNode(int iRobot, int iIDNode);
+	//! Unblock all nodes
+	bool unBlockAll(int iRobot);
 
 	//!
 	int getNodes();
 	//! Gets Node by nodeID
 	Node *getNode(unsigned int node_id);
 
+	bool checkNodeFree(int idNode, int idRobot);
+	bool checkNodesFree(std::vector<int> vNodesId, int idRobot);
+	bool checkZoneFree(int idZone, int idRobot);
+
   private:
 	//! Deserializes a xml file, extracting the nodes and magnets
 	int deserialize(string *msg);
 	//! Process nodes from xml document
 	int processNodesFromXML(DOMDocument *doc);
+	//! Process Zones From XML
+	int processZonesFromXML(DOMDocument *doc);
 };
 
 #endif

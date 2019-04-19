@@ -113,7 +113,7 @@ class Graph
 	int setup(string *msg);
 	//!
 	int shutDown();
-	//! Prints the list of nodes and magnets read from xml
+	//! Prints the list of nodes read from xml
 	void print();
 	//! Obtiene las coordenadas de los nodos ordenadas para esa trayectoria, además de las velocidades entre dichos nodos
 	int getRoute(int from, int to, vector<geometry_msgs::Pose2D> *nodes, vector<double> *speed_between_nodes);
@@ -142,8 +142,10 @@ class Graph
 	bool checkZoneFree(int idZone, int idRobot);
 
   private:
-	//! Deserializes a xml file, extracting the nodes and magnets
-	int deserialize(string *msg);
+	//! Deserializes a xml file, extracting the nodes
+	[[deprecated]] int deserialize(string *msg);
+	//! Deserializes a json file, extracting the graph
+
 	//! Process nodes from xml document
 	int processNodesFromXML(DOMDocument *doc);
 	//! Process Zones From XML

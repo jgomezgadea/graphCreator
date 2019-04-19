@@ -125,11 +125,9 @@ int Graph::shutDown()
 }
 
 /*! \fn int Graph::deserialize()
- * 	\brief Process the data read previouly from a xml document
+ * 	\brief Process the data reading previouly from a xml document
 */
-int Graph::deserialize(std::string *msg)
-{
-    //
+[[deprecated]] int Graph::deserialize(std::string *msg) {
     // Initialize the XML4C2 system.
     try
     {
@@ -208,7 +206,6 @@ int Graph::deserialize(std::string *msg)
     }
     catch (const XMLException &toCatch)
     {
-
         ROS_ERROR("Graph::deserialize: Error during parsing %s file", cXMLFile); //, StrX(toCatch.getMessage()));
 
         // XERCES_STD_QUALIFIER cerr << "\nError during parsing: '" << cXMLFile << "'\n"
@@ -220,7 +217,6 @@ int Graph::deserialize(std::string *msg)
     }
     catch (const DOMException &toCatch)
     {
-
         const unsigned int maxChars = 2047;
         XMLCh errText[maxChars + 1];
         ROS_ERROR("Graph::deserialize: DOM Error during parsing %s file. DOMException code is: %d", cXMLFile, toCatch.code);

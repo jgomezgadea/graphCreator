@@ -485,7 +485,7 @@ bool Dijkstra::checkNodeFree(int iIDNode, int iIDRobot)
  * 	\brief Adds an arc from a node to another with constant weight
  *  No controlamos que el nodo objetivo esté en la lista de nodos, puesto que puede que se introduzca después
 */
-int Dijkstra::addArc(int from_node, int to_node, double speed)
+int Dijkstra::addArc(int from_node, int to_node)
 {
 	int locatedFrom = -1; // Id del nodo
 
@@ -523,13 +523,13 @@ int Dijkstra::addArc(int from_node, int to_node, double speed)
 		return -1;
 	}
 
-	return vNodes[locatedFrom].addNodeAdjacent(to_node, speed);
+	return vNodes[locatedFrom].addNodeAdjacent(to_node);
 }
 
 /*! \fn int Dijkstra::addArc(int from_node, int to_node, double speed, int weight)
  * 	\brief Adds an arc from a node to another with weight
 */
-int Dijkstra::addArc(int from_node, int to_node, double speed, int weight)
+int Dijkstra::addArc(int from_node, int to_node, int weight)
 {
 	int locatedFrom = -1; //Id del nodo
 
@@ -565,7 +565,7 @@ int Dijkstra::addArc(int from_node, int to_node, double speed, int weight)
 		return -1;
 	}
 
-	return vNodes[locatedFrom].addNodeAdjacent(to_node, speed, weight);
+	return vNodes[locatedFrom].addNodeAdjacent(to_node, weight);
 }
 
 /*! \fn int Dijkstra::deleteArc(int from_node, int to_node)
@@ -1132,7 +1132,7 @@ int Dijkstra::getNodePosition(int node_id, double *x, double *y, double *z)
  * 	\brief Gets the arc's values between nodes
  *  \return 0 if OK
 */
-int Dijkstra::getArcBetweenNodes(int from_node, int to_node, double *speed)
+int Dijkstra::getArcBetweenNodes(int from_node, int to_node)
 {
 	// La edición debe estar finalizada
 	if (bEdit)

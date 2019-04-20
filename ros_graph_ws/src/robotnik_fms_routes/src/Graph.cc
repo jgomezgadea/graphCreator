@@ -559,7 +559,7 @@ int Graph::getRoute(int from, int to, vector<geometry_msgs::Pose2D> *nodes, vect
         if (!dijkstraGraph->getNodePosition(route[i], &pos.x, &pos.y, &pos.theta))
         {
             nodes->push_back(pos);
-            if (dijkstraGraph->getArcBetweenNodes(route[i], route[i + 1], &speed) != 0)
+            if (dijkstraGraph->getArcBetweenNodes(route[i], route[i + 1]) != 0)
             { // Obtenemos los imanes en la ruta al nodo adyacente
                 ROS_ERROR("Graph::getRoute: Error getting the magnets from %d to %d", route[i], route[i + 1]);
 
@@ -624,7 +624,7 @@ int Graph::getRoute(int from, int to, vector<Node> *detailed_nodes, vector<doubl
     { // Recorremos los nodos de la ruta hasta el penultimo
         if (!dijkstraGraph->getNodePosition((*detailed_nodes)[i].iNode, &pos.x, &pos.y, &pos.theta))
         {
-            if (dijkstraGraph->getArcBetweenNodes((*detailed_nodes)[i].iNode, (*detailed_nodes)[i + 1].iNode, &speed) != 0)
+            if (dijkstraGraph->getArcBetweenNodes((*detailed_nodes)[i].iNode, (*detailed_nodes)[i + 1].iNode) != 0)
             { // Obtenemos los imanes en la ruta al nodo adyacente
                 ROS_ERROR("Graph::getRoute: Error getting the magnets from %d to %d", (*detailed_nodes)[i].iNode, (*detailed_nodes)[i + 1].iNode);
                 return -1;

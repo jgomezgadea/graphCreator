@@ -1,12 +1,10 @@
 /** \file Dijkstra.h
  * \author Robotnik Automation S.L.L.
- * \version 1.4
+ * \version 2.0
  * \date    2010
  *
  * \brief Dijkstra header
  * Implementa el algoritmo de Dijkstra
- * 1.3 - En esta versión los nodos se acceden no por posicion sino por Id, a parte de que tendrá nuevos campos
- * 1.4 - NodeRoute almacenará a parte de los Ids de nodo, los propios objetos de nodo, para poder extraer toda la información correspondiente
  * (C) 2010 Robotnik Automation, SLL
 */
 
@@ -31,41 +29,36 @@ using namespace std;
 //! Class Node utilizada por Dijstra para representar los nodos del grafo
 class Node
 {
-
 	//! Class Arc utilizada por Node para indicar el peso y al nodo al que está conectado
 	class Arc
 	{
 	  public:
-		//! Peso de la arista
+		//! Peso de la arista (distancia)
 		int iWeight;
 		//! Nodo con el conecta la arista
 		int iNextNode;
-		//! velocidad máxima en ese arco (m/s)
-		float dSpeed;
 
 	  public:
 		//! Constructor
-		Arc(int next_node, double speed)
+		Arc(int next_node)
 		{
 			iWeight = 1000; //Peso por defecto
 			iNextNode = next_node;
-			dSpeed = speed; //Velocidad lenta por defecto
 		};
 		//! Constructor
-		Arc(int next_node, int weight, double speed)
+		Arc(int next_node, int weight)
 		{
 			iWeight = weight; //Peso asignado
 			iNextNode = next_node;
-			dSpeed = speed;
 		};
 		//! Destructor
 		~Arc(){
 			//std::cout << "Arc::~Arc:" << std::endl;
 		};
-		//! Establece la velocidad en ese arco
-		int setSpeed(double value)
+		//! Establece el peso (distancia) en ese arco
+		int setWeight(double weight)
 		{
-			dSpeed = value;
+			iWeight = weight;
 			return 0;
 		}
 		//! Gets the node connected
@@ -154,7 +147,7 @@ class Node
 	}
 	//! Adds new node adjacent with default weight
 	//!	\returns 0 if OK
-	int addNodeAdjacent(int node_id, double speed)
+	int addNodeAdjacent(int node_id)
 	{
 		int size = vAdjacent.size();
 
@@ -172,13 +165,13 @@ class Node
 		}
 
 		// Añadimos el arco
-		Arc new_arc(node_id, speed);
+		Arc new_arc(node_id);
 		vAdjacent.push_back(new_arc);
 		return 0;
 	}
 	//! Adds new node adjacent with selected weight
 	//!	\returns 0 if OK
-	int addNodeAdjacent(int node_id, double speed, int weight)
+	int addNodeAdjacent(int node_id, int weight)
 	{
 		int size = vAdjacent.size();
 
@@ -194,7 +187,7 @@ class Node
 				}
 			}
 		}
-		Arc new_arc(node_id, abs(weight), speed); //Le pasamos el peso en valor absoluto, para evitarnos comprobaciones
+		Arc new_arc(node_id, abs(weight)); //Le pasamos el peso en valor absoluto, para evitarnos comprobaciones
 		vAdjacent.push_back(new_arc);
 		return 0;
 	}
@@ -254,17 +247,17 @@ class Node
 			std::cout << "\t Node::PrintArcs: " << size << " arcs" << std::endl;
 			for (int i = 0; i < size; i++)
 			{
-				std::cout << "\t\tArc " << i << ": Weight = " << vAdjacent[i].iWeight << ", Point to " << vAdjacent[i].iNextNode << std::endl;
-				std::cout << "\t\tMagnets: " << std::endl
+				std::cout << "\t\tArc " << i << ": Weight = " << vAdjacent[i].iWeight
+						  << ", Point to " << vAdjacent[i].iNextNode << std::endl
 						  << "\t\t\t";
 				std::cout << std::endl;
 			}
 		}
 		else
-			std::cout << "\tNode::PrintArcs: No arcs.." << std::endl;
+			std::cout << "\tNode::PrintArcs: No arcs." << std::endl;
 	}
 
-	//! returns if the node has been used in the algorithm
+	//! Returns if the node has been used in the algorithm
 	bool isUsed()
 	{
 		return bUsed;
@@ -664,13 +657,13 @@ class Dijkstra
 	int addNode(int node, double x, double y, double z, double theta, std::string frame, char *name);
 
 	//! Adds arc from a node to another with constant weight
-	int addArc(int from_node, int to_node, double speed);
+	int addArc(int from_node, int to_node);
 	//! Adds arc from a node to another with weight
-	int addArc(int from_node, int to_node, double speed, int weight);
+	int addArc(int from_node, int to_node, int weight);
 	//! Get the node with this id
 	int getNodePosition(int node_id, double *x, double *y, double *z);
 	//! Gets the arc between two nodes
-	int getArcBetweenNodes(int from_node, int to_node, double *speed);
+	int getArcBetweenNodes(int from_node, int to_node);
 	//! Prints current nodes
 	void printNodes();
 	//! Deletes all the nodes

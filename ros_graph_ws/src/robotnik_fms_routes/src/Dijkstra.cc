@@ -28,35 +28,35 @@ Dijkstra::Dijkstra()
 Dijkstra::~Dijkstra()
 {
 	delete rRoutes;
-	delete[] pNodes;
+	//delete[] pNodes;
 	//cout << "Dijkstra::~Dijkstra" << endl;
 }
 
-/*! \fn int Dijkstra::finalizeEdition()
+/*! \fn int Dijkstra::finalizeEdition(graph_msgs::GraphNodeArray *graphData)
  * 	\brief Disables the edition of nodes and arcs. Necesario para poder calcular rutas sin incoherencias
- *  \return 0 if graph's elements are OK
+ *  \return "OK" if graph's elements are OK
 */
-int Dijkstra::finalizeEdition(std::string *msg)
+std::string Dijkstra::finalizeEdition(graph_msgs::GraphNodeArray *graphData)
 {
 	int max_id = 0;
 	bool bNodeFound = false;
 
-	if (vNodes.size() > 0)
+	if (graphData->nodes.size() > 0)
 	{ // Si no hay nodos no tiene sentido
 		// Comprobamos coherencia de los arcos de cada nodo. No pueden haber arcos que apunten a nodos inexistentes.
 		// Esta comprobación no se realiza en el momento en que se inserta un nuevo arco, puesto que necesitamos
-		// que sea flexible a la hora de leer el grafo desde un archivo xml.
+		// que sea flexible a la hora de leer el grafo desde un archivo json.
 		//Buscamos el mayor Id y creamos una ruta con todos esos nodos(no es muy eficiente en espacio pero podemos reutilizar rRoute)
-		for (int i = 0; i < (int)vNodes.size(); i++)
+		for (int i = 0; i < (int)graphData->nodes.size(); i++)
 		{
-			//
-			//Comprobamos si existen los adyacentes que tiene asignados cada nodo
-			for (int j = 0; j < (int)vNodes[i].vAdjacent.size(); j++)
+
+			// Comprobamos si existen los adyacentes que tiene asignados cada nodo
+			for (int j = 0; j < (int)graphData->nodes[i].arc_list.size(); j++)
 			{
 				bNodeFound = false;
-				for (int k = 0; k < (int)vNodes.size(); k++)
+				for (int k = 0; k < (int)graphData->nodes.size(); k++)
 				{
-					if (vNodes[i].vAdjacent[j].getNode() == vNodes[k].getId())
+					if (graphData->nodes[i].arc_list[j].node_dest == graphData->nodes[k].id)
 					{
 						bNodeFound = true;
 						break;
@@ -64,30 +64,18 @@ int Dijkstra::finalizeEdition(std::string *msg)
 				}
 				if (!bNodeFound)
 				{ // Nodo adyacente no existe
-					//cout << "Dijkstra::FinalizeEdition: Error: Arco entre node " << vNodes[i].getId() << " y node " << vNodes[i].vAdjacent[j].GetNode() << " no existe." << endl;
-					ROS_ERROR("Dijkstra::FinalizeEdition: Error: Arco entre node %d y node %d", vNodes[i].getId(), vNodes[i].vAdjacent[j].getNode());
-					*msg = "Dijkstra::FinalizeEdition: Error: Arco entre node:" + std::to_string(vNodes[i].getId()) + " y node:" + std::to_string(vNodes[i].vAdjacent[j].getNode());
-
-					return -1;
+					ROS_ERROR("Dijkstra::FinalizeEdition: Error: Arco entre nodo %d y nodo %d", graphData->nodes[i].id, graphData->nodes[i].arc_list[j].node_dest);
+					return "Dijkstra::FinalizeEdition: Error: Arco entre node:" + std::to_string(graphData->nodes[i].id) + " y node:" + std::to_string(graphData->nodes[i].arc_list[j].node_dest);
 				}
 			}
-			if (vNodes[i].getId() > max_id)
-				max_id = vNodes[i].getId();
+			max_id = max(max_id, graphData->nodes[i].id);
 		}
-		//	cout << "Dijkstra::FinalizeEdition: Creamos matriz de " << max_id << "x" << max_id << endl;
 		bEdit = false;
-		rRoutes = new Route(max_id + 1); //Creamos matriz de posibles rutas
-		pNodes = new Node *[max_id + 1]; //Creamos vector de punteros a cada nodo, refereciados por su ID
+		rRoutes = new Route(max_id + 1); // Creamos matriz de posibles rutas
 		iMaxNodeId = max_id;
-		//! Enlazamos punteros
-		for (int i = 0; i < (int)vNodes.size(); i++)
-		{
-			pNodes[vNodes[i].getId()] = &vNodes[i];
-			//cout << "Dijkstra::FinalizeEdition: Nodo enlazado: " << pNodes[vNodes[i].getId()]->getId() << endl;
-		}
 	}
 
-	return 0;
+	return "OK";
 }
 
 /*! \fn void Dijkstra::enableEdition()
@@ -1063,31 +1051,6 @@ int Dijkstra::calculateRoute(int initial_node, int end_node)
 	return 0;
 }
 
-/*! \fn void Dijkstra::printNodes()
- * 	\brief Prints current nodes
-*/
-void Dijkstra::printNodes()
-{
-	double x = 0.0, y = 0.0, z = 0.0;
-	int size = vNodes.size();
-
-	if (size > 0)
-	{
-		cout << "Dijkstra::PrintNodes: " << size << " nodes" << endl;
-		for (int i = 0; i < size; i++)
-		{
-			cout << "\tNode " << vNodes[i].getId() << ": Dist = " << vNodes[i].iDist << endl;
-			cout << "\tName = " << vNodes[i].getName() << " , parent = " << vNodes[i].iParent << endl;
-			vNodes[i].getPosition(&x, &y, &z);
-			cout << "\tPosition: x = " << x << " y = " << y << " z = " << z << endl;
-			vNodes[i].printArcs();
-			cout << endl;
-		}
-	}
-	else
-		cout << "Dijkstra::printNodes: No nodes.." << endl;
-}
-
 /*! \fn int Dijkstra::getNodeIndex(int nodeID)
  * 	\brief Gets the index of the node using his ID
  *  \return -1 if id does not exist
@@ -1110,7 +1073,7 @@ int Dijkstra::getNodeIndex(int nodeID)
  * 	\brief Gets the node's position with this id
  *  \return 0 if OK
 */
-int Dijkstra::getNodePosition(int node_id, double *x, double *y, double *z)
+int Dijkstra::getNodePosition(graph_msgs::GraphNodeArray *graphData, int node_id, double *x, double *y, double *z)
 {
 	if (bEdit)
 	{
@@ -1124,7 +1087,11 @@ int Dijkstra::getNodePosition(int node_id, double *x, double *y, double *z)
 		return -1;
 	}
 
-	pNodes[node_id]->getPosition(x, y, z);
+	*x = graphData->nodes[node_id].pose.x;
+	*y = graphData->nodes[node_id].pose.y;
+	*z = graphData->nodes[node_id].pose.z;
+
+	//pNodes[node_id]->getPosition(x, y, z);
 	return 0;
 }
 

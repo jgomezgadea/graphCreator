@@ -453,14 +453,26 @@ int GraphNode::setup()
     ///////////////////////////////////////////////////
     graph_route = new Graph(graph_file_.c_str());
 
-    std::string sError;
+    /*std::string sError;
 
     if (graph_route->setup(&sError) != OK)
     {
         PUSH_ERROR_HMI("Error Reading Graph:" + sError);
         return ERROR;
+    }*/
+
+    std::string sError = graph_route->setup();
+
+    if (sError != "OK")
+    {
+        PUSH_ERROR_HMI("Error Reading Graph: " + sError);
+        return ERROR;
     }
+
     initialized = true;
+
+    // TODO quitar
+    graph_route->print();
 
     return OK;
 }
@@ -1430,7 +1442,7 @@ bool GraphNode::reloadGraphServiceServerCb(robotnik_fms_msgs::ReloadGraph::Reque
     Graph *graph_route_aux = new Graph(new_file.c_str());
 
     std::string msg;
-    if (graph_route_aux->setup(&msg) != OK)
+    if (graph_route_aux->setup() != "OK")
     {
         pthread_mutex_unlock(&mutexGraph);
         PUSH_ERROR_HMI(" Error in Graph Setup:" + msg);

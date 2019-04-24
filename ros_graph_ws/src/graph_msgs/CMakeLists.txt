@@ -11,7 +11,7 @@ add_message_files(
    GraphNodePose.msg
    GraphArc.msg
    GraphNode.msg
-   Graph.msg
+   GraphNodeArray.msg
 )
 
 add_service_files(

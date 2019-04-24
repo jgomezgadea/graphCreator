@@ -12,33 +12,9 @@
 #include <iostream>
 #include <string>
 
-#include <xercesc/util/PlatformUtils.hpp>
-#include <xercesc/util/XMLString.hpp>
-#include <xercesc/dom/DOM.hpp>
-#include <xercesc/util/OutOfMemoryException.hpp>
-#include <xercesc/framework/StdOutFormatTarget.hpp>
-#include <xercesc/framework/LocalFileFormatTarget.hpp>
-#include <xercesc/parsers/XercesDOMParser.hpp>
-#include <xercesc/util/XMLUni.hpp>
-#include <xercesc/parsers/AbstractDOMParser.hpp>
-#include <xercesc/dom/DOMImplementation.hpp>
-#include <xercesc/dom/DOMImplementationLS.hpp>
-#include <xercesc/dom/DOMImplementationRegistry.hpp>
-#include <xercesc/dom/DOMLSParser.hpp>
-#include <xercesc/dom/DOMException.hpp>
-#include <xercesc/dom/DOMDocument.hpp>
-#include <xercesc/dom/DOMNodeList.hpp>
-#include <xercesc/dom/DOMError.hpp>
-#include <xercesc/dom/DOMLocator.hpp>
-#include <xercesc/dom/DOMNamedNodeMap.hpp>
-#include <xercesc/dom/DOMAttr.hpp>
-
 #include <robotnik_fms_routes/Dijkstra.h>
-#include <robotnik_fms_routes/DOMPrintFilter.hpp>
-#include <robotnik_fms_routes/DOMPrintErrorHandler.hpp>
-#include <robotnik_fms_routes/DOMTreeErrorReporter.hpp>
-#include <robotnik_fms_routes/DOMCount.hpp>
 #include <geometry_msgs/Pose2D.h>
+#include <graph_msgs/GraphNodeArray.h>
 
 //XERCES_CPP_NAMESPACE_USE
 using namespace std;
@@ -56,45 +32,12 @@ enum ReturnValue
 	NOT_ERROR = -5
 };
 
-//!  This is a simple class that lets us do easy (though not terribly efficient)
-//!  trancoding of char* data to XMLCh data.
-class XStr
-{
-
-  public:
-	//! Constructor
-	XStr(const char *const toTranscode)
-	{
-		// Call the private transcoding method
-		fUnicodeForm = XMLString::transcode(toTranscode);
-	}
-	//! Destructor
-	~XStr()
-	{
-		XMLString::release(&fUnicodeForm);
-	}
-
-	// -----------------------------------------------------------------------
-	//  Getter methods
-	// -----------------------------------------------------------------------
-	const XMLCh *unicodeForm() const
-	{
-		return fUnicodeForm;
-	}
-
-  private:
-	//! This is the Unicode XMLCh format of the string.
-	XMLCh *fUnicodeForm;
-};
-
-#define X(str) XStr(str).unicodeForm()
-
 class Graph
 {
 
   private:
 	//! Nombre del fichero xml
-	char cXMLFile[128];
+	char fileName[128];
 	//! Controls if has been initialized succesfully
 	bool bInitialized;
 	int nodes;
@@ -103,6 +46,7 @@ class Graph
   public:
 	//! Grafo con los nodos y arcos del sistema
 	Dijkstra *dijkstraGraph;
+	graph_msgs::GraphNodeArray *graphData;
 
   public:
 	//! Constructor
@@ -110,11 +54,13 @@ class Graph
 	//! Destructor
 	~Graph();
 	//!
-	int setup(string *msg);
+	std::string setup();
 	//!
 	int shutDown();
-	//! Prints the list of nodes read from xml
+	//! Print current graph
 	void print();
+	//! Print node arcs
+	void printArcs(graph_msgs::GraphNode *node);
 	//! Obtiene las coordenadas de los nodos ordenadas para esa trayectoria, además de las velocidades entre dichos nodos
 	int getRoute(int from, int to, vector<geometry_msgs::Pose2D> *nodes, vector<double> *speed_between_nodes);
 	//! Misma función salvo que obtiene los nodos de la ruta en detalle, no solamente su posición
@@ -142,14 +88,8 @@ class Graph
 	bool checkZoneFree(int idZone, int idRobot);
 
   private:
-	//! Deserializes a xml file, extracting the nodes
-	[[deprecated]] int deserialize(string *msg);
 	//! Deserializes a json file, extracting the graph
-
-	//! Process nodes from xml document
-	int processNodesFromXML(DOMDocument *doc);
-	//! Process Zones From XML
-	int processZonesFromXML(DOMDocument *doc);
+	std::string deserialize();
 };
 
 #endif

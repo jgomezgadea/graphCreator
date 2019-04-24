@@ -15,6 +15,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
+#include <graph_msgs/GraphNodeArray.h>
 
 using namespace std;
 
@@ -26,7 +27,7 @@ using namespace std;
 
 #define MAX_STRING_LENGTH 300
 
-//! Class Node utilizada por Dijstra para representar los nodos del grafo
+//! Class Node utilizada por Dijkstra para representar los nodos del grafo
 class Node
 {
 	//! Class Arc utilizada por Node para indicar el peso y al nodo al que está conectado
@@ -609,7 +610,7 @@ class Dijkstra
 	//! Cola de prioridad necesaria para el algoritmo
 	std::priority_queue<PointerNode, std::deque<PointerNode>, NodeComparison> pqQueue;
 	//! Array de punteros a nodo, para acceder a los nodos directamente. Referenciados por su ID
-	Node **pNodes;
+	graph_msgs::GraphNodeArray *pNodes;
 	//! max value of a node id
 	int iMaxNodeId;
 
@@ -626,8 +627,7 @@ class Dijkstra
 	//! Public Destructor
 	~Dijkstra();
 	//! Disables the edition of nodes and arcs. Necesario para poder calcular rutas sin incoherencias
-	//! Return -1 if exist errors (Nodos con arcos a nodos que no existen)
-	int finalizeEdition(string *msg);
+	std::string finalizeEdition(graph_msgs::GraphNodeArray *graphData);
 	//! Enable the edition of nodes and arcs. Necesario para poder añadir nodos y aristas. Todos los cálculos realizados se perderán
 	void enableEdition();
 	//! Reset the calculated route
@@ -661,11 +661,9 @@ class Dijkstra
 	//! Adds arc from a node to another with weight
 	int addArc(int from_node, int to_node, int weight);
 	//! Get the node with this id
-	int getNodePosition(int node_id, double *x, double *y, double *z);
+	int getNodePosition(graph_msgs::GraphNodeArray *graphData, int node_id, double *x, double *y, double *z);
 	//! Gets the arc between two nodes
 	int getArcBetweenNodes(int from_node, int to_node);
-	//! Prints current nodes
-	void printNodes();
 	//! Deletes all the nodes
 	int deleteAll();
 	//! Gets the index of the node using his ID

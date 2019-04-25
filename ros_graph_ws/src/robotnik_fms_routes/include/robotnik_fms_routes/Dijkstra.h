@@ -30,56 +30,46 @@ using namespace std;
 //! Class Node utilizada por Dijkstra para representar los nodos del grafo
 class Node
 {
-	//! Class Arc utilizada por Node para indicar el peso y al nodo al que está conectado
 	class Arc
 	{
 	  public:
-		//! Peso de la arista (distancia)
-		int iWeight;
-		//! Nodo con el conecta la arista
-		int iNextNode;
+		//! Arista
+		graph_msgs::GraphArc *arc;
 
 	  public:
 		//! Constructor
-		Arc(int next_node)
+		Arc(graph_msgs::GraphArc *pointerToArc)
 		{
-			iWeight = 1000; //Peso por defecto
-			iNextNode = next_node;
-		};
-		//! Constructor
-		Arc(int next_node, int weight)
-		{
-			iWeight = weight; //Peso asignado
-			iNextNode = next_node;
+			arc = pointerToArc;
 		};
 		//! Destructor
 		~Arc(){
 			//std::cout << "Arc::~Arc:" << std::endl;
 		};
-		//! Establece el peso (distancia) en ese arco
-		int setWeight(double weight)
+		//! Establece la velocidad en ese arco
+		int setMaxSpeed(double value)
 		{
-			iWeight = weight;
+			arc->max_speed = value;
 			return 0;
 		}
 		//! Gets the node connected
-		int getNode()
+		int getNextNode()
 		{
-			return iNextNode;
+			return arc->node_dest;
 		}
-		//! Gets the weight of the arc
+		//! Gets the weight of the edge
 		int getWeight()
 		{
-			return iWeight;
+			return arc->distance;
 		}
 	};
 
   public:
-	//! Identificador/Número de nodo
-	int iNode;
-	//! Distancia al nodo
+	//! Node
+	graph_msgs::GraphNode *node;
+	//! Distance from previous node
 	int iDist;
-	//! Nodo antecesor en la ruta
+	//! Id from previous node
 	int iParent;
 	//! Flag para marcar cuando se utiliza el nodo para el cálculo de
 	// distancias (solo se utiliza una vez), para no volverlo a encolar
@@ -88,14 +78,6 @@ class Node
 	std::vector<Arc> vAdjacent;
 	//! vector de Zonas
 	std::vector<int> viZones;
-	//! Coordenadas del nodo
-	double dX, dY, dZ;
-	//! Theta
-	double dTheta;
-	//! Frame
-	std::string sFrame_id;
-	//! Nombre del nodo
-	char cName[MAX_STRING_LENGTH];
 	//! iRobot
 	int iRobot;
 	//! iRobot Reserved
@@ -103,26 +85,14 @@ class Node
 
   public:
 	//! Constructor
-	Node(int node, double x, double y, double z, double dThet, std::string sFram,
-		 char *name)
+	Node(graph_msgs::GraphNode *pointerToNode)
 	{
-
-		iNode = node;
+		node = pointerToNode;
+		iDist = INFINITE;
 		iParent = NO_PARENT;
+		bUsed = false;
 		iRobot = -1;
 		iResRobot = -1;
-
-		dX = x;
-		dY = y;
-		dZ = z;
-
-		dTheta = dThet;
-
-		sFrame_id = sFram;
-
-		//strcpy(cName, name); Esto puede tener un overflow tremendo
-		strncpy(cName, name, MAX_STRING_LENGTH); // MAX_STRING_LENGTH es el tamaño reservado para cName, asi que se copian como mucho esos caracteres
-		cName[MAX_STRING_LENGTH - 1] = 0;		 //y ademas, por si acaso, asignamos NULL al final
 	}
 	//! Destructor
 	~Node()
@@ -130,49 +100,9 @@ class Node
 		//delete log;
 		//std::cout << "Node::~Node:" << std::endl;
 	}
-	//! Sets the node's coordinates
-	void setPosition(double x, double y, double z, double theta, std::string sFram)
-	{
-		dX = x;
-		dY = y;
-		dZ = z;
-		dTheta = theta;
-		sFrame_id = sFram;
-	}
-	//! Sets the node's name
-	void setName(char *name)
-	{
-		//strcpy(cName, name); Esto puede tener un overflow tremendo
-		strncpy(cName, name, MAX_STRING_LENGTH); // MAX_STRING_LENGTH es el tamaño reservado para cName, asi que se copian como mucho esos caracteres
-		cName[MAX_STRING_LENGTH - 1] = 0;		 //y ademas, por si acaso, asignamos NULL al final
-	}
-	//! Adds new node adjacent with default weight
+	//! Adds new node adjacent with default weight and a list of magnets in the way
 	//!	\returns 0 if OK
-	int addNodeAdjacent(int node_id)
-	{
-		int size = vAdjacent.size();
-
-		if (size > 0)
-		{
-			for (int i = 0; i < size; i++)
-			{ // Comprobamos que no esté repetido
-				if (vAdjacent[i].iNextNode == node_id)
-				{ // Si está repetido no lo insertamos
-
-					//std::cout << "Node::AddNodeAdjacent: Error: node " << node_id << " already adjacent" << std::endl;
-					return -1;
-				}
-			}
-		}
-
-		// Añadimos el arco
-		Arc new_arc(node_id);
-		vAdjacent.push_back(new_arc);
-		return 0;
-	}
-	//! Adds new node adjacent with selected weight
-	//!	\returns 0 if OK
-	int addNodeAdjacent(int node_id, int weight)
+	int addNodeAdjacent(graph_msgs::GraphArc *pointerToArc)
 	{
 		int size = vAdjacent.size();
 
@@ -180,15 +110,16 @@ class Node
 		{
 			for (int i = 0; i < size; i++)
 			{ //Comprobamos que no esté repetido
-				if (vAdjacent[i].iNextNode == node_id)
-				{ //Si está repetido no lo insertamos
+				if (vAdjacent[i].getNextNode() == pointerToArc->node_dest)
+				{ // Si está repetido no lo insertamos
 					//std::cout << "Node::AddNodeAdjacent: Error: node " << node_id << " already adjacent" << std::endl;
-
 					return -1;
 				}
 			}
 		}
-		Arc new_arc(node_id, abs(weight)); //Le pasamos el peso en valor absoluto, para evitarnos comprobaciones
+		//
+		// Añadimos el arco
+		Arc new_arc(pointerToArc);
 		vAdjacent.push_back(new_arc);
 		return 0;
 	}
@@ -220,14 +151,13 @@ class Node
 		{
 			for (int i = 0; i < size; i++)
 			{
-				if (vAdjacent[i].iNextNode == node_id)
+				if (vAdjacent[i].getNextNode() == node_id)
 				{ //Encontrado
 					vAdjacent.erase(vAdjacent.begin() + i);
 					return 0;
 				}
 			}
 		}
-
 		//std::cout << "Node::AddNodeAdjacent: Error: node " << node_id << " not adjacent" << std::endl;
 		return -1;
 	}
@@ -238,38 +168,18 @@ class Node
 
 		return 0;
 	}
-	//! Prints current arcs
-	void printArcs()
-	{
-		int size = vAdjacent.size();
-
-		if (size > 0)
-		{
-			std::cout << "\t Node::PrintArcs: " << size << " arcs" << std::endl;
-			for (int i = 0; i < size; i++)
-			{
-				std::cout << "\t\tArc " << i << ": Weight = " << vAdjacent[i].iWeight
-						  << ", Point to " << vAdjacent[i].iNextNode << std::endl
-						  << "\t\t\t";
-				std::cout << std::endl;
-			}
-		}
-		else
-			std::cout << "\tNode::PrintArcs: No arcs." << std::endl;
-	}
-
 	//! Returns if the node has been used in the algorithm
 	bool isUsed()
 	{
 		return bUsed;
 	}
 	//! Sets the node as used
-	void used()
+	void setUsed()
 	{
 		bUsed = true;
 	}
 	//! Returns the current distance stored in the node
-	int distance()
+	int getDistance()
 	{
 		return iDist;
 	}
@@ -278,29 +188,20 @@ class Node
 	{
 		iDist = distance;
 	}
-	//! returns the value of the id
-	int getId()
-	{
-		return iNode;
-	}
 	//! returns the value of the parent
 	int getParent()
 	{
 		return iParent;
 	}
-	//! returns the position of the node
-	int getPosition(double *x, double *y, double *z)
+	//! returns the value of the id
+	int getId()
 	{
-		*x = dX;
-		*y = dY;
-		*z = dZ;
-
-		return 0;
+		return node->id;
 	}
 	//! returns the name of the node
-	char *getName()
+	std::string getName()
 	{
-		return cName;
+		return node->name;
 	}
 
 	//! Adds a new Zone
@@ -369,10 +270,8 @@ class Dijkstra
 		//! Public Constructor
 		Route(int num_nodes)
 		{
-
 			nodes = num_nodes;
-			//	std::cout << "Route::Route: nodes = " << nodes << std::endl;
-
+			//ROS_INFO("Route::Route: nodes = %i", nodes);
 			iRoute = new NodesRoute *[nodes];
 			for (int i = 0; i < nodes; i++)
 			{
@@ -387,7 +286,6 @@ class Dijkstra
 				delete[] iRoute[i];
 
 			delete[] iRoute;
-			//std::cout << "Route::~Route:" << std::endl;
 		}
 		//! Añade un nodo en la ruta para llegar al nodo objetivo "to_node"
 		//! La ruta se añade de manera inversa, por lo que insertamos elementos siempre al principio del vector
@@ -564,7 +462,7 @@ class Dijkstra
 		{
 			for (int i = 0; i < (int)vpNodes.size(); i++)
 			{
-				if (vpNodes[i]->iNode == pNode->iNode)
+				if (vpNodes[i]->node->id == pNode->node->id)
 					return -1;
 			}
 			vpNodes.push_back(pNode);
@@ -603,14 +501,12 @@ class Dijkstra
 	};
 
   private:
-	//! Checks if it's possible to edit the graph
+	//! Controls if it's possible to edit the graph
 	bool bEdit;
 	//!	Objeto de tipo Route con todas las rutas posibles
 	Route *rRoutes;
 	//! Cola de prioridad necesaria para el algoritmo
 	std::priority_queue<PointerNode, std::deque<PointerNode>, NodeComparison> pqQueue;
-	//! Array de punteros a nodo, para acceder a los nodos directamente. Referenciados por su ID
-	graph_msgs::GraphNodeArray *pNodes;
 	//! max value of a node id
 	int iMaxNodeId;
 
@@ -630,20 +526,22 @@ class Dijkstra
 	std::string finalizeEdition(graph_msgs::GraphNodeArray *graphData);
 	//! Enable the edition of nodes and arcs. Necesario para poder añadir nodos y aristas. Todos los cálculos realizados se perderán
 	void enableEdition();
+	//! Returns if the graph is being edited
+	bool isOnEdition();
 	//! Reset the calculated route
 	int resetRoutes();
 	//! Deletes All the nodes
 	int deleteNodes();
-	//! Deletes selected arc
+	//! Deletes selected edge
 	int deleteArc(int from_node, int to_node);
-	//! Deletes all the arcs from the node
+	//! Deletes all the edge from the node
 	int deleteArcs(int from_node);
 	//! Gets the optimum calculated route between selected nodes
 	int getRoute(int inital_node, int end_node, std::vector<int> *route);
 	int getRoute(int inital_node, int end_node, std::vector<Node> *route);
 
 	//! Get list of nodes used or blocked
-	bool getNodesUsed(std::vector<Node *> *route);
+	std::vector<graph_msgs::GraphNode *> getNodesUsed();
 
 	bool reserveNode(int iRobot, int iIDNode);
 
@@ -654,22 +552,14 @@ class Dijkstra
 	bool unBlockAll(int iRobot);
 
 	//! Adds a new node
-	int addNode(int node, double x, double y, double z, double theta, std::string frame, char *name);
+	int addNode(graph_msgs::GraphNode *node);
 
-	//! Adds arc from a node to another with constant weight
-	int addArc(int from_node, int to_node);
-	//! Adds arc from a node to another with weight
-	int addArc(int from_node, int to_node, int weight);
-	//! Get the node with this id
-	int getNodePosition(graph_msgs::GraphNodeArray *graphData, int node_id, double *x, double *y, double *z);
+	//! Adds edge from a node to another
+	int addArc(int from_node, graph_msgs::GraphArc *arc);
 	//! Gets the arc between two nodes
 	int getArcBetweenNodes(int from_node, int to_node);
-	//! Deletes all the nodes
-	int deleteAll();
 	//! Gets the index of the node using his ID
 	int getNodeIndex(int nodeID);
-	//! Gets Node by nodeID
-	Node *getNode(unsigned int node_id);
 	//! Add Node to Zone
 	int addNodeToZone(int iIDNode, int iIDZone, bool bMan);
 	//! Add Zone to Graph

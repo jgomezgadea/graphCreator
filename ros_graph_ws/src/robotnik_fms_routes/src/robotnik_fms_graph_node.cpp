@@ -980,7 +980,7 @@ void GraphNode::rosPublish()
     robotnik_fms_msgs::NodesInfo Nodes;
     robotnik_fms_msgs::NodesID NodesId;
 
-    graph_route->getNodesUsed(&route);
+    route = graph_route->getNodesUsed();
 
     //ROS_INFO(" ROUTE ------------ Size:%d",route.size());
 

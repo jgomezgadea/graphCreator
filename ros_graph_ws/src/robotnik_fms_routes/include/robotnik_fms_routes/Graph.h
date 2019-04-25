@@ -36,7 +36,7 @@ class Graph
 {
 
   private:
-	//! Nombre del fichero xml
+	//! Nombre del fichero json
 	char fileName[128];
 	//! Controls if has been initialized succesfully
 	bool bInitialized;
@@ -61,33 +61,50 @@ class Graph
 	void print();
 	//! Print node arcs
 	void printArcs(graph_msgs::GraphNode *node);
+	/* TODO
+	//! Adds a new node
+	int addNode(int node, double x, double y, double z, double theta, std::string frame, char *name);
+	//! Adds arc from a node to another with constant weight
+	int addArc(int from_node, int to_node);
+	//! Adds arc from a node to another with weight
+	int addArc(int from_node, int to_node, int weight);
+
+	//! Delete all the nodes
+	int deleteNodes();
+	//! Delete arc
+	int deleteArc(int from_node, int to_node);
+	//! Delete all arcs of a node
+	int deleteArcs(int from_node);
+	*/
 	//! Obtiene las coordenadas de los nodos ordenadas para esa trayectoria, además de las velocidades entre dichos nodos
 	int getRoute(int from, int to, vector<geometry_msgs::Pose2D> *nodes, vector<double> *speed_between_nodes);
 	//! Misma función salvo que obtiene los nodos de la ruta en detalle, no solamente su posición
-	int getRoute(int from, int to, vector<Node> *detailed_nodes, vector<geometry_msgs::Pose2D> *nodes, vector<double> *speed_between_nodes);
+	int getRoute(int from, int to, vector<graph_msgs::GraphNodeArray> *detailed_nodes, vector<geometry_msgs::Pose2D> *nodes, vector<double> *speed_between_nodes);
 	//! Obtiene los nodos por los que pasa la ruta que va desde el nodo "from" al nodo "to"
 	int getRoute(int from, int to, vector<int> *route);
 	//! Obtiene los nodos de la ruta de forma detallada
-	int getRoute(int from, int to, vector<Node> *detailed_nodes, vector<double> *speed_between_nodes);
+	int getRoute(int from, int to, vector<graph_msgs::GraphNodeArray> *detailed_nodes, vector<double> *speed_between_nodes);
 	//! Obtiene la posición del nodo indicado
 	int getNodePosition(int num_node, geometry_msgs::Pose2D *pos);
 	//! Get list of Used Nodes
-	bool getNodesUsed(std::vector<Node *> *route);
+	std::vector<graph_msgs::GraphNode *> getNodesUsed();
 	//! Reserve a node
 	bool reserveNode(int iRobot, int iIDNode);
 	//! Unblock all nodes
 	bool unBlockAll(int iRobot);
+	//! Deletes all nodes
+	int deleteAll();
 
-	//!
-	int getNodes();
 	//! Gets Node by nodeID
-	Node *getNode(unsigned int node_id);
+	graph_msgs::GraphNode *getNode(unsigned int node_id);
 
 	bool checkNodeFree(int idNode, int idRobot);
 	bool checkNodesFree(std::vector<int> vNodesId, int idRobot);
 	bool checkZoneFree(int idZone, int idRobot);
 
   private:
+	//! Serializes a json file, saving the graph
+	std::string serialize();
 	//! Deserializes a json file, extracting the graph
 	std::string deserialize();
 };

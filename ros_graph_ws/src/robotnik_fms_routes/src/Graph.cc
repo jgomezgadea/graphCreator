@@ -42,8 +42,6 @@ std::string Graph::setup()
 {
     ROS_INFO("Graph::start Setup");
 
-    //TODO load graph from json
-
     if (bInitialized)
     {
         return "Graph::setup: Already initialized";
@@ -74,19 +72,27 @@ int Graph::shutDown()
 {
     if (!bInitialized)
     {
-        ROS_ERROR("Graph::shutDown: Impossible because of it's not initialized");
+        ROS_ERROR("Graph::shutDown: Impossible because it's not initialized");
         return NOT_INITIALIZED;
     }
 
-    dijkstraGraph->deleteAll();
+    deleteAll();
 
     bInitialized = false;
 
     return OK;
 }
 
+/*! \fn int Graph::serialize()
+ * 	\brief Save the graph data on a json document
+*/
+std::string Graph::serialize()
+{
+    return "TODO";
+}
+
 /*! \fn int Graph::deserialize()
- * 	\brief Process the data reading previouly from a json document
+ * 	\brief Read the graph data reading previouly from a json document
 */
 std::string Graph::deserialize()
 {
@@ -178,14 +184,6 @@ void Graph::printArcs(graph_msgs::GraphNode *node)
         ROS_INFO("  Arcs: Empty");
 }
 
-/*! \fn int Graph::getNodes()
- * 	\brief
-*/
-int Graph::getNodes()
-{
-    return nodes;
-}
-
 /*! \fn int Graph::getRoute(int from, int to, vector<int> *route)
  * 	\brief Gets the list of nodes from initial node "from" to the end node "to"
 */
@@ -194,12 +192,12 @@ int Graph::getRoute(int from, int to, vector<int> *route)
     return dijkstraGraph->getRoute(from, to, route);
 }
 
-/*! \fn int Graph::GetNodesUsed(vector<Node *> *route)
+/*! \fn std::vector<Node *> Graph::GetNodesUsed()
  * 	\brief Gets the list of nodes used
 */
-bool Graph::getNodesUsed(std::vector<Node *> *route)
+std::vector<graph_msgs::GraphNode *> Graph::getNodesUsed()
 {
-    return dijkstraGraph->getNodesUsed(route);
+    return dijkstraGraph->getNodesUsed();
 }
 
 /*! \fn int Graph::ReserveNode(int iRobot,int iIDNode)
@@ -233,7 +231,7 @@ int Graph::getRoute(int from, int to, vector<geometry_msgs::Pose2D> *nodes, vect
 
     for (i = 0; i < (int)(route.size() - 1); i++)
     { // Recorremos los nodos de la ruta hasta el penultimo
-        if (!dijkstraGraph->getNodePosition(graphData, route[i], &pos.x, &pos.y, &pos.theta))
+        if (!getNodePosition(route[i], &pos))
         {
             nodes->push_back(pos);
             if (dijkstraGraph->getArcBetweenNodes(route[i], route[i + 1]) != 0)
@@ -325,17 +323,28 @@ int Graph::getRoute(int from, int to, vector<Node> *detailed_nodes, vector<doubl
  *  \return 0 if OK
  *  \return -1 si el nodo no existe
 */
-int Graph::getNodePosition(int num_node, geometry_msgs::Pose2D *pos)
+int Graph::getNodePosition(int node_id, geometry_msgs::Pose2D *pos)
 {
-    double x = 0.0, y = 0.0, a = 0.0;
-    if (!dijkstraGraph->getNodePosition(graphData, num_node, &x, &y, &a))
+    if (dijkstraGraph->isOnEdition())
     {
-        pos->x = x;
-        pos->y = y;
-        pos->theta = a;
+        ROS_ERROR("Dijkstra::GetNodePosition: Edition must be disabled");
+        return -2;
+    }
+    else if ((node_id > graphData->nodes.size()) || (node_id < 0))
+    {
+        ROS_ERROR("Dijkstra::GetNodePosition: node %d does not exist", node_id);
+        return -1;
+    }
+    else
+    {
+        graph_msgs::GraphNode *node = getNode(node_id);
+
+        pos->x = node->pose.x;
+        pos->y = node->pose.y;
+        pos->theta = node->pose.theta;
+
         return 0;
     }
-    return -1;
 }
 
 /*! \fn Node* Dijkstra::CheckNodeFree(int idNode, int idRobot)
@@ -371,7 +380,26 @@ bool Graph::checkZoneFree(int idZone, int idRobot)
 /*! \fn Node* Dijkstra::getNode(unsigned int nodeID)
  * 	\brief Gets Node by nodeID
 */
-Node *Graph::getNode(unsigned int node_id)
+graph_msgs::GraphNode *Graph::getNode(unsigned int node_id)
 {
-    return dijkstraGraph->getNode(node_id);
+    for (int i = 0; i < graphData->nodes.size(); i++)
+    {
+        if (graphData->nodes[i].id == node_id)
+            return &graphData->nodes[i];
+        //ROS_ERROR("Dijkstra::getNode: node %d, pNodes[i]->iNode:%d  ", node_id,vNodes[i].iNode);
+    }
+    //ROS_ERROR("Dijkstra::getNode: node %d  NULL ", node_id);
+    return NULL;
+}
+
+/*! \fn int Dijkstra::DeleteAll()
+ * 	\brief Deletes all the components
+ *  \return 0 if OK
+*/
+int Graph::deleteAll()
+{
+    graphData->nodes.clear();
+
+    ROS_INFO("Dijkstra::deleteAll: all data has been removed");
+    return 0;
 }

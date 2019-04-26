@@ -40,8 +40,6 @@ class Graph
 	char fileName[128];
 	//! Controls if has been initialized succesfully
 	bool bInitialized;
-	int nodes;
-	int zones;
 
   public:
 	//! Grafo con los nodos y arcos del sistema
@@ -62,7 +60,7 @@ class Graph
 	//! Print node arcs
 	void printArcs(graph_msgs::GraphNode *node);
 	/* TODO
-	//! Adds a new node
+	//! Adds a new node // TODO Sumar 1 a variable numNodes
 	int addNode(int node, double x, double y, double z, double theta, std::string frame, char *name);
 	//! Adds arc from a node to another with constant weight
 	int addArc(int from_node, int to_node);
@@ -77,21 +75,27 @@ class Graph
 	int deleteArcs(int from_node);
 	*/
 	//! Obtiene las coordenadas de los nodos ordenadas para esa trayectoria, además de las velocidades entre dichos nodos
-	int getRoute(int from, int to, vector<geometry_msgs::Pose2D> *nodes, vector<double> *speed_between_nodes);
+	int getRoute(int from, int to, vector<geometry_msgs::Pose2D> *nodes, vector<double> *max_speed);
 	//! Misma función salvo que obtiene los nodos de la ruta en detalle, no solamente su posición
-	int getRoute(int from, int to, vector<graph_msgs::GraphNodeArray> *detailed_nodes, vector<geometry_msgs::Pose2D> *nodes, vector<double> *speed_between_nodes);
+	int getRoute(int from, int to, vector<graph_msgs::GraphNode> *detailed_nodes, vector<geometry_msgs::Pose2D> *nodes, vector<double> *max_speed);
 	//! Obtiene los nodos por los que pasa la ruta que va desde el nodo "from" al nodo "to"
 	int getRoute(int from, int to, vector<int> *route);
 	//! Obtiene los nodos de la ruta de forma detallada
-	int getRoute(int from, int to, vector<graph_msgs::GraphNodeArray> *detailed_nodes, vector<double> *speed_between_nodes);
+	int getRoute(int from, int to, vector<graph_msgs::GraphNode> *detailed_nodes, vector<double> *max_speed);
 	//! Obtiene la posición del nodo indicado
 	int getNodePosition(int num_node, geometry_msgs::Pose2D *pos);
-	//! Get list of Used Nodes
+	//! Obtiene el arco entre dos nodos
+	int getArcBetweenNodes(int from_id, int to_id, graph_msgs::GraphArc *arc);
+	//! Get list of used nodes
 	std::vector<graph_msgs::GraphNode *> getNodesUsed();
+	//! Get msg with the used nodes
+	graph_msgs::GraphNodeArray getNodesUsedMsg();
 	//! Reserve a node
 	bool reserveNode(int iRobot, int iIDNode);
 	//! Unblock all nodes
 	bool unBlockAll(int iRobot);
+	//! Get the number of nodes
+	int getNumNodes();
 	//! Deletes all nodes
 	int deleteAll();
 
@@ -101,6 +105,16 @@ class Graph
 	bool checkNodeFree(int idNode, int idRobot);
 	bool checkNodesFree(std::vector<int> vNodesId, int idRobot);
 	bool checkZoneFree(int idZone, int idRobot);
+
+	//! Get Node From ID
+	graph_msgs::GraphNode *getNodeFromId(int iIDNode);
+
+	//! Get iRobot from ID
+	int getRobotFromId(int iIDNode);
+	//! Set iRobot from ID
+	bool setRobotById(int iIDNode);
+	//! Get iResRobot from ID
+	int getResRobotFromId(int iIDNode);
 
   private:
 	//! Serializes a json file, saving the graph

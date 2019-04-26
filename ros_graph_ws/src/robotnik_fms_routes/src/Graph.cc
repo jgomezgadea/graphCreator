@@ -20,7 +20,6 @@ Graph::Graph(const char *f)
     dijkstraGraph = new Dijkstra();
     graphData = new graph_msgs::GraphNodeArray();
     bInitialized = false;
-    nodes = zones = 0;
 }
 
 /*! \fn Graph::~Graph()
@@ -97,9 +96,6 @@ std::string Graph::serialize()
 std::string Graph::deserialize()
 {
     ROS_INFO("Graph::deserialize File: %s", fileName);
-
-    nodes = 5; // Number of nodes
-    zones = 1; // Number of zones
 
     graphData->nodes.resize(3);
 
@@ -184,14 +180,6 @@ void Graph::printArcs(graph_msgs::GraphNode *node)
         ROS_INFO("  Arcs: Empty");
 }
 
-/*! \fn int Graph::getRoute(int from, int to, vector<int> *route)
- * 	\brief Gets the list of nodes from initial node "from" to the end node "to"
-*/
-int Graph::getRoute(int from, int to, vector<int> *route)
-{
-    return dijkstraGraph->getRoute(from, to, route);
-}
-
 /*! \fn std::vector<Node *> Graph::GetNodesUsed()
  * 	\brief Gets the list of nodes used
 */
@@ -200,7 +188,24 @@ std::vector<graph_msgs::GraphNode *> Graph::getNodesUsed()
     return dijkstraGraph->getNodesUsed();
 }
 
-/*! \fn int Graph::ReserveNode(int iRobot,int iIDNode)
+/*! \fn std::vector<Node *> Graph::GetNodesUsedMsg()
+ * 	\brief Get msg with the used nodes
+*/
+graph_msgs::GraphNodeArray Graph::getNodesUsedMsg()
+{
+    std::vector<graph_msgs::GraphNode *> nodes_vector = dijkstraGraph->getNodesUsed();
+
+    graph_msgs::GraphNodeArray nodes_msg;
+    nodes_msg.nodes.resize(nodes_vector.size());
+    for (int i = 0; i < nodes_vector.size(); i++)
+    {
+        nodes_msg.nodes.push_back(*nodes_vector[i]);
+    }
+
+    return nodes_msg;
+}
+
+/*! \fn int Graph::ReserveNode(int iRobot, int iIDNode)
  * 	\brief Reserve Node
 */
 bool Graph::reserveNode(int iRobot, int iIDNode)
@@ -216,15 +221,22 @@ bool Graph::unBlockAll(int iRobot)
     return dijkstraGraph->unBlockAll(iRobot);
 }
 
-/*! \fn int Graph::getRoute(int from, int to, vector<geometry_msgs::Pose2D> *nodes){
+/*! \fn int Graph::getRoute(int from, int to, vector<int> *route)
+ * 	\brief Gets the list of nodes from initial node "from" to the end node "to"
+*/
+int Graph::getRoute(int from, int to, vector<int> *route)
+{
+    return dijkstraGraph->getRoute(from, to, route);
+}
+
+/*! \fn int Graph::getRoute(int from, int to, vector<geometry_msgs::Pose2D> *nodes, vector<double> *max_speed){
  * 	\brief Obtiene las coordenadas de los nodos y de los imanes ordenadas para esa trayectoria, además de las velocidades entre dichos nodos
 */
-int Graph::getRoute(int from, int to, vector<geometry_msgs::Pose2D> *nodes, vector<double> *speed_between_nodes)
+int Graph::getRoute(int from, int to, vector<geometry_msgs::Pose2D> *nodes, vector<double> *max_speed)
 {
     vector<int> route;
     int i = 0;
     geometry_msgs::Pose2D pos;
-    double speed = 0.0;
 
     if (dijkstraGraph->getRoute(from, to, &route) != 0) // Ruta incorrecta
         return -1;
@@ -234,16 +246,13 @@ int Graph::getRoute(int from, int to, vector<geometry_msgs::Pose2D> *nodes, vect
         if (!getNodePosition(route[i], &pos))
         {
             nodes->push_back(pos);
-            if (dijkstraGraph->getArcBetweenNodes(route[i], route[i + 1]) != 0)
-            { // Obtenemos los imanes en la ruta al nodo adyacente
-                ROS_ERROR("Graph::getRoute: Error getting the magnets from %d to %d", route[i], route[i + 1]);
-
-                return -1;
+            graph_msgs::GraphArc *arc;
+            if (getArcBetweenNodes(route[i], route[i + 1], arc) != 0)
+            {
+                ROS_ERROR("Graph::getRoute: Error getting the route from %d to %d", route[i], route[i + 1]);
             }
             else
-            {
-                speed_between_nodes->push_back(speed);
-            }
+                max_speed->push_back(arc->max_speed);
         }
         else
         {
@@ -253,7 +262,53 @@ int Graph::getRoute(int from, int to, vector<geometry_msgs::Pose2D> *nodes, vect
         }
     }
     // El último nodo
-    if (!dijkstraGraph->getNodePosition(graphData, route[i], &pos.x, &pos.y, &pos.theta))
+    if (!getNodePosition(route[i], &pos))
+    {
+        nodes->push_back(pos);
+    }
+    else
+    {
+        ROS_ERROR("Graph::getRoute: Last node: Error getting node %d", route[i]);
+
+        return -1;
+    }
+    return 0;
+}
+
+/*! \fn int Graph::getRoute(int from, int to, vector<graph_msgs::GraphNode> *detailed_nodes, vector<geometry_msgs::Pose2D> *nodes){
+ * 	\brief Misma función salvo que también obtiene los nodos de la ruta en detalle, no solamente su posición
+*/
+int Graph::getRoute(int from, int to, vector<graph_msgs::GraphNode> *detailed_nodes, vector<geometry_msgs::Pose2D> *nodes, vector<double> *max_speed)
+{
+    vector<int> route;
+    int i = 0;
+    geometry_msgs::Pose2D pos;
+
+    if (dijkstraGraph->getRoute(from, to, &route) != 0) // Ruta incorrecta
+        return -1;
+
+    for (i = 0; i < (int)(route.size() - 1); i++)
+    { // Recorremos los nodos de la ruta hasta el penultimo
+        if (!getNodePosition(route[i], &pos))
+        {
+            nodes->push_back(pos);
+            graph_msgs::GraphArc *arc;
+            if (getArcBetweenNodes(route[i], route[i + 1], arc) != 0)
+            {
+                ROS_ERROR("Graph::getRoute: Error getting the route from %d to %d", route[i], route[i + 1]);
+            }
+            else
+                max_speed->push_back(arc->max_speed);
+        }
+        else
+        {
+            ROS_ERROR("Graph::GetRoute: Error getting node %d", route[i]);
+
+            return -1;
+        }
+    }
+    // El último nodo
+    if (!getNodePosition(route[i], &pos))
     {
         nodes->push_back(pos);
     }
@@ -264,57 +319,45 @@ int Graph::getRoute(int from, int to, vector<geometry_msgs::Pose2D> *nodes, vect
         return -1;
     }
 
-    return 0;
-}
-
-/*! \fn int Graph::getRoute(int from, int to, vector<Node> *detailed_nodes, vector<geometry_msgs::Pose2D> *nodes){
- * 	\brief Misma función salvo que también obtiene los nodos de la ruta en detalle, no solamente su posición
-*/
-int Graph::getRoute(int from, int to, vector<Node> *detailed_nodes, vector<geometry_msgs::Pose2D> *nodes, vector<double> *speed_between_nodes)
-{
-
-    if (dijkstraGraph->getRoute(from, to, detailed_nodes) != 0) // Ruta incorrecta
-        return -1;
-
-    if (getRoute(from, to, nodes, speed_between_nodes) != 0) // Llamamos a la función de obtener ruta normal
-        return -1;
+    graph_msgs::GraphNode node;
+    for (int i; i < route.size(); i++)
+    {
+        node = *getNode(route[i]);
+        detailed_nodes->push_back(node);
+    }
 
     return 0;
 }
 
-/*! \fn int Graph::getRoute(int from, int to, vector<Node> *detailed_nodes, vector<double> *speed_between_nodes){
+/*! \fn int Graph::getRoute(int from, int to, vector<Node> *detailed_nodes, vector<double> *max_speed){
  * 	\brief Misma función salvo que también obtiene los nodos de la ruta en detalle, no solamente su posición
 */
-int Graph::getRoute(int from, int to, vector<Node> *detailed_nodes, vector<double> *speed_between_nodes)
+int Graph::getRoute(int from, int to, vector<graph_msgs::GraphNode> *detailed_nodes, vector<double> *max_speed)
 {
     vector<int> route;
     int i = 0;
-    geometry_msgs::Pose2D pos;
-    double speed = 0.0;
 
-    if (dijkstraGraph->getRoute(from, to, detailed_nodes) != 0) // Ruta incorrecta
+    if (dijkstraGraph->getRoute(from, to, &route) != 0) // Ruta incorrecta
         return -1;
 
-    for (i = 0; i < (int)(detailed_nodes->size() - 1); i++)
+    for (i = 0; i < (int)(route.size() - 1); i++)
     { // Recorremos los nodos de la ruta hasta el penultimo
-        if (!dijkstraGraph->getNodePosition(graphData, (*detailed_nodes)[i].iNode, &pos.x, &pos.y, &pos.theta))
+        graph_msgs::GraphArc *arc;
+        if (getArcBetweenNodes(route[i], route[i + 1], arc) != 0)
         {
-            if (dijkstraGraph->getArcBetweenNodes((*detailed_nodes)[i].iNode, (*detailed_nodes)[i + 1].iNode) != 0)
-            { // Obtenemos los imanes en la ruta al nodo adyacente
-                ROS_ERROR("Graph::getRoute: Error getting the magnets from %d to %d", (*detailed_nodes)[i].iNode, (*detailed_nodes)[i + 1].iNode);
-                return -1;
-            }
-            else
-            {
-                speed_between_nodes->push_back(speed);
-            }
+            ROS_ERROR("Graph::getRoute: Error getting the route from %d to %d", route[i], route[i + 1]);
         }
         else
-        {
-            ROS_ERROR("Graph::getRoute: Error getting node %d", route[i]);
-            return -1;
-        }
+            max_speed->push_back(arc->max_speed);
     }
+
+    graph_msgs::GraphNode node;
+    for (int i; i < route.size(); i++)
+    {
+        node = *getNode(route[i]);
+        detailed_nodes->push_back(node);
+    }
+
     return 0;
 };
 
@@ -347,6 +390,39 @@ int Graph::getNodePosition(int node_id, geometry_msgs::Pose2D *pos)
     }
 }
 
+/*! \fn int Graph::getArcBetweenNodes(int from_id, int to_id, graph_msgs::GraphArc *arc)
+ * 	\brief Obtiene el arco entre nodos
+ *  \return 0 if OK
+ *  \return -1 si el nodo no existe
+*/
+int Graph::getArcBetweenNodes(int from_id, int to_id, graph_msgs::GraphArc *arc)
+{
+    if (dijkstraGraph->isOnEdition())
+    {
+        ROS_ERROR("Dijkstra::GetNodePosition: Edition must be disabled");
+        return -2;
+    }
+    else if ((from_id > graphData->nodes.size()) || (from_id < 0))
+    {
+        ROS_ERROR("Dijkstra::GetNodePosition: node %d does not exist", from_id);
+        return -1;
+    }
+    else
+    {
+        graph_msgs::GraphNode *node = getNode(from_id);
+        for (int i = 0; i < node->arc_list.size(); i++)
+        {
+            if (node->arc_list[i].node_dest == to_id)
+            {
+                arc = &node->arc_list[i];
+                return 0;
+            }
+        }
+        ROS_ERROR("Dijkstra::GetNodePosition: route to node %d does not exist", to_id);
+        return -1;
+    }
+}
+
 /*! \fn Node* Dijkstra::CheckNodeFree(int idNode, int idRobot)
  * true if node Free, false if used or reserved by a robot
 */
@@ -369,7 +445,7 @@ bool Graph::checkNodesFree(std::vector<int> vNodesId, int idRobot)
     return bfree;
 }
 
-/*! \fn Node* Dijkstra::CheckZoneFree(int idZone, int idRobot)
+/*! \fn Node* Graph::checkZoneFree(int idZone, int idRobot)
  * true if Zone Free, false if used or reserved by a robot
 */
 bool Graph::checkZoneFree(int idZone, int idRobot)
@@ -377,7 +453,40 @@ bool Graph::checkZoneFree(int idZone, int idRobot)
     return dijkstraGraph->checkZoneFree(idZone, idRobot);
 }
 
-/*! \fn Node* Dijkstra::getNode(unsigned int nodeID)
+/*! \fn graph_msgs::GraphNode *Graph::getNodeFromID(int iIDNode)
+ * 	\brief Get node by nodeID
+*/
+graph_msgs::GraphNode *Graph::getNodeFromId(int iIDNode)
+{
+    return dijkstraGraph->getNodeFromId(iIDNode)->node;
+}
+
+/*! \fn int Graph::getRobotFromId(int iIDNode)
+ * 	\brief Get node by nodeID
+*/
+int Graph::getRobotFromId(int iIDNode)
+{
+    return dijkstraGraph->getNodeFromId(iIDNode)->iRobot;
+}
+
+/*! \fn bool Graph::setRobotById(int iIDNode)
+ * 	\brief Get node by nodeID
+*/
+bool Graph::setRobotById(int iIDNode)
+{
+    dijkstraGraph->getNodeFromId(iIDNode)->iRobot = iIDNode;
+    return true;
+}
+
+/*! \fn int Graph::getResRobotFromId(int iIDNode)
+ * 	\brief Get node by nodeID
+*/
+int Graph::getResRobotFromId(int iIDNode)
+{
+    return dijkstraGraph->getNodeFromId(iIDNode)->iResRobot;
+}
+
+/*! \fn Node* Graph::getNode(unsigned int nodeID)
  * 	\brief Gets Node by nodeID
 */
 graph_msgs::GraphNode *Graph::getNode(unsigned int node_id)
@@ -392,7 +501,16 @@ graph_msgs::GraphNode *Graph::getNode(unsigned int node_id)
     return NULL;
 }
 
-/*! \fn int Dijkstra::DeleteAll()
+/*! \fn int Graph::getNumNodes()
+ * 	\brief Get the number of nodes
+ *  \return Number of nodes
+*/
+int Graph::getNumNodes()
+{
+    return graphData->nodes.size();
+}
+
+/*! \fn int Graph::deleteAll()
  * 	\brief Deletes all the components
  *  \return 0 if OK
 */

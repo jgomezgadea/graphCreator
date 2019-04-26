@@ -570,7 +570,7 @@ class Dijkstra
 	bool checkCompZoneFree(int iIDZone, int iIDRobot);
 
 	//! Get Node From ID
-	Node *getNodeFromID(int iIDNode);
+	Node *getNodeFromId(int iIDNode);
 
   private:
 	//! Set the initial node

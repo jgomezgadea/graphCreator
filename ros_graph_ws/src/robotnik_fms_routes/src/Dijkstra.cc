@@ -169,7 +169,7 @@ int Dijkstra::addZone(int iIDZone, int iMaxRobots, bool bMan, int iNodeDest, int
  * 	\brief Gets Pointer to a Node
  *  \return NULL if Error
 */
-Node *Dijkstra::getNodeFromID(int iIDNode)
+Node *Dijkstra::getNodeFromId(int iIDNode)
 {
 	Node *nod = NULL;
 
@@ -184,7 +184,7 @@ Node *Dijkstra::getNodeFromID(int iIDNode)
 */
 int Dijkstra::addNodeToZone(int iIDNode, int iIDZone, bool bMan)
 {
-	Node *nod = getNodeFromID(iIDNode);
+	Node *nod = getNodeFromId(iIDNode);
 	// Falta comprobar que existen zona y nodo
 	if (nod != NULL)
 	{
@@ -195,7 +195,7 @@ int Dijkstra::addNodeToZone(int iIDNode, int iIDZone, bool bMan)
 		{
 			if (vZones[i].iIDZone == iIDZone)
 			{
-				Node *pNode = getNodeFromID(iIDNode);
+				Node *pNode = getNodeFromId(iIDNode);
 				res = vZones[i].addNodeToZone(pNode, bMan);
 				if (res == -1)
 					return -1;
@@ -389,7 +389,7 @@ bool Dijkstra::checkNodeFree(int iIDNode, int iIDRobot)
 	int i = 0;
 	int iNR = 0;
 	Node *pNodeOr;
-	pNodeOr = getNodeFromID(iIDNode);
+	pNodeOr = getNodeFromId(iIDNode);
 
 	//ROS_INFO("Checking Node:%d, for robot:%d",iIDNode,iIDRobot);
 

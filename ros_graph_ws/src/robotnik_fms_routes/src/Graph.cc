@@ -82,56 +82,6 @@ int Graph::shutDown()
     return OK;
 }
 
-/*! \fn int Graph::serialize()
- * 	\brief Save the graph data on a json document
-*/
-std::string Graph::serialize()
-{
-    return "TODO";
-}
-
-/*! \fn int Graph::deserialize()
- * 	\brief Read the graph data reading previouly from a json document
-*/
-std::string Graph::deserialize()
-{
-    ROS_INFO("Graph::deserialize File: %s", fileName);
-
-    graphData->nodes.resize(3);
-
-    graphData->nodes[0].arc_list.resize(2);
-    graphData->nodes[0].id = 0;
-    graphData->nodes[0].zone = 1;
-    graphData->nodes[0].pose.frame_id = "map";
-    graphData->nodes[0].pose.x = 0;
-    graphData->nodes[0].pose.y = 0;
-    graphData->nodes[0].pose.z = 0;
-    graphData->nodes[0].pose.theta = 0;
-    graphData->nodes[0].arc_list[0].node_dest = 1;
-    graphData->nodes[0].arc_list[1].node_dest = 2;
-
-    graphData->nodes[1].id = 1;
-    graphData->nodes[1].zone = 1;
-    graphData->nodes[1].pose.frame_id = "map";
-    graphData->nodes[1].pose.x = 1;
-    graphData->nodes[1].pose.y = 0;
-    graphData->nodes[1].pose.z = 0;
-    graphData->nodes[1].pose.theta = 0;
-
-    graphData->nodes[2].id = 2;
-    graphData->nodes[2].zone = 1;
-    graphData->nodes[2].pose.frame_id = "map";
-    graphData->nodes[2].pose.x = 0;
-    graphData->nodes[2].pose.y = 1;
-    graphData->nodes[2].pose.z = 0;
-    graphData->nodes[2].pose.theta = 0;
-
-    //ROS_ERROR("%s", std::to_string(graphData->nodes[0].arc_list[1].node_dest).c_str());
-
-    // TODO ROS_INFO("Graph::Deserialize: Processing JSON Found %s Nodes, %s Zones", std::to_string(nodes), std::to_string(zones));
-    return "OK";
-}
-
 /*! \fn void Graph::print()
  * 	\brief Print current graph
 */
@@ -178,6 +128,75 @@ void Graph::printArcs(graph_msgs::GraphNode *node)
     }
     else
         ROS_INFO("  Arcs: Empty");
+}
+
+/*! \fn int Graph::addNode(int node, double x, double y, double z, double theta, std::string frame, char *name)
+ * 	\brief Adds a new node to the graph
+*/
+graph_msgs::GraphNode *Graph::addNode(int node, int zone, double x, double y, double z, double theta, std::string frame, std::string name)
+{
+    int pos = graphData->nodes.size() + 1;
+    graphData->nodes.resize(pos--);
+
+    graphData->nodes[pos].id = node;
+    graphData->nodes[pos].zone = zone;
+    graphData->nodes[pos].pose.x = x;
+    graphData->nodes[pos].pose.y = y;
+    graphData->nodes[pos].pose.z = z;
+    graphData->nodes[pos].pose.theta = theta;
+    graphData->nodes[pos].pose.frame_id = frame;
+
+    //TODO
+    //dijkstraGraph->addNode(&graphData->nodes[pos]);
+    //dijkstraGraph->addZone(zone, 1);
+    //dijkstraGraph->addNodeToZone(node, zone);
+
+    return &graphData->nodes[pos];
+}
+
+/*! \fn int Graph::addArc(graph_msgs::GraphNode *from_node, int to_node)
+ * 	\brief Adds an arc from a node to another with constant weight
+*/
+int Graph::addArc(graph_msgs::GraphNode *from_node, int to_node)
+{
+    int pos = from_node->arc_list.size() + 1;
+    from_node->arc_list.resize(pos--);
+    from_node->arc_list[pos].node_dest = to_node;
+    from_node->arc_list[pos].distance = 1;
+    from_node->arc_list[pos].max_speed = 1.5;
+
+    //TODO
+    //dijkstraGraph->addArc(from_node->id, &from_node->arc_list[pos]);
+
+    return 0;
+}
+
+/*! \fn int Graph::addArc(graph_msgs::GraphNode *from_node, int to_node, float weight)
+ * 	\brief Adds an arc from a node to another with weight
+*/
+int Graph::addArc(graph_msgs::GraphNode *from_node, int to_node, float weight)
+{
+    int pos = from_node->arc_list.size() + 1;
+    from_node->arc_list.resize(pos--);
+    from_node->arc_list[pos].node_dest = to_node;
+    from_node->arc_list[pos].distance = weight;
+    from_node->arc_list[pos].max_speed = 1.5;
+
+    return 0;
+}
+
+/*! \fn int Graph::addArc(graph_msgs::GraphNode *from_node, int to_node, float weight, float max_speed)
+ * 	\brief Adds an arc from a node to another with weight and max_speed
+*/
+int Graph::addArc(graph_msgs::GraphNode *from_node, int to_node, float weight, float max_speed)
+{
+    int pos = from_node->arc_list.size() + 1;
+    from_node->arc_list.resize(pos--);
+    from_node->arc_list[pos].node_dest = to_node;
+    from_node->arc_list[pos].distance = weight;
+    from_node->arc_list[pos].max_speed = max_speed;
+
+    return 0;
 }
 
 /*! \fn std::vector<Node *> Graph::GetNodesUsed()
@@ -361,7 +380,7 @@ int Graph::getRoute(int from, int to, vector<graph_msgs::GraphNode> *detailed_no
     return 0;
 };
 
-/*! \fn int Graph::getNodePosition(int num_node, geometry_msgs::Pose2D *pos)
+/*! \fn int Graph::getNodePosition(int node_id, geometry_msgs::Pose2D *pos)
  * 	\brief Obtiene la posición del nodo
  *  \return 0 if OK
  *  \return -1 si el nodo no existe
@@ -520,4 +539,35 @@ int Graph::deleteAll()
 
     ROS_INFO("Dijkstra::deleteAll: all data has been removed");
     return 0;
+}
+
+/*! \fn int Graph::serialize()
+ * 	\brief Save the graph data on a json document
+*/
+std::string Graph::serialize()
+{
+    return "TODO";
+}
+
+/*! \fn int Graph::deserialize()
+ * 	\brief Read the graph data reading previouly from a json document
+*/
+std::string Graph::deserialize()
+{
+    ROS_INFO("Graph::deserialize File: %s", fileName);
+
+    //graph_msgs::GraphNode *node =
+    graph_msgs::GraphNode *node = addNode(0, 1, 0, 0, 0, 0, "map", "Node name 1");
+    addArc(node, 1);
+    addArc(node, 2);
+
+    node = addNode(1, 1, 1, 0, 0, 0.5, "map", "Node name 2");
+    addArc(node, 2);
+
+    addNode(2, 1, 0, 1, 0, 0.75, "map", "Node name 3");
+
+    //ROS_ERROR("%s", std::to_string(graphData->nodes[0].arc_list[1].node_dest).c_str());
+
+    // TODO ROS_INFO("Graph::Deserialize: Processing JSON Found %s Nodes, %s Zones", std::to_string(nodes), std::to_string(zones));
+    return "OK";
 }

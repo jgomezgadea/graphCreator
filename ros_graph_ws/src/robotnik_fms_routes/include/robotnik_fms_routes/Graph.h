@@ -59,14 +59,16 @@ class Graph
 	void print();
 	//! Print node arcs
 	void printArcs(graph_msgs::GraphNode *node);
-	/* TODO
-	//! Adds a new node // TODO Sumar 1 a variable numNodes
-	int addNode(int node, double x, double y, double z, double theta, std::string frame, char *name);
+	//! Adds a new node
+	graph_msgs::GraphNode *addNode(int node, int zone, double x, double y, double z, double theta, std::string frame, std::string name);
 	//! Adds arc from a node to another with constant weight
-	int addArc(int from_node, int to_node);
+	int addArc(graph_msgs::GraphNode *from_node, int to_node);
 	//! Adds arc from a node to another with weight
-	int addArc(int from_node, int to_node, int weight);
+	int addArc(graph_msgs::GraphNode *from_node, int to_node, float weight);
+	//! Adds arc from a node to another with weight and max speed
+	int addArc(graph_msgs::GraphNode *from_node, int to_node, float weight, float max_speed);
 
+	/* TODO
 	//! Delete all the nodes
 	int deleteNodes();
 	//! Delete arc

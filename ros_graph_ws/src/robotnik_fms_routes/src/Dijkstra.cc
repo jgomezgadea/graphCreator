@@ -154,14 +154,14 @@ int Dijkstra::addNode(graph_msgs::GraphNode *node)
  * 	\brief Adds a Zone
  *  \return 0 if OK
 */
-int Dijkstra::addZone(int iIDZone, int iMaxRobots, bool bMan, int iNodeDest, int iComp)
+int Dijkstra::addZone(int iIDZone, int iMaxRobots)
 {
 	for (int i = 0; i < (int)vZones.size(); i++)
 	{
 		if (vZones[i].iIDZone == iIDZone)
 			return -1;
 	}
-	vZones.push_back(Zone(iIDZone, iMaxRobots, bMan, iNodeDest, iComp));
+	vZones.push_back(Zone(iIDZone, iMaxRobots));
 	return 0;
 }
 
@@ -182,113 +182,31 @@ Node *Dijkstra::getNodeFromId(int iIDNode)
  * 	\brief Adds Node to a Zone
  *  \return 0 if OK
 */
-int Dijkstra::addNodeToZone(int iIDNode, int iIDZone, bool bMan)
+int Dijkstra::addNodeToZone(int iIDNode, int iIDZone)
 {
 	Node *nod = getNodeFromId(iIDNode);
 	// Falta comprobar que existen zona y nodo
 	if (nod != NULL)
 	{
 		int res = nod->addZoneToNode(iIDZone);
-		//if (res>=0){
 		int s = (int)vZones.size();
 		for (int i = 0; i < s; i++)
 		{
 			if (vZones[i].iIDZone == iIDZone)
 			{
 				Node *pNode = getNodeFromId(iIDNode);
-				res = vZones[i].addNodeToZone(pNode, bMan);
+				res = vZones[i].addNodeToZone(pNode);
 				if (res == -1)
 					return -1;
 				else
 					return 0;
 			}
 		}
-		//}
 		return 0;
 	}
 	else
 	{
 		return -1;
-	}
-}
-
-/*! \fn bool Dijkstra::CheckCompZoneFree(int iIDZone,int iIDRobot){
- * 	\brief Checks if zone Free
- *  \return true if free false other case
-*/
-bool Dijkstra::checkCompZoneFree(int iIDZone, int iIDRobot)
-{
-	//ROS_INFO("Checking Comp Zone:%d for Robot:%d ",iIDZone,iIDRobot);
-	int iZone = -1;
-	bool bFound = false;
-	int iMaxRobots = 0;
-	bool bPresRobot[50];
-	for (int i = 0; i < (int)vZones.size(); i++)
-	{
-		if (vZones[i].iIDZone == iIDZone)
-		{
-			iMaxRobots = vZones[i].iMaxRobots;
-			bFound = true;
-			iZone = i;
-			break;
-		}
-	}
-	if (!bFound)
-	{
-		return true;
-	}
-	iMaxRobots = 1;
-	for (int i = 0; i < 50; i++)
-	{
-		bPresRobot[i] = false;
-	}
-	for (int j = 0; j < (int)vZones[iZone].vpNodes.size(); j++)
-	{
-		Node *pNode;
-		pNode = vZones[iZone].vpNodes[j];
-		if (pNode == NULL)
-		{
-			return true;
-		}
-		//ROS_INFO("Zone:%d,Checking Node:%d robot:%d resrobot:%d,iMaxRobots:%d",iIDZone,pNode->iNode,pNode->iRobot,pNode->iResRobot,iMaxRobots);
-		if (iIDRobot >= 0)
-		{
-			if ((pNode->iRobot >= 0) && (pNode->iRobot != iIDRobot))
-				bPresRobot[pNode->iRobot] = true;
-			if ((pNode->iResRobot >= 0) && (pNode->iResRobot != iIDRobot))
-				bPresRobot[pNode->iResRobot] = true;
-		}
-		else
-		{
-			//ROS_INFO("1");
-			if (pNode->iRobot >= 0)
-			{
-				//ROS_INFO("2");
-				bPresRobot[pNode->iRobot] = true;
-			}
-			if (pNode->iResRobot >= 0)
-			{
-				//ROS_INFO("3");
-				bPresRobot[pNode->iResRobot] = true;
-			}
-		}
-	}
-	int iNR = 0;
-	for (int i = 0; i < 50; i++)
-	{
-		if (bPresRobot[i])
-			iNR++;
-	}
-	//ROS_INFO("Zone:%d,Checking,NR:%d,iMaxRobots:%d",iIDZone,iNR,iMaxRobots);
-	if (iNR >= iMaxRobots)
-	{
-		//if (iIDRobot>=0) ROS_ERROR("--Comp Zone Block:%d,robot:%d",iIDZone,iIDRobot);
-		return false;
-	}
-	else
-	{
-
-		return true;
 	}
 }
 
@@ -304,7 +222,6 @@ bool Dijkstra::checkZoneFree(int iIDZone, int iIDRobot)
 	bool bFound = false;
 	int iMaxRobots = 0;
 	bool bPresRobot[50];
-	int iCompZone = -1;
 	bool bCompZoneFree = true;
 	for (int i = 0; i < (int)vZones.size(); i++)
 	{
@@ -313,9 +230,6 @@ bool Dijkstra::checkZoneFree(int iIDZone, int iIDRobot)
 			iMaxRobots = vZones[i].iMaxRobots;
 			bFound = true;
 			iZone = i;
-			iCompZone = vZones[i].iComplementary;
-			//ROS_ERROR("Comp zone:%d,RRRobot:%d",iCompZone,iIDRobot);
-			bCompZoneFree = checkCompZoneFree(iCompZone, iIDRobot);
 			break;
 		}
 	}

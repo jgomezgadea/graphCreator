@@ -209,9 +209,9 @@ class GraphNode
     void timerPublishCallback(const ros::TimerEvent &);
 
     // Status Publisher
-    ros::Publisher nodeUsedPublisher;
-    ros::Publisher nodeIDUsedPublisher;
-    ros::Publisher graphPublisher;
+    ros::Publisher used_nodes_pub_old;
+    ros::Publisher used_nodes_id_pub;
+    ros::Publisher graph_pub;
 
     std::vector<ros::Subscriber> vRobotStatusSubs;
     std::vector<robotnik_fms_msgs::RobotStatus> vRobotStatus;
@@ -729,13 +729,13 @@ int GraphNode::rosSetup()
 
     // Publishers
     state_publisher_ = pnh_.advertise<robotnik_fms_msgs::State>("state", 1);
-    nodeUsedPublisher = pnh_.advertise<robotnik_fms_msgs::NodesInfo>("nodes_used", 1);
-    nodeIDUsedPublisher = pnh_.advertise<robotnik_fms_msgs::NodesID>("nodes_id_used", 1);
-    graphPublisher = pnh_.advertise<robotnik_fms_msgs::NodesInfo>("graph", 1);
+    used_nodes_pub_old = pnh_.advertise<robotnik_fms_msgs::NodesInfo>("nodes_used", 1);
+    used_nodes_id_pub = pnh_.advertise<robotnik_fms_msgs::NodesID>("nodes_id_used", 1);
+    graph_pub = pnh_.advertise<robotnik_fms_msgs::NodesInfo>("graph", 1);
     graph_scale_publisher_ = pnh_.advertise<std_msgs::Float32>("graph_marker_scale", 1);
 
     // New publishers
-    used_nodes_pub = pnh_.advertise<graph_msgs::GraphNodeArray>("state", 1);
+    used_nodes_pub = pnh_.advertise<graph_msgs::GraphNodeArray>("used_nodes", 1);
 
     ros_initialized = true;
 
@@ -1077,15 +1077,15 @@ void GraphNode::rosPublish()
         }
         markers_pub_nodes_used.publish(marker_array_msg);
 
-        nodeUsedPublisher.publish(rviz_nodes);
-        nodeIDUsedPublisher.publish(rviz_nodesId);
+        used_nodes_pub_old.publish(rviz_nodes);
+        used_nodes_id_pub.publish(rviz_nodesId);
 
         used_nodes_pub.publish(route);
     }
     else
     {
         rviz_nodesId.id.push_back("-");
-        nodeIDUsedPublisher.publish(rviz_nodesId);
+        used_nodes_id_pub.publish(rviz_nodesId);
     }
     visualization_msgs::MarkerArray marker_array_msg;
     //visualization_msgs::MarkerArray marker_array_arrow_msg;
@@ -1313,7 +1313,7 @@ void GraphNode::rosPublish()
         }
         //markers_pub_graph_arcs.publish(marker_array_arrow_msg);
         markers_pub_graph.publish(marker_array_msg);
-        graphPublisher.publish(Graph);
+        graph_pub.publish(Graph);
     }
 }
 

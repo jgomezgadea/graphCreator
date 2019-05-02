@@ -205,7 +205,7 @@ class Node
 	}
 
 	//! Adds a new Zone
-	//! return -1 if the node already exists
+	//! return -1 if the zone already on the node
 	//! return 0 if OK
 	int addZoneToNode(int iZone)
 	{
@@ -410,19 +410,6 @@ class Dijkstra
 		int iIDZone;
 		//! Max Robots in Zone
 		int iMaxRobots;
-		//! Zone Type
-		//! =0 o 1 Zona Exclusion Normal
-		//! =2 No Maniobra, Movimientos con origen y destino dentro de la misma zona generaran una ruta con un paso
-		//!     intermedio por el nodo destino zona.
-		//! =3 ambos casos
-		bool bMan;
-		//! Node Dest Zone cuando de devuelva un carro a la zona primero se envia aqui, tambien sera el nodo intermedio
-		//! para los movimientos con origen y destino dentro de la misma zona de no maniobra
-		int iNodeDest;
-
-		//! complementary Zone
-		//!
-		int iComplementary;
 		//! Vector Lista Nodos que contiene la zona
 		std::vector<Node *> vpNodes;
 
@@ -430,25 +417,12 @@ class Dijkstra
 		{
 			iIDZone = iZ;
 			iMaxRobots = 1;
-			bMan = false;
-			iNodeDest = -1;
 		}
 
 		Zone(int iZ, int iMaxR)
 		{
 			iIDZone = iZ;
 			iMaxRobots = iMaxR;
-			bMan = false;
-			iNodeDest = -1;
-		}
-
-		Zone(int iZ, int iMaxR, bool bMan, int iNodeD, int iComp)
-		{
-			iIDZone = iZ;
-			iMaxRobots = iMaxR;
-			bMan = false;
-			iNodeDest = iNodeD;
-			iComplementary = iComp;
 		}
 
 		~Zone()
@@ -458,7 +432,7 @@ class Dijkstra
 		//! Adds a new Zone
 		//! return -1 if the node already exists
 		//! return 0 if OK
-		int addNodeToZone(Node *pNode, bool bMan)
+		int addNodeToZone(Node *pNode)
 		{
 			for (int i = 0; i < (int)vpNodes.size(); i++)
 			{
@@ -561,13 +535,12 @@ class Dijkstra
 	//! Gets the index of the node using his ID
 	int getNodeIndex(int nodeID);
 	//! Add Node to Zone
-	int addNodeToZone(int iIDNode, int iIDZone, bool bMan);
+	int addNodeToZone(int iIDNode, int iIDZone);
 	//! Add Zone to Graph
-	int addZone(int iIDZone, int iMaxRobots, bool bMan, int iNodeDest, int iComp);
+	int addZone(int iIDZone, int iMaxRobots);
 
 	bool checkNodeFree(int iIDNode, int iIDRobot);
 	bool checkZoneFree(int iIDZone, int iIDRobot);
-	bool checkCompZoneFree(int iIDZone, int iIDRobot);
 
 	//! Get Node From ID
 	Node *getNodeFromId(int iIDNode);

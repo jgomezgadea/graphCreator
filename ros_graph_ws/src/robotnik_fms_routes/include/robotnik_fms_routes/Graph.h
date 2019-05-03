@@ -44,7 +44,6 @@ class Graph
   public:
 	//! Grafo con los nodos y arcos del sistema
 	Dijkstra *dijkstraGraph;
-	graph_msgs::GraphNodeArray *graphData;
 
   public:
 	//! Constructor
@@ -58,15 +57,15 @@ class Graph
 	//! Print current graph
 	void print();
 	//! Print node arcs
-	void printArcs(graph_msgs::GraphNode *node);
+	void printArcs(graph_msgs::GraphNode node);
 	//! Adds a new node
-	graph_msgs::GraphNode *addNode(int node, int zone, double x, double y, double z, double theta, std::string frame, std::string name);
+	graph_msgs::GraphNode addNode(int node, int zone, double x, double y, double z, double theta, std::string frame, std::string name);
 	//! Adds arc from a node to another with constant weight
-	int addArc(graph_msgs::GraphNode *from_node, int to_node);
+	int addArc(graph_msgs::GraphNode from_node, int to_node);
 	//! Adds arc from a node to another with weight
-	int addArc(graph_msgs::GraphNode *from_node, int to_node, float weight);
+	int addArc(graph_msgs::GraphNode from_node, int to_node, float weight);
 	//! Adds arc from a node to another with weight and max speed
-	int addArc(graph_msgs::GraphNode *from_node, int to_node, float weight, float max_speed);
+	int addArc(graph_msgs::GraphNode from_node, int to_node, float weight, float max_speed);
 
 	/* TODO
 	//! Delete all the nodes
@@ -89,7 +88,7 @@ class Graph
 	//! Obtiene el arco entre dos nodos
 	int getArcBetweenNodes(int from_id, int to_id, graph_msgs::GraphArc *arc);
 	//! Get list of used nodes
-	std::vector<graph_msgs::GraphNode *> getNodesUsed();
+	std::vector<graph_msgs::GraphNode> getNodesUsed();
 	//! Get msg with the used nodes
 	graph_msgs::GraphNodeArray getNodesUsedMsg();
 	//! Reserve a node
@@ -102,14 +101,14 @@ class Graph
 	int deleteAll();
 
 	//! Gets Node by nodeID
-	graph_msgs::GraphNode *getNode(unsigned int node_id);
+	graph_msgs::GraphNode getNode(unsigned int node_id);
 
 	bool checkNodeFree(int idNode, int idRobot);
 	bool checkNodesFree(std::vector<int> vNodesId, int idRobot);
 	bool checkZoneFree(int idZone, int idRobot);
 
 	//! Get Node From ID
-	graph_msgs::GraphNode *getNodeFromId(int iIDNode);
+	graph_msgs::GraphNode getNodeFromId(int iIDNode);
 
 	//! Get iRobot from ID
 	int getRobotFromId(int iIDNode);

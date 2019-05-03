@@ -30,43 +30,9 @@ using namespace std;
 //! Class Node utilizada por Dijkstra para representar los nodos del grafo
 class Node
 {
-	class Arc
-	{
-	  public:
-		//! Arista
-		graph_msgs::GraphArc *arc;
-
-	  public:
-		//! Constructor
-		Arc(graph_msgs::GraphArc *pointerToArc)
-		{
-			arc = pointerToArc;
-		};
-		//! Destructor
-		~Arc(){
-			//std::cout << "Arc::~Arc:" << std::endl;
-		};
-		//! Establece la velocidad en ese arco
-		int setMaxSpeed(double value)
-		{
-			arc->max_speed = value;
-			return 0;
-		}
-		//! Gets the node connected
-		int getNextNode()
-		{
-			return arc->node_dest;
-		}
-		//! Gets the weight of the edge
-		int getWeight()
-		{
-			return arc->distance;
-		}
-	};
-
   public:
 	//! Node
-	graph_msgs::GraphNode *node;
+	graph_msgs::GraphNode node;
 	//! Distance from previous node
 	int iDist;
 	//! Id from previous node
@@ -74,8 +40,6 @@ class Node
 	//! Flag para marcar cuando se utiliza el nodo para el cálculo de
 	// distancias (solo se utiliza una vez), para no volverlo a encolar
 	bool bUsed;
-	//! vector de arcos a nodos adyacentes
-	std::vector<Arc> vAdjacent;
 	//! vector de Zonas
 	std::vector<int> viZones;
 	//! iRobot
@@ -85,9 +49,15 @@ class Node
 
   public:
 	//! Constructor
-	Node(graph_msgs::GraphNode *pointerToNode)
+	Node()
 	{
-		node = pointerToNode;
+		node = graph_msgs::GraphNode();
+		node.id = -1;
+	}
+	//! Constructor
+	Node(graph_msgs::GraphNode new_node)
+	{
+		node = new_node;
 		iDist = INFINITE;
 		iParent = NO_PARENT;
 		bUsed = false;
@@ -102,15 +72,15 @@ class Node
 	}
 	//! Adds new node adjacent with default weight and a list of magnets in the way
 	//!	\returns 0 if OK
-	int addNodeAdjacent(graph_msgs::GraphArc *pointerToArc)
+	int addNodeAdjacent(graph_msgs::GraphArc arc)
 	{
-		int size = vAdjacent.size();
+		int size = node.arc_list.size();
 
 		if (size > 0)
 		{
 			for (int i = 0; i < size; i++)
 			{ //Comprobamos que no esté repetido
-				if (vAdjacent[i].getNextNode() == pointerToArc->node_dest)
+				if (node.arc_list[i].node_dest == arc.node_dest)
 				{ // Si está repetido no lo insertamos
 					//std::cout << "Node::AddNodeAdjacent: Error: node " << node_id << " already adjacent" << std::endl;
 					return -1;
@@ -119,8 +89,7 @@ class Node
 		}
 		//
 		// Añadimos el arco
-		Arc new_arc(pointerToArc);
-		vAdjacent.push_back(new_arc);
+		node.arc_list.push_back(arc);
 		return 0;
 	}
 	//! Resets values for new routes
@@ -146,25 +115,24 @@ class Node
 	//!	\returns 0 if OK
 	int deleteAdjacent(int node_id)
 	{
-		int size = vAdjacent.size();
+		int size = node.arc_list.size();
 		if (size > 0)
 		{
 			for (int i = 0; i < size; i++)
 			{
-				if (vAdjacent[i].getNextNode() == node_id)
+				if (node.arc_list[i].node_dest == node_id)
 				{ //Encontrado
-					vAdjacent.erase(vAdjacent.begin() + i);
+					node.arc_list.erase(node.arc_list.begin() + i);
 					return 0;
 				}
 			}
 		}
-		//std::cout << "Node::AddNodeAdjacent: Error: node " << node_id << " not adjacent" << std::endl;
 		return -1;
 	}
 	//! Deletes all adjacent nodes
 	int deleteAdjacent()
 	{
-		vAdjacent.clear();
+		node.arc_list.clear();
 
 		return 0;
 	}
@@ -196,12 +164,12 @@ class Node
 	//! returns the value of the id
 	int getId()
 	{
-		return node->id;
+		return node.id;
 	}
 	//! returns the name of the node
 	std::string getName()
 	{
-		return node->name;
+		return node.name;
 	}
 
 	//! Adds a new Zone
@@ -436,7 +404,7 @@ class Dijkstra
 		{
 			for (int i = 0; i < (int)vpNodes.size(); i++)
 			{
-				if (vpNodes[i]->node->id == pNode->node->id)
+				if (vpNodes[i]->node.id == pNode->node.id)
 					return -1;
 			}
 			vpNodes.push_back(pNode);
@@ -497,7 +465,7 @@ class Dijkstra
 	//! Public Destructor
 	~Dijkstra();
 	//! Disables the edition of nodes and arcs. Necesario para poder calcular rutas sin incoherencias
-	std::string finalizeEdition(graph_msgs::GraphNodeArray *graphData);
+	std::string finalizeEdition(std::vector<Node> graph);
 	//! Enable the edition of nodes and arcs. Necesario para poder añadir nodos y aristas. Todos los cálculos realizados se perderán
 	void enableEdition();
 	//! Returns if the graph is being edited
@@ -515,7 +483,7 @@ class Dijkstra
 	int getRoute(int inital_node, int end_node, std::vector<Node> *route);
 
 	//! Get list of nodes used or blocked
-	std::vector<graph_msgs::GraphNode *> getNodesUsed();
+	std::vector<graph_msgs::GraphNode> getNodesUsed();
 
 	bool reserveNode(int iRobot, int iIDNode);
 
@@ -526,10 +494,10 @@ class Dijkstra
 	bool unBlockAll(int iRobot);
 
 	//! Adds a new node
-	int addNode(graph_msgs::GraphNode *node);
+	int addNode(graph_msgs::GraphNode node);
 
 	//! Adds edge from a node to another
-	int addArc(int from_node, graph_msgs::GraphArc *arc);
+	int addArc(int from_node, graph_msgs::GraphArc new_arc);
 	//! Gets the arc between two nodes
 	int getArcBetweenNodes(int from_node, int to_node);
 	//! Gets the index of the node using his ID

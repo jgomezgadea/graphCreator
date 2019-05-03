@@ -1115,10 +1115,10 @@ void GraphNode::rosPublish()
 
             visualization_msgs::Marker M;
             M.header.stamp = ros::Time::now();
-            M.header.frame_id = nod.node->pose.frame_id;
+            M.header.frame_id = nod.node.pose.frame_id;
             M.ns = "basic_shapes";
             M.id = iID + 10000;
-            if (isnan(nod.node->pose.theta))
+            if (isnan(nod.node.pose.theta))
             {
                 M.type = visualization_msgs::Marker::SPHERE;
                 M.pose.orientation.x = 0.0;
@@ -1129,24 +1129,24 @@ void GraphNode::rosPublish()
             else
             {
                 M.type = visualization_msgs::Marker::ARROW;
-                M.pose.orientation = tf::createQuaternionMsgFromYaw(nod.node->pose.theta);
+                M.pose.orientation = tf::createQuaternionMsgFromYaw(nod.node.pose.theta);
             }
             M.action = visualization_msgs::Marker::ADD;
-            M.pose.position.x = nod.node->pose.x / fGraph_markers_scale;
-            M.pose.position.y = nod.node->pose.y / fGraph_markers_scale;
-            M.pose.position.z = nod.node->pose.z;
+            M.pose.position.x = nod.node.pose.x / fGraph_markers_scale;
+            M.pose.position.y = nod.node.pose.y / fGraph_markers_scale;
+            M.pose.position.z = nod.node.pose.z;
 
             float fR = 1.0;
             float fG = 1.0;
             float fB = 1.0;
             float fA = 1.0;
 
-            /*if (nod.bLoad)
-                fR = 0.5;
-            if (nod.bUnload)
-                fG = 0.5;
-            if (nod.bCharge)
-                fB = 0.5;*/
+            //if (nod.bLoad)
+            //    fR = 0.5;
+            //if (nod.bUnload)
+            //    fG = 0.5;
+            //if (nod.bCharge)
+            //    fB = 0.5;
 
             M.scale.x = scale;      //+0.1*nod.bStop;
             M.scale.y = scale;      //+0.1*nod.bStop;
@@ -1164,77 +1164,77 @@ void GraphNode::rosPublish()
                 txt = sZones + ":";
             else
                 txt = "";
-            /*if (nod.bDoorOpen)
-                txt = txt + "DO";
-            if (nod.bDoorClose)
-                txt = txt + "DC";
-            if (nod.bEnterShower)
-                txt = txt + "ESH:" + nod.sShowerFrom + ":" + nod.sShowerDoor;
-            if (nod.bLeaveShower)
-                txt = txt + "LSH:" + nod.sShowerFrom + ":" + nod.sShowerDoor;
+            // if (nod.bDoorOpen)
+            //     txt = txt + "DO";
+            // if (nod.bDoorClose)
+            //     txt = txt + "DC";
+            // if (nod.bEnterShower)
+            //     txt = txt + "ESH:" + nod.sShowerFrom + ":" + nod.sShowerDoor;
+            // if (nod.bLeaveShower)
+            //     txt = txt + "LSH:" + nod.sShowerFrom + ":" + nod.sShowerDoor;
 
-            if (nod.bLoad)
-                txt = txt + "L";
-            if (nod.bUnload)
-                txt = txt + "UL";
-            if (nod.bPrePick)
-                txt = txt + "PRL";
-            if (nod.bPrePlace)
-                txt = txt + "PRUL";
-            if (nod.bPostPick)
-                txt = txt + "POL";
-            if (nod.bPostPlace)
-                txt = txt + "POUL";
-            if (nod.bCharge)
-                txt = txt + "C";
+            // if (nod.bLoad)
+            //     txt = txt + "L";
+            // if (nod.bUnload)
+            //     txt = txt + "UL";
+            // if (nod.bPrePick)
+            //     txt = txt + "PRL";
+            // if (nod.bPrePlace)
+            //     txt = txt + "PRUL";
+            // if (nod.bPostPick)
+            //     txt = txt + "POL";
+            // if (nod.bPostPlace)
+            //     txt = txt + "POUL";
+            // if (nod.bCharge)
+            //     txt = txt + "C";
 
-            if (nod.bDoNothing)
-                txt = txt + "DoNothing";
+            // if (nod.bDoNothing)
+            //     txt = txt + "DoNothing";
 
-            if (nod.bElevator)
-            {
-                txt = txt + "EL";
+            // if (nod.bElevator)
+            // {
+            //     txt = txt + "EL";
 
-                if (nod.bElevatorGetControl)
-                {
-                    txt = txt + "_Control";
-                }
-                if (nod.bElevatorLeaveControl)
-                {
-                    txt = txt + "_Leave";
-                }
-                if (nod.bElevatorOpenDoor)
-                {
-                    txt = txt + "_Open";
-                    txt = txt + "Floor" + std::to_string(nod.iElevatorFloor);
-                }
-                if (nod.bElevatorCloseDoor)
-                {
-                    txt = txt + "_Close";
-                    txt = txt + "Floor" + std::to_string(nod.iElevatorFloor);
-                }
-                txt = txt + "ID" + std::to_string(nod.iElevatorID);
-            }*/
+            //     if (nod.bElevatorGetControl)
+            //     {
+            //         txt = txt + "_Control";
+            //     }
+            //     if (nod.bElevatorLeaveControl)
+            //     {
+            //         txt = txt + "_Leave";
+            //     }
+            //     if (nod.bElevatorOpenDoor)
+            //     {
+            //         txt = txt + "_Open";
+            //         txt = txt + "Floor" + std::to_string(nod.iElevatorFloor);
+            //     }
+            //     if (nod.bElevatorCloseDoor)
+            //     {
+            //         txt = txt + "_Close";
+            //         txt = txt + "Floor" + std::to_string(nod.iElevatorFloor);
+            //     }
+            //     txt = txt + "ID" + std::to_string(nod.iElevatorID);
+            // }
 
             if (txt != "")
                 txt = txt + ":";
             visualization_msgs::Marker MText;
             MText.header.stamp = ros::Time::now();
-            MText.header.frame_id = nod.node->pose.frame_id;
+            MText.header.frame_id = nod.node.pose.frame_id;
             MText.ns = "basic_shapes";
             MText.id = iID;
             MText.type = visualization_msgs::Marker::TEXT_VIEW_FACING;
             MText.action = visualization_msgs::Marker::ADD;
-            txt = txt + std::string(nod.node->name);
+            txt = txt + std::string(nod.node.name);
             if (nod.iResRobot >= 0)
                 txt = txt + " Res:" + std::to_string(nod.iResRobot);
             if (nod.iRobot >= 0)
                 txt = txt + " R:" + std::to_string(nod.iRobot);
             MText.text = txt;
             //ROS_INFO("%s NodesUsed:%s",txt.c_str(),text_nodes_used.c_str());
-            MText.pose.position.x = nod.node->pose.x / fGraph_markers_scale;
-            MText.pose.position.y = nod.node->pose.y / fGraph_markers_scale;
-            MText.pose.position.z = nod.node->pose.z + 0.1;
+            MText.pose.position.x = nod.node.pose.x / fGraph_markers_scale;
+            MText.pose.position.y = nod.node.pose.y / fGraph_markers_scale;
+            MText.pose.position.z = nod.node.pose.z + 0.1;
             MText.pose.orientation.x = 0.0;
             MText.pose.orientation.y = 0.0;
             MText.pose.orientation.z = 0.0;
@@ -1251,22 +1251,22 @@ void GraphNode::rosPublish()
             iID++;
 
             //marker_array_arrow_msg.markers.resize(nod.vAdjacent.size());
-            for (int j = 0; j < nod.vAdjacent.size(); j++)
+            for (int j = 0; j < nod.node.arc_list.size(); j++)
             {
-                int iNext = nod.vAdjacent[j].getNextNode();
-                graph_msgs::GraphNode *nodDest = graph_route->getNodeFromId(iNext);
+                int iNext = nod.node.arc_list[j].node_dest;
+                graph_msgs::GraphNode nodDest = graph_route->getNodeFromId(iNext);
 
-                if (nodDest != NULL)
+                if (nodDest.id >= 0)
                 {
                     //ROS_INFO("Adding Arc:%d from Node:%d[%f,%f]F:%s name:%s to Node:%d[%f,%f]F:%s name:%s",j,nod.iNode,nod.dX,nod.dY,nod.sFrame_id.c_str(),std::string(nod.cName).c_str(),nodDest->iNode,nodDest->dX,nodDest->dY,nodDest->sFrame_id.c_str(),std::string(nodDest->cName).c_str());
 
-                    if (nod.node->pose.frame_id == nodDest->pose.frame_id)
+                    if (nod.node.pose.frame_id == nodDest.pose.frame_id)
                     {
 
                         visualization_msgs::Marker M;
 
                         M.header.stamp = ros::Time::now();
-                        M.header.frame_id = nod.node->pose.frame_id;
+                        M.header.frame_id = nod.node.pose.frame_id;
                         M.ns = "basic_shapes";
                         M.id = iID;
 
@@ -1292,13 +1292,13 @@ void GraphNode::rosPublish()
 
                         M.points.resize(2);
 
-                        M.points[0].x = nod.node->pose.x / fGraph_markers_scale;
-                        M.points[0].y = nod.node->pose.y / fGraph_markers_scale;
-                        M.points[0].z = nod.node->pose.z;
+                        M.points[0].x = nod.node.pose.x / fGraph_markers_scale;
+                        M.points[0].y = nod.node.pose.y / fGraph_markers_scale;
+                        M.points[0].z = nod.node.pose.z;
 
-                        M.points[1].x = nodDest->pose.x / fGraph_markers_scale;
-                        M.points[1].y = nodDest->pose.y / fGraph_markers_scale;
-                        M.points[1].z = nodDest->pose.z;
+                        M.points[1].x = nodDest.pose.x / fGraph_markers_scale;
+                        M.points[1].y = nodDest.pose.y / fGraph_markers_scale;
+                        M.points[1].z = nodDest.pose.z;
 
                         M.lifetime = ros::Duration((1.0 / dGraphFreq_) * 10.0);
                         marker_array_msg.markers.push_back(M);
@@ -1355,11 +1355,11 @@ bool GraphNode::routeServiceServerCb(robotnik_fms_msgs::GetRoute::Request &reque
     if (request.from_node == request.to_node)
     {
         robotnik_fms_msgs::NodeInfo nod;
-        graph_msgs::GraphNode *nod_temp = graph_route->getNode(request.from_node);
+        graph_msgs::GraphNode nod_temp = graph_route->getNode(request.from_node);
 
-        nod.name = std::string(nod_temp->name);
+        nod.name = std::string(nod_temp.name);
 
-        nodes = nodes + std::to_string(nod_temp->id);
+        nodes = nodes + std::to_string(nod_temp.id);
 
         response.nodes.push_back(nod);
     }
@@ -1444,9 +1444,10 @@ bool GraphNode::reloadGraphServiceServerCb(robotnik_fms_msgs::ReloadGraph::Reque
 //! True if it is posible to block/free node idNode by Robot iRobot
 bool GraphNode::checkNode(bool bBlock, int idNode, int iRobot, string *msg)
 {
-    graph_msgs::GraphNode *node_info = NULL;
+    graph_msgs::GraphNode node_info;
+    node_info.id = -1;
     node_info = graph_route->getNode(idNode);
-    if (node_info == NULL)
+    if (node_info.id < 0)
     {
         *msg = "NOT FOUND Node:" + std::to_string(idNode);
         return false;
@@ -1457,14 +1458,14 @@ bool GraphNode::checkNode(bool bBlock, int idNode, int iRobot, string *msg)
 
         if (!graph_route->checkNodeFree(idNode, iRobot))
         {
-            *msg = "Node:" + std::to_string(idNode) + " ALREADY used by other Robot:" + std::to_string(graph_route->getRobotFromId(node_info->id));
+            *msg = "Node:" + std::to_string(idNode) + " ALREADY used by other Robot:" + std::to_string(graph_route->getRobotFromId(node_info.id));
             return false;
         }
 
         //if (node_info->bBlocked){
-        if (graph_route->getRobotFromId(node_info->id) >= 0)
+        if (graph_route->getRobotFromId(node_info.id) >= 0)
         {
-            if (graph_route->getRobotFromId(node_info->id) == iRobot)
+            if (graph_route->getRobotFromId(node_info.id) == iRobot)
             {
                 // Already Blocked by this robot
                 *msg = "Node:" + std::to_string(idNode) + " ALREADY Blocked by Robot:" + std::to_string(iRobot);
@@ -1473,32 +1474,32 @@ bool GraphNode::checkNode(bool bBlock, int idNode, int iRobot, string *msg)
             else
             {
                 // Already Blocked by other robot
-                *msg = "Node:" + std::to_string(idNode) + " ALREADY Blocked by other Robot:" + std::to_string(graph_route->getRobotFromId(node_info->id));
+                *msg = "Node:" + std::to_string(idNode) + " ALREADY Blocked by other Robot:" + std::to_string(graph_route->getRobotFromId(node_info.id));
                 return false;
             }
         }
         else
         {
             // Block OK
-            *msg = "Node:" + std::to_string(idNode) + " Block Possible by Robot:" + std::to_string(graph_route->getRobotFromId(node_info->id));
+            *msg = "Node:" + std::to_string(idNode) + " Block Possible by Robot:" + std::to_string(graph_route->getRobotFromId(node_info.id));
             return true;
         }
     }
     else
     {
         //if (node_info->bBlocked){
-        if (graph_route->getRobotFromId(node_info->id) >= 0)
+        if (graph_route->getRobotFromId(node_info.id) >= 0)
         {
             // Unblock OK
-            if (graph_route->getRobotFromId(node_info->id) == iRobot)
+            if (graph_route->getRobotFromId(node_info.id) == iRobot)
             {
-                *msg = "Node:" + std::to_string(idNode) + " Unblock Possible by Robot:%d " + std::to_string(graph_route->getRobotFromId(node_info->id));
+                *msg = "Node:" + std::to_string(idNode) + " Unblock Possible by Robot:%d " + std::to_string(graph_route->getRobotFromId(node_info.id));
                 return true;
             }
             else
             {
                 // Not Blocked by this robot
-                *msg = "Trying to Unblock Node:" + std::to_string(idNode) + " by Robot " + std::to_string(iRobot) + " but BLOCKED by Robot:" + std::to_string(graph_route->getRobotFromId(node_info->id));
+                *msg = "Trying to Unblock Node:" + std::to_string(idNode) + " by Robot " + std::to_string(iRobot) + " but BLOCKED by Robot:" + std::to_string(graph_route->getRobotFromId(node_info.id));
                 return false;
             }
         }
@@ -1513,9 +1514,10 @@ bool GraphNode::checkNode(bool bBlock, int idNode, int iRobot, string *msg)
 
 bool GraphNode::reserveNode(bool bReserve, int idNode, int iRobot, string *msg)
 {
-    graph_msgs::GraphNode *node_info = NULL;
+    graph_msgs::GraphNode node_info;
+    node_info.id = -1;
     node_info = graph_route->getNode(idNode);
-    if (node_info == NULL)
+    if (node_info.id < 0)
     {
         *msg = "NOT FOUND Node:" + std::to_string(idNode);
         return false;
@@ -1525,22 +1527,22 @@ bool GraphNode::reserveNode(bool bReserve, int idNode, int iRobot, string *msg)
 
         if (!graph_route->checkNodeFree(idNode, iRobot))
         {
-            *msg = "Not Possible to Reserve Node:" + std::to_string(idNode) + " ALREADY used by other Robot:" + std::to_string(graph_route->getRobotFromId(node_info->id));
+            *msg = "Not Possible to Reserve Node:" + std::to_string(idNode) + " ALREADY used by other Robot:" + std::to_string(graph_route->getRobotFromId(node_info.id));
             return false;
         }
         //if (node_info->bReserved){
-        if (graph_route->getResRobotFromId(node_info->id) >= 0)
+        if (graph_route->getResRobotFromId(node_info.id) >= 0)
         {
-            if (graph_route->getResRobotFromId(node_info->id) == iRobot)
+            if (graph_route->getResRobotFromId(node_info.id) == iRobot)
             {
                 // Already Reserved by this robot
-                *msg = "Node:" + std::to_string(idNode) + " ALREADY Reserved by Robot:" + std::to_string(graph_route->getRobotFromId(node_info->id));
+                *msg = "Node:" + std::to_string(idNode) + " ALREADY Reserved by Robot:" + std::to_string(graph_route->getRobotFromId(node_info.id));
                 return true;
             }
             else
             {
                 // Already Reserved by other robot
-                *msg = "Node:" + std::to_string(idNode) + " ALREADY Reserved by other Robot:" + std::to_string(graph_route->getRobotFromId(node_info->id));
+                *msg = "Node:" + std::to_string(idNode) + " ALREADY Reserved by other Robot:" + std::to_string(graph_route->getRobotFromId(node_info.id));
                 return false;
             }
         }
@@ -1555,10 +1557,10 @@ bool GraphNode::reserveNode(bool bReserve, int idNode, int iRobot, string *msg)
     else
     {
         //if (node_info->bReserved){
-        if (graph_route->getResRobotFromId(node_info->id) >= 0)
+        if (graph_route->getResRobotFromId(node_info.id) >= 0)
         {
             // Unblock OK
-            if (graph_route->getRobotFromId(node_info->id) == iRobot)
+            if (graph_route->getRobotFromId(node_info.id) == iRobot)
             {
                 *msg = "Node:" + std::to_string(idNode) + " Unreserved OK by Robot:%d " + std::to_string(iRobot);
                 graph_route->reserveNode(-1, idNode);
@@ -1568,7 +1570,7 @@ bool GraphNode::reserveNode(bool bReserve, int idNode, int iRobot, string *msg)
             else
             {
                 // Not Reserved by this robot
-                *msg = "Trying to Reserve Node:" + std::to_string(idNode) + " by Robot " + std::to_string(iRobot) + " but Reserved by Robot:" + std::to_string(graph_route->getRobotFromId(node_info->id));
+                *msg = "Trying to Reserve Node:" + std::to_string(idNode) + " by Robot " + std::to_string(iRobot) + " but Reserved by Robot:" + std::to_string(graph_route->getRobotFromId(node_info.id));
                 return false;
             }
         }
@@ -1583,10 +1585,11 @@ bool GraphNode::reserveNode(bool bReserve, int idNode, int iRobot, string *msg)
 
 bool GraphNode::blockNode(bool bBlock, int idNode, int iRobot, string *msg)
 {
-    graph_msgs::GraphNode *node_info = NULL;
+    graph_msgs::GraphNode node_info;
+    node_info.id = -1;
 
     node_info = graph_route->getNode(idNode);
-    if (node_info == NULL)
+    if (node_info.id < 0)
     {
         *msg = "NOT FOUND Node:" + std::to_string(idNode);
         return false;
@@ -1595,22 +1598,22 @@ bool GraphNode::blockNode(bool bBlock, int idNode, int iRobot, string *msg)
     {
         if (!graph_route->checkNodeFree(idNode, iRobot))
         {
-            *msg = "Not Possible to Block Node:" + std::to_string(idNode) + " ALREADY used by other Robot:" + std::to_string(graph_route->getResRobotFromId(node_info->id));
+            *msg = "Not Possible to Block Node:" + std::to_string(idNode) + " ALREADY used by other Robot:" + std::to_string(graph_route->getResRobotFromId(node_info.id));
             return false;
         }
-        if (graph_route->getRobotFromId(node_info->id) >= 0)
+        if (graph_route->getRobotFromId(node_info.id) >= 0)
         {
             //if (node_info->bBlocked){
-            if (graph_route->getRobotFromId(node_info->id) == iRobot)
+            if (graph_route->getRobotFromId(node_info.id) == iRobot)
             {
                 // Already Blocked by this robot
-                *msg = "Node:" + std::to_string(idNode) + " ALREADY Blocked by Robot:" + std::to_string(graph_route->getRobotFromId(node_info->id));
+                *msg = "Node:" + std::to_string(idNode) + " ALREADY Blocked by Robot:" + std::to_string(graph_route->getRobotFromId(node_info.id));
                 return true;
             }
             else
             {
                 // Already Blocked by other robot
-                *msg = "Node:" + std::to_string(idNode) + " ALREADY Blocked by other Robot:" + std::to_string(graph_route->getRobotFromId(node_info->id));
+                *msg = "Node:" + std::to_string(idNode) + " ALREADY Blocked by other Robot:" + std::to_string(graph_route->getRobotFromId(node_info.id));
                 return false;
             }
         }
@@ -1627,10 +1630,10 @@ bool GraphNode::blockNode(bool bBlock, int idNode, int iRobot, string *msg)
     else
     {
         //if (node_info->bBlocked){
-        if (graph_route->getRobotFromId(node_info->id) >= 0)
+        if (graph_route->getRobotFromId(node_info.id) >= 0)
         {
             // Unblock OK
-            if (graph_route->getRobotFromId(node_info->id) == iRobot)
+            if (graph_route->getRobotFromId(node_info.id) == iRobot)
             {
                 *msg = "Node:" + std::to_string(idNode) + " Unblocked OK by Robot:%d " + std::to_string(iRobot);
                 //node_info->bBlocked=false;
@@ -1639,7 +1642,7 @@ bool GraphNode::blockNode(bool bBlock, int idNode, int iRobot, string *msg)
             else
             {
                 // Not Blocked by this robot
-                *msg = "Trying to Unblock Node:" + std::to_string(idNode) + " by Robot " + std::to_string(iRobot) + " but BLOCKED by Robot:" + std::to_string(graph_route->getRobotFromId(node_info->id));
+                *msg = "Trying to Unblock Node:" + std::to_string(idNode) + " by Robot " + std::to_string(iRobot) + " but BLOCKED by Robot:" + std::to_string(graph_route->getRobotFromId(node_info.id));
                 return false;
             }
         }
@@ -1719,10 +1722,11 @@ bool GraphNode::getBlockedNodeServiceServerCb(robotnik_fms_msgs::GetBlockedNode:
 bool GraphNode::getNodeInfoServiceServerCb(robotnik_fms_msgs::GetNodeInfo::Request &request, robotnik_fms_msgs::GetNodeInfo::Response &response)
 {
     pthread_mutex_lock(&mutexGraph);
-    graph_msgs::GraphNode *node_info = NULL;
+    graph_msgs::GraphNode node_info;
+    node_info.id = -1;
     node_info = graph_route->getNode(request.node_id);
 
-    if (node_info == NULL)
+    if (node_info.id < 0)
     {
         response.ret = false;
         response.msg = "Node NOT found";

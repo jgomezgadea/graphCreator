@@ -34,27 +34,27 @@ Dijkstra::~Dijkstra()
  * 	\brief Disables the edition of nodes and arcs. Necesario para poder calcular rutas sin incoherencias
  *  \return "OK" if graph's elements are OK
 */
-std::string Dijkstra::finalizeEdition(graph_msgs::GraphNodeArray *graphData)
+std::string Dijkstra::finalizeEdition(std::vector<Node> graph)
 {
 	int max_id = 0;
 	bool bNodeFound = false;
 
-	if (graphData->nodes.size() > 0)
+	if (graph.size() > 0)
 	{ // Si no hay nodos no tiene sentido
 		// Comprobamos coherencia de los arcos de cada nodo. No pueden haber arcos que apunten a nodos inexistentes.
 		// Esta comprobación no se realiza en el momento en que se inserta un nuevo arco, puesto que necesitamos
 		// que sea flexible a la hora de leer el grafo desde un archivo json.
 		//Buscamos el mayor Id y creamos una ruta con todos esos nodos(no es muy eficiente en espacio pero podemos reutilizar rRoute)
-		for (int i = 0; i < (int)graphData->nodes.size(); i++)
+		for (int i = 0; i < (int)graph.size(); i++)
 		{
 
 			// Comprobamos si existen los adyacentes que tiene asignados cada nodo
-			for (int j = 0; j < (int)graphData->nodes[i].arc_list.size(); j++)
+			for (int j = 0; j < (int)graph[i].node.arc_list.size(); j++)
 			{
 				bNodeFound = false;
-				for (int k = 0; k < (int)graphData->nodes.size(); k++)
+				for (int k = 0; k < (int)graph.size(); k++)
 				{
-					if (graphData->nodes[i].arc_list[j].node_dest == graphData->nodes[k].id)
+					if (graph[i].node.arc_list[j].node_dest == graph[k].node.id)
 					{
 						bNodeFound = true;
 						break;
@@ -62,11 +62,11 @@ std::string Dijkstra::finalizeEdition(graph_msgs::GraphNodeArray *graphData)
 				}
 				if (!bNodeFound)
 				{ // Nodo adyacente no existe
-					ROS_ERROR("Dijkstra::FinalizeEdition: Error: Arco entre nodo %d y nodo %d", graphData->nodes[i].id, graphData->nodes[i].arc_list[j].node_dest);
-					return "Dijkstra::FinalizeEdition: Error: Arco entre node:" + std::to_string(graphData->nodes[i].id) + " y node:" + std::to_string(graphData->nodes[i].arc_list[j].node_dest);
+					ROS_ERROR("Dijkstra::FinalizeEdition: Error: Arco entre nodo %d y nodo %d", graph[i].node.id, graph[i].node.arc_list[j].node_dest);
+					return "Dijkstra::FinalizeEdition: Error: Arco entre node:" + std::to_string(graph[i].node.id) + " y node:" + std::to_string(graph[i].node.arc_list[j].node_dest);
 				}
 			}
-			max_id = max(max_id, graphData->nodes[i].id);
+			max_id = max(max_id, (int)graph[i].node.id);
 		}
 		bEdit = false;
 		rRoutes = new Route(max_id + 1); // Creamos matriz de posibles rutas
@@ -121,7 +121,7 @@ int Dijkstra::deleteNodes()
  *  \returns The id of the node if OK
 */
 //!
-int Dijkstra::addNode(graph_msgs::GraphNode *node)
+int Dijkstra::addNode(graph_msgs::GraphNode node)
 {
 	if (!bEdit)
 	{
@@ -131,23 +131,21 @@ int Dijkstra::addNode(graph_msgs::GraphNode *node)
 
 	int size = vNodes.size();
 
-	for (int i = 0; i < size; i++)
-	{
-		if (vNodes[i].getId() == node->id) // Nodo con id repetido
-			return -1;
-	}
-
-	if (node < 0)
+	if (node.id < 0)
 	{
 		ROS_ERROR("Dijkstra::addNode: el id del nodo debe ser un numero positivo");
 		return -1;
 	}
 
-	Node *new_node = new Node(node);
+	for (int i = 0; i < size; i++)
+	{
+		if (vNodes[i].getId() == node.id) // Nodo con id repetido
+			return -1;
+	}
 
-	vNodes.push_back(*new_node);
+	vNodes.push_back(Node(node));
 
-	return size + 1;
+	return node.id;
 }
 
 /*! \fn int Dijkstra::AddZone(int iIDZone,iMaxRobots){
@@ -171,11 +169,12 @@ int Dijkstra::addZone(int iIDZone, int iMaxRobots)
 */
 Node *Dijkstra::getNodeFromId(int iIDNode)
 {
-	Node *nod = NULL;
-
 	int iNode = getNodeIndex(iIDNode);
-	nod = &vNodes[iNode];
-	return nod;
+
+	if (iNode == -1)
+		return (new Node());
+	else
+		return &vNodes[iNode];
 }
 
 /*! \fn int Dijkstra::addNodetoZone(int iIDNode,int iIDZone){
@@ -370,7 +369,7 @@ bool Dijkstra::checkNodeFree(int iIDNode, int iIDRobot)
 /*! \fn int Dijkstra::addArc(int from_node, graph_msgs::GraphArc *pointerToArc)
  * 	\brief Adds an arc from a node to another with weight
 */
-int Dijkstra::addArc(int from_node, graph_msgs::GraphArc *pointerToArc)
+int Dijkstra::addArc(int from_node, graph_msgs::GraphArc new_arc)
 {
 	int locatedFrom = -1; //Id del nodo
 
@@ -388,9 +387,9 @@ int Dijkstra::addArc(int from_node, graph_msgs::GraphArc *pointerToArc)
 		return -1;
 	}
 
-	if (from_node == pointerToArc->node_dest)
+	if (from_node == new_arc.node_dest)
 	{
-		ROS_ERROR("Dijkstra::addArc: Error: graph cycles are not permitted: from %d to %d", from_node, pointerToArc->node_dest);
+		ROS_ERROR("Dijkstra::addArc: Error: graph cycles are not permitted: from %d to %d", from_node, new_arc.node_dest);
 		return -1;
 	}
 
@@ -406,7 +405,7 @@ int Dijkstra::addArc(int from_node, graph_msgs::GraphArc *pointerToArc)
 		return -1;
 	}
 
-	return vNodes[locatedFrom].addNodeAdjacent(pointerToArc);
+	return vNodes[locatedFrom].addNodeAdjacent(new_arc);
 }
 
 /*! \fn int Dijkstra::deleteArc(int from_node, int to_node)
@@ -487,16 +486,16 @@ int Dijkstra::getNearestNodeID(double x, double y, std::string frame)
 	int current_node = -1;
 	for (int in = 0; in < vNodes.size(); in++)
 	{
-		if (vNodes[in].node->pose.z == 0)
+		if (vNodes[in].node.pose.z == 0)
 		{
-			if (vNodes[in].node->pose.frame_id == frame)
+			if (vNodes[in].node.pose.frame_id == frame)
 			{
-				double new_dist = std::sqrt(std::pow(vNodes[in].node->pose.x - x, 2) +
-											std::pow(vNodes[in].node->pose.y - y, 2));
+				double new_dist = std::sqrt(std::pow(vNodes[in].node.pose.x - x, 2) +
+											std::pow(vNodes[in].node.pose.y - y, 2));
 				if (new_dist <= dist)
 				{
 					dist = new_dist;
-					current_node = vNodes[in].node->id;
+					current_node = vNodes[in].node.id;
 				}
 			}
 		}
@@ -550,14 +549,14 @@ bool Dijkstra::unBlockAll(int iRobot)
  * 	\brief Gets the list of nodes used or blocked
  *  \return 0 if OK
 */
-std::vector<graph_msgs::GraphNode *> Dijkstra::getNodesUsed()
+std::vector<graph_msgs::GraphNode> Dijkstra::getNodesUsed()
 {
-	std::vector<graph_msgs::GraphNode *> route;
+	std::vector<graph_msgs::GraphNode> route;
 	for (int in = 0; in < vNodes.size(); in++)
 	{
 		//ROS_INFO("N:%d->resNode:%d",in,vNodes[in].iResRobot);
 		bool bAdd = false;
-		if (vNodes[in].node->id >= 0)
+		if (vNodes[in].node.id >= 0)
 		{
 			bAdd = true;
 		}

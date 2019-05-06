@@ -185,6 +185,21 @@ class Node
 		viZones.push_back(iZone);
 		return 0;
 	}
+	//! Prints on console the node
+	void print()
+	{
+		ROS_INFO("Node: %i:", node.id);
+		ROS_INFO("  iDist: %i:", iDist);
+		ROS_INFO("  iParent: %i ", iParent);
+		ROS_INFO("  bUsed: %s ", bUsed);
+		ROS_INFO("  iRobot: %i ", iRobot);
+		ROS_INFO("  iResRobot: %i ", iResRobot);
+		ROS_INFO("  Zones: %i ", iRobot);
+		for (int i; i < viZones.size(); i++)
+		{
+			ROS_INFO("    %i ", viZones[i]);
+		}
+	}
 };
 
 //! Class Dijkstra
@@ -408,6 +423,7 @@ class Dijkstra
 					return -1;
 			}
 			vpNodes.push_back(pNode);
+			//pNode->print();
 			pNode->addZoneToNode(this->iIDZone);
 			return 0;
 		}

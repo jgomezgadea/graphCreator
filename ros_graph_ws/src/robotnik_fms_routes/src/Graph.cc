@@ -263,13 +263,13 @@ int Graph::getRoute(int from, int to, vector<geometry_msgs::Pose2D> *nodes, vect
         if (!getNodePosition(route[i], &pos))
         {
             nodes->push_back(pos);
-            graph_msgs::GraphArc *arc;
+            graph_msgs::GraphArc arc;
             if (getArcBetweenNodes(route[i], route[i + 1], arc) != 0)
             {
                 ROS_ERROR("Graph::getRoute: Error getting the route from %d to %d", route[i], route[i + 1]);
             }
             else
-                max_speed->push_back(arc->max_speed);
+                max_speed->push_back(arc.max_speed);
         }
         else
         {
@@ -309,13 +309,13 @@ int Graph::getRoute(int from, int to, vector<graph_msgs::GraphNode> *detailed_no
         if (!getNodePosition(route[i], &pos))
         {
             nodes->push_back(pos);
-            graph_msgs::GraphArc *arc;
+            graph_msgs::GraphArc arc;
             if (getArcBetweenNodes(route[i], route[i + 1], arc) != 0)
             {
                 ROS_ERROR("Graph::getRoute: Error getting the route from %d to %d", route[i], route[i + 1]);
             }
             else
-                max_speed->push_back(arc->max_speed);
+                max_speed->push_back(arc.max_speed);
         }
         else
         {
@@ -359,13 +359,13 @@ int Graph::getRoute(int from, int to, vector<graph_msgs::GraphNode> *detailed_no
 
     for (i = 0; i < (int)(route.size() - 1); i++)
     { // Recorremos los nodos de la ruta hasta el penultimo
-        graph_msgs::GraphArc *arc;
+        graph_msgs::GraphArc arc;
         if (getArcBetweenNodes(route[i], route[i + 1], arc) != 0)
         {
             ROS_ERROR("Graph::getRoute: Error getting the route from %d to %d", route[i], route[i + 1]);
         }
         else
-            max_speed->push_back(arc->max_speed);
+            max_speed->push_back(arc.max_speed);
     }
 
     graph_msgs::GraphNode node;
@@ -407,12 +407,12 @@ int Graph::getNodePosition(int node_id, geometry_msgs::Pose2D *pos)
     }
 }
 
-/*! \fn int Graph::getArcBetweenNodes(int from_id, int to_id, graph_msgs::GraphArc *arc)
+/*! \fn int Graph::getArcBetweenNodes(int from_id, int to_id, graph_msgs::GraphArc arc)
  * 	\brief Obtiene el arco entre nodos
  *  \return 0 if OK
  *  \return -1 si el nodo no existe
 */
-int Graph::getArcBetweenNodes(int from_id, int to_id, graph_msgs::GraphArc *arc)
+int Graph::getArcBetweenNodes(int from_id, int to_id, graph_msgs::GraphArc arc)
 {
     if (dijkstraGraph->isOnEdition())
     {
@@ -431,7 +431,7 @@ int Graph::getArcBetweenNodes(int from_id, int to_id, graph_msgs::GraphArc *arc)
         {
             if (node.arc_list[i].node_dest == to_id)
             {
-                arc = &node.arc_list[i];
+                arc = node.arc_list[i];
                 return 0;
             }
         }
@@ -462,7 +462,7 @@ bool Graph::checkNodesFree(std::vector<int> vNodesId, int idRobot)
     return bfree;
 }
 
-/*! \fn Node* Graph::checkZoneFree(int idZone, int idRobot)
+/*! \fn bool Graph::checkZoneFree(int idZone, int idRobot)
  * true if Zone Free, false if used or reserved by a robot
 */
 bool Graph::checkZoneFree(int idZone, int idRobot)
@@ -470,7 +470,7 @@ bool Graph::checkZoneFree(int idZone, int idRobot)
     return dijkstraGraph->checkZoneFree(idZone, idRobot);
 }
 
-/*! \fn graph_msgs::GraphNode *Graph::getNodeFromID(int iIDNode)
+/*! \fn graph_msgs::GraphNode Graph::getNodeFromID(int iIDNode)
  * 	\brief Get node by nodeID
 */
 graph_msgs::GraphNode Graph::getNodeFromId(int iIDNode)
@@ -503,7 +503,7 @@ int Graph::getResRobotFromId(int iIDNode)
     return dijkstraGraph->getNodeFromId(iIDNode)->iResRobot;
 }
 
-/*! \fn Node* Graph::getNode(unsigned int nodeID)
+/*! \fn graph_msgs::GraphNode Graph::getNode(unsigned int nodeID)
  * 	\brief Gets Node by nodeID
 */
 graph_msgs::GraphNode Graph::getNode(unsigned int node_id)
@@ -563,8 +563,6 @@ std::string Graph::deserialize()
     addArc(node, 2);
 
     addNode(2, 1, 0, 1, 0, 0.75, "map", "Node name 3");
-
-    //ROS_ERROR("%s", std::to_string(graphData->nodes[0].arc_list[1].node_dest).c_str());
 
     // TODO ROS_INFO("Graph::Deserialize: Processing JSON Found %s Nodes, %s Zones", std::to_string(nodes), std::to_string(zones));
     return "OK";

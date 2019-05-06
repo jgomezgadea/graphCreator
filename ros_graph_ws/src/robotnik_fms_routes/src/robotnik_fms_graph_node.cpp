@@ -988,23 +988,24 @@ void GraphNode::rosPublish()
 
         for (int i = 0; i < route.nodes.size(); i++)
         {
+            aquí es donde se publican los nodos repetidos;
             robotnik_fms_msgs::NodeInfo Node_inf;
-            graph_msgs::GraphNode *nod;
-            nod = &route.nodes[i];
+            graph_msgs::GraphNode nod;
+            nod = route.nodes[i];
 
-            graph_frame = nod->pose.frame_id;
+            graph_frame = nod.pose.frame_id;
 
             rviz_nodes.Nodes.push_back(Node_inf);
-            std::string sID = "ID:" + std::to_string(nod->id);
+            std::string sID = "ID:" + std::to_string(nod.id);
 
-            if (graph_route->getRobotFromId(nod->id) >= 0)
+            if (graph_route->getRobotFromId(nod.id) >= 0)
             {
-                sID = sID + "/R:" + std::to_string(graph_route->getRobotFromId(nod->id));
+                sID = sID + "/R:" + std::to_string(graph_route->getRobotFromId(nod.id));
                 text_nodes_used = text_nodes_used + sID;
             }
-            if (graph_route->getRobotFromId(nod->id) >= 0)
+            if (graph_route->getRobotFromId(nod.id) >= 0)
             {
-                sID = sID + "/Res:" + std::to_string(graph_route->getRobotFromId(nod->id));
+                sID = sID + "/Res:" + std::to_string(graph_route->getRobotFromId(nod.id));
                 text_nodes_used = text_nodes_used + sID;
             }
             rviz_nodesId.id.push_back(sID);

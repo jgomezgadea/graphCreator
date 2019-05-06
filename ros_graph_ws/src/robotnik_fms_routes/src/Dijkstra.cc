@@ -116,7 +116,7 @@ int Dijkstra::deleteNodes()
 	return 0;
 }
 
-/*! \fn int Dijkstra::addNode(graph_msgs::GraphNode *node)
+/*! \fn int Dijkstra::addNode(graph_msgs::GraphNode node)
  * 	\brief  Adds a new node
  *  \returns The id of the node if OK
 */
@@ -148,7 +148,7 @@ int Dijkstra::addNode(graph_msgs::GraphNode node)
 	return node.id;
 }
 
-/*! \fn int Dijkstra::AddZone(int iIDZone,iMaxRobots){
+/*! \fn int Dijkstra::AddZone(int iIDZone, int iMaxRobots){
  * 	\brief Adds a Zone
  *  \return 0 if OK
 */
@@ -211,17 +211,16 @@ int Dijkstra::addNodeToZone(int iIDNode, int iIDZone)
 
 /*! \fn bool Dijkstra::CheckZoneFree(int iIDZone,int iIDRobot){
  * 	\brief Checks if zone Free
- *  \return true if free false other case
+ *  \return true if free false in other case
 */
 bool Dijkstra::checkZoneFree(int iIDZone, int iIDRobot)
 {
+	//ROS_INFO("Checking Zone: %d for Robot: %d ", iIDZone, iIDRobot);
 
-	//ROS_INFO("Checking Zone:%d for Robot:%d ",iIDZone,iIDRobot);
-	int iZone = -1;
-	bool bFound = false;
-	int iMaxRobots = 0;
-	bool bPresRobot[50];
-	bool bCompZoneFree = true;
+	int iZone = -1;		 // Zone position on vZones array
+	bool bFound = false; // Zone found
+	int iMaxRobots = 0;  // Max num of robot in this zone
+
 	for (int i = 0; i < (int)vZones.size(); i++)
 	{
 		if (vZones[i].iIDZone == iIDZone)
@@ -236,10 +235,13 @@ bool Dijkstra::checkZoneFree(int iIDZone, int iIDRobot)
 	{
 		return true;
 	}
-	for (int i = 0; i < 50; i++)
+
+	bool bPresRobot[100]; // True if robot is on the zone
+	for (int i = 0; i < 100; i++)
 	{
 		bPresRobot[i] = false;
 	}
+
 	for (int j = 0; j < (int)vZones[iZone].vpNodes.size(); j++)
 	{
 		Node *pNode;
@@ -248,7 +250,7 @@ bool Dijkstra::checkZoneFree(int iIDZone, int iIDRobot)
 		{
 			return true;
 		}
-		//ROS_INFO("Zone:%d,Checking Node:%d robot:%d resrobot:%d,iMaxRobots:%d",iIDZone,pNode->iNode,pNode->iRobot,pNode->iResRobot,iMaxRobots);
+		//ROS_INFO("Zone: %d, Checking node: %d, robot: %d, resrobot: %d, iMaxRobots: %d", iIDZone, pNode->node.id, pNode->iRobot, pNode->iResRobot, iMaxRobots);
 		if (iIDRobot >= 0)
 		{
 			if ((pNode->iRobot >= 0) && (pNode->iRobot != iIDRobot))
@@ -258,21 +260,18 @@ bool Dijkstra::checkZoneFree(int iIDZone, int iIDRobot)
 		}
 		else
 		{
-			//ROS_INFO("1");
-			if (pNode->iRobot >= 0)
+			if (pNode->iRobot >= 0 && pNode->iRobot <= 100)
 			{
-				//ROS_INFO("2");
 				bPresRobot[pNode->iRobot] = true;
 			}
-			if (pNode->iResRobot >= 0)
+			if (pNode->iResRobot >= 0 && pNode->iResRobot <= 100)
 			{
-				//ROS_INFO("3");
 				bPresRobot[pNode->iResRobot] = true;
 			}
 		}
 	}
 	int iNR = 0;
-	for (int i = 0; i < 50; i++)
+	for (int i = 0; i < 100; i++)
 	{
 		if (bPresRobot[i])
 			iNR++;
@@ -284,11 +283,7 @@ bool Dijkstra::checkZoneFree(int iIDZone, int iIDRobot)
 	}
 	else
 	{
-
-		if (bCompZoneFree)
-			return true;
-		else
-			return false;
+		return true;
 	}
 }
 
@@ -859,9 +854,9 @@ int Dijkstra::calculateRoute(int initial_node, int end_node)
 		{ //Extraemos el nodo con distancia mínima de la cola
 			//cout << "\t Extraemos nodo " << pNodeMin.node->getId() << " .Quedan " << pqQueue.size() << endl;
 			//Para todos los nodos adyacentes al extraido calculamos distancias
-			for (int i = 0; i < (int)pNodeMin.node->vAdjacent.size(); i++)
+			for (int i = 0; i < (int)pNodeMin.node->node.arc_list.size(); i++)
 			{
-				int nodeAdjacent = pNodeMin.node->vAdjacent[i].getNextNode();
+				int nodeAdjacent = pNodeMin.node->node.arc_list[i].node_dest;
 
 				int nodeAdjIndex = getNodeIndex(nodeAdjacent);
 				if (nodeAdjIndex < 0)
@@ -871,10 +866,10 @@ int Dijkstra::calculateRoute(int initial_node, int end_node)
 				}
 
 				// Añadimos al peso la distancia entre los nodos
-				diffX = vNodes[nodeAdjIndex].node->pose.x - pNodeMin.node->node->pose.x;
-				diffY = vNodes[nodeAdjIndex].node->pose.y - pNodeMin.node->node->pose.y;
+				diffX = vNodes[nodeAdjIndex].node.pose.x - pNodeMin.node->node.pose.x;
+				diffY = vNodes[nodeAdjIndex].node.pose.y - pNodeMin.node->node.pose.y;
 				distance = sqrt(diffX * diffX + diffY * diffY) * 1000.0;
-				int weight = (int)(pNodeMin.node->vAdjacent[i].getWeight());
+				int weight = (int)(pNodeMin.node->node.arc_list[i].distance);
 
 				if (!vNodes[nodeAdjIndex].isUsed())
 				{ // Si no hemos utilizado el nodo

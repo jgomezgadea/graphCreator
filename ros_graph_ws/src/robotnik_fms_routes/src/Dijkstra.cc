@@ -309,19 +309,18 @@ bool Dijkstra::checkNodeFree(int iIDNode, int iIDRobot)
 
 	//if ((pNodeOr->bBlocked) && (pNodeOr->iRobot!=iIDRobot)) return false;
 
-	int iNZ = pNodeOr->viZones.size();
-	for (i = 0; i < (int)iNZ; i++)
+	for (int i = 0; i < vZones.size(); i++)
 	{
-		int iZone = pNodeOr->viZones[i];
-		//ROS_INFO("Checking Zone:%d, Node:%d, for robot:%d",iZone,iIDNode,iIDRobot);
-		if (!checkZoneFree(iZone, iIDRobot))
+		for (int j = 0; j < vZones[i].vpNodes.size(); i++)
 		{
-			iNR++;
-			//ROS_INFO("---Node:%d, Zone %d: not Free",iIDNode,iZone);
-		}
-		else
-		{
-			//ROS_INFO("----------------Node:%d, Zone %d: Free",iIDNode,iZone);
+			// If node is on this zone
+			if (vZones[i].vpNodes[j]->node.id == pNodeOr->node.id)
+			{
+				if (!checkZoneFree(vZones[i].iIDZone, iIDRobot))
+				{
+					iNR++;
+				}
+			}
 		}
 	}
 

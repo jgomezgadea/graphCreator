@@ -19,7 +19,7 @@ GRAPHVIEW.GraphView = function (options) {
     this.rosNodes = new ROSLIB.Topic({
       ros: options.ros,
       name: options.rosNodesTopic || '/robotnik_fms_routes_node/graph',
-      messageType: options.rosNodesMsg || 'robotnik_fms_msgs/NodesInfo'
+      messageType: options.rosNodesMsg || 'graph_msgs/GraphNodeArray'
     })
 
     var self = this;
@@ -32,8 +32,11 @@ GRAPHVIEW.GraphView = function (options) {
 
         // Fill graph with received nodes
         // TODO Puede que no nos lleguen ordenados los id's (ni que estén todos)
-        message.Nodes.forEach(node => {
-          self.addNode(node.name);
+        message.nodes.forEach(node => {
+          self.addNode(node);
+          node.arc_list.forEach(arc => {
+            self.addEdge(node.id, arc);
+          })
         });
 
         self.stabilize();
@@ -49,8 +52,6 @@ GRAPHVIEW.GraphView = function (options) {
 
   }
 
-  this.nextID = 0 + this.nodes.length;
-
   // Create the graph
   this.container = document.getElementById(this.divID);
   this.data = {
@@ -64,15 +65,17 @@ GRAPHVIEW.GraphView = function (options) {
 
 // Definition of methods
 
-GRAPHVIEW.GraphView.prototype.addNode = function (name) {
-  this.nodes.add({ id: this.nextID, label: name || "Node " + this.nextID })
-  this.nextID++;
+GRAPHVIEW.GraphView.prototype.addNode = function (node) {
+  this.nodes.add({ id: node.id, label: node.name || "Node " + node.id })
+};
+
+GRAPHVIEW.GraphView.prototype.addEdge = function (from_id, arc) {
+  this.edges.add({ from: from_id, to: arc.node_dest, arrows: 'to' })
 };
 
 GRAPHVIEW.GraphView.prototype.deleteGraph = function () {
   this.nodes.clear();
   this.edges.clear();
-  this.nextID = 0;
 };
 
 GRAPHVIEW.GraphView.prototype.stabilize = function () {
@@ -89,11 +92,11 @@ GRAPHVIEW.GraphView.prototype.stabilize = function () {
 GRAPHVIEW.GraphView.prototype.hasChanged = function (message) {
   var changed = false;
   // If has different lengths
-  if (message.Nodes.length !== this.nodes.length) {
+  if (message.nodes.length !== this.nodes.length) {
     changed = true;
   }
   // If any node is different
-  message.Nodes.forEach(node => {
+  message.nodes.forEach(node => {
 
     if (this.nodes.getDataSet().get(node.id) == null) {
       changed = true;

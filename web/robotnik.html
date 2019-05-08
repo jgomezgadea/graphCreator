@@ -31,7 +31,7 @@
         url: 'ws://localhost:9090'
       });
 
-      nodes = new vis.DataSet([
+      /*nodes = new vis.DataSet([
         // TODO: Quitar ejemplo y trabajar por ROS
         { id: 1, label: 'Node 1' },
         { id: 2, label: 'Node 2' },
@@ -50,7 +50,7 @@
         { from: 2, to: 5, arrows: 'to, middle, from' },
         { from: 5, to: 6, arrows: { to: { scaleFactor: 2 } } },
         { from: 6, to: 7, arrows: { middle: { scaleFactor: 0.5 }, from: true } }
-      ]);
+      ]);*/
 
       mapView = new MAPVIEW.MapView({
         ros: ros,
@@ -63,7 +63,7 @@
         divID: 'graph',
         ros: ros,
         rosNodesTopic: '/robotnik_fms_routes_node/graph',
-        rosNodesMsg: 'robotnik_fms_msgs/NodesInfo'
+        rosNodesMsg: 'graph_msgs/GraphNodeArray'
         //nodes: nodes,
         //edges: edges
       });

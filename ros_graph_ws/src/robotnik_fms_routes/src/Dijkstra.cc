@@ -34,7 +34,7 @@ Dijkstra::~Dijkstra()
  * 	\brief Disables the edition of nodes and arcs. Necesario para poder calcular rutas sin incoherencias
  *  \return "OK" if graph's elements are OK
 */
-std::string Dijkstra::finalizeEdition(std::vector<Node> graph)
+std::string Dijkstra::finalizeEdition(std::vector<Node *> graph)
 {
 	int max_id = 0;
 	bool bNodeFound = false;
@@ -49,12 +49,12 @@ std::string Dijkstra::finalizeEdition(std::vector<Node> graph)
 		{
 
 			// Comprobamos si existen los adyacentes que tiene asignados cada nodo
-			for (int j = 0; j < (int)graph[i].node.arc_list.size(); j++)
+			for (int j = 0; j < (int)graph[i]->node.arc_list.size(); j++)
 			{
 				bNodeFound = false;
 				for (int k = 0; k < (int)graph.size(); k++)
 				{
-					if (graph[i].node.arc_list[j].node_dest == graph[k].node.id)
+					if (graph[i]->node.arc_list[j].node_dest == graph[k]->node.id)
 					{
 						bNodeFound = true;
 						break;
@@ -62,11 +62,11 @@ std::string Dijkstra::finalizeEdition(std::vector<Node> graph)
 				}
 				if (!bNodeFound)
 				{ // Nodo adyacente no existe
-					ROS_ERROR("Dijkstra::FinalizeEdition: Error: Arco entre nodo %d y nodo %d", graph[i].node.id, graph[i].node.arc_list[j].node_dest);
-					return "Dijkstra::FinalizeEdition: Error: Arco entre node:" + std::to_string(graph[i].node.id) + " y node:" + std::to_string(graph[i].node.arc_list[j].node_dest);
+					ROS_ERROR("Dijkstra::FinalizeEdition: Error: Arco entre nodo %d y nodo %d", graph[i]->node.id, graph[i]->node.arc_list[j].node_dest);
+					return "Dijkstra::FinalizeEdition: Error: Arco entre node:" + std::to_string(graph[i]->node.id) + " y node:" + std::to_string(graph[i]->node.arc_list[j].node_dest);
 				}
 			}
-			max_id = max(max_id, (int)graph[i].node.id);
+			max_id = max(max_id, (int)graph[i]->node.id);
 		}
 		bEdit = false;
 		rRoutes = new Route(max_id + 1); // Creamos matriz de posibles rutas
@@ -108,7 +108,7 @@ int Dijkstra::deleteNodes()
 
 	for (int i = 0; i < (int)vNodes.size(); i++)
 	{
-		vNodes[i].deleteAdjacent();
+		vNodes[i]->deleteAdjacent();
 	}
 	vNodes.clear();
 	iMaxNodeId = -1;
@@ -139,11 +139,13 @@ int Dijkstra::addNode(graph_msgs::GraphNode node)
 
 	for (int i = 0; i < size; i++)
 	{
-		if (vNodes[i].getId() == node.id) // Nodo con id repetido
+		if (vNodes[i]->getId() == node.id) // Nodo con id repetido
 			return -1;
 	}
 
-	vNodes.push_back(Node(node));
+	vNodes.push_back(new Node(node));
+	addZone(node.zone, 1);
+	addNodeToZone(node.id, node.zone);
 
 	return node.id;
 }
@@ -172,9 +174,9 @@ Node *Dijkstra::getNodeFromId(int iIDNode)
 	int iNode = getNodeIndex(iIDNode);
 
 	if (iNode == -1)
-		return (new Node());
+		return 0;
 	else
-		return &vNodes[iNode];
+		return vNodes[iNode];
 }
 
 /*! \fn int Dijkstra::addNodetoZone(int iIDNode,int iIDZone){
@@ -183,22 +185,15 @@ Node *Dijkstra::getNodeFromId(int iIDNode)
 */
 int Dijkstra::addNodeToZone(int iIDNode, int iIDZone)
 {
-	Node *nod = getNodeFromId(iIDNode);
-	// Falta comprobar que existen zona y nodo
-	if (nod != NULL)
+	Node *node = getNodeFromId(iIDNode);
+
+	if (node)
 	{
-		int res = nod->addZoneToNode(iIDZone);
-		int s = (int)vZones.size();
-		for (int i = 0; i < s; i++)
+		for (int i = 0; i < vZones.size(); i++)
 		{
 			if (vZones[i].iIDZone == iIDZone)
 			{
-				Node *pNode = getNodeFromId(iIDNode);
-				res = vZones[i].addNodeToZone(pNode);
-				if (res == -1)
-					return -1;
-				else
-					return 0;
+				return vZones[i].addNodeToZone(node);
 			}
 		}
 		return 0;
@@ -211,7 +206,7 @@ int Dijkstra::addNodeToZone(int iIDNode, int iIDZone)
 
 /*! \fn bool Dijkstra::CheckZoneFree(int iIDZone,int iIDRobot){
  * 	\brief Checks if zone Free
- *  \return true if free false in other case
+ *  \return true if free, false in other case
 */
 bool Dijkstra::checkZoneFree(int iIDZone, int iIDRobot)
 {
@@ -253,9 +248,9 @@ bool Dijkstra::checkZoneFree(int iIDZone, int iIDRobot)
 		//ROS_INFO("Zone: %d, Checking node: %d, robot: %d, resrobot: %d, iMaxRobots: %d", iIDZone, pNode->node.id, pNode->iRobot, pNode->iResRobot, iMaxRobots);
 		if (iIDRobot >= 0)
 		{
-			if ((pNode->iRobot >= 0) && (pNode->iRobot != iIDRobot))
+			if (pNode->iRobot != iIDRobot)
 				bPresRobot[pNode->iRobot] = true;
-			if ((pNode->iResRobot >= 0) && (pNode->iResRobot != iIDRobot))
+			if (pNode->iResRobot != iIDRobot)
 				bPresRobot[pNode->iResRobot] = true;
 		}
 		else
@@ -280,6 +275,7 @@ bool Dijkstra::checkZoneFree(int iIDZone, int iIDRobot)
 	if (iNR >= iMaxRobots)
 	{
 		return false;
+		ROS_ERROR("The number of robots (%i) is >= than max (%i)", iNR, iMaxRobots);
 	}
 	else
 	{
@@ -289,7 +285,7 @@ bool Dijkstra::checkZoneFree(int iIDZone, int iIDRobot)
 
 /*! \fn int Dijkstra::CheckNodeFree(int iIDNode,int iIDRobot){
  * 	\brief Checks if Node free for use
- *  \return true if free false other case
+ *  \return true if free, false if not
 */
 bool Dijkstra::checkNodeFree(int iIDNode, int iIDRobot)
 {
@@ -389,7 +385,7 @@ int Dijkstra::addArc(int from_node, graph_msgs::GraphArc new_arc)
 
 	for (int i = 0; i < size; i++)
 	{
-		if (vNodes[i].getId() == from_node) //Existe el nodo
+		if (vNodes[i]->getId() == from_node) //Existe el nodo
 			locatedFrom = i;
 	}
 
@@ -399,7 +395,7 @@ int Dijkstra::addArc(int from_node, graph_msgs::GraphArc new_arc)
 		return -1;
 	}
 
-	return vNodes[locatedFrom].addNodeAdjacent(new_arc);
+	return vNodes[locatedFrom]->addNodeAdjacent(new_arc);
 }
 
 /*! \fn int Dijkstra::deleteArc(int from_node, int to_node)
@@ -426,7 +422,7 @@ int Dijkstra::deleteArc(int from_node, int to_node)
 		return -1;
 	}
 
-	return vNodes[from_node].deleteAdjacent(to_node);
+	return vNodes[from_node]->deleteAdjacent(to_node);
 }
 
 /*! \fn int Dijkstra::deleteArcs(int from_node)
@@ -453,7 +449,7 @@ int Dijkstra::deleteArcs(int from_node)
 		return -1;
 	}
 
-	return vNodes[from_node].deleteAdjacent();
+	return vNodes[from_node]->deleteAdjacent();
 }
 
 /*! \fn int Dijkstra::resetRoutes()
@@ -480,16 +476,16 @@ int Dijkstra::getNearestNodeID(double x, double y, std::string frame)
 	int current_node = -1;
 	for (int in = 0; in < vNodes.size(); in++)
 	{
-		if (vNodes[in].node.pose.z == 0)
+		if (vNodes[in]->node.pose.z == 0)
 		{
-			if (vNodes[in].node.pose.frame_id == frame)
+			if (vNodes[in]->node.pose.frame_id == frame)
 			{
-				double new_dist = std::sqrt(std::pow(vNodes[in].node.pose.x - x, 2) +
-											std::pow(vNodes[in].node.pose.y - y, 2));
+				double new_dist = std::sqrt(std::pow(vNodes[in]->node.pose.x - x, 2) +
+											std::pow(vNodes[in]->node.pose.y - y, 2));
 				if (new_dist <= dist)
 				{
 					dist = new_dist;
-					current_node = vNodes[in].node.id;
+					current_node = vNodes[in]->node.id;
 				}
 			}
 		}
@@ -507,15 +503,15 @@ bool Dijkstra::reserveNode(int iRobot, int iIDNode)
 	{
 		if (in == iIDNode)
 		{
-			//if (vNodes[in].iResRobot!=iRobot) ROS_INFO("Reserve Node:%d for Robot:%d",iIDNode,iRobot);
-			vNodes[in].iResRobot = iRobot;
+			//if (vNodes[in]->iResRobot!=iRobot) ROS_INFO("Reserve Node:%d for Robot:%d",iIDNode,iRobot);
+			vNodes[in]->iResRobot = iRobot;
 		}
 		else
 		{
-			if (vNodes[in].iResRobot == iRobot)
+			if (vNodes[in]->iResRobot == iRobot)
 			{
 				//ROS_INFO("%d,UnReserve Node:%d for Robot:%d",in,iIDNode,iRobot);
-				vNodes[in].iResRobot = -1;
+				vNodes[in]->iResRobot = -1;
 			}
 		}
 	}
@@ -529,11 +525,11 @@ bool Dijkstra::unBlockAll(int iRobot)
 {
 	for (int in = 0; in < vNodes.size(); in++)
 	{
-		if (vNodes[in].iResRobot == iRobot)
+		if (vNodes[in]->iResRobot == iRobot)
 		{
 			ROS_INFO("UnBlock Node:%d for Robot:%d", in, iRobot);
-			vNodes[in].iRobot = -1;
-			//vNodes[in].bBlocked=false;
+			vNodes[in]->iRobot = -1;
+			//vNodes[in]->bBlocked=false;
 		}
 	}
 	return true;
@@ -548,33 +544,34 @@ std::vector<graph_msgs::GraphNode> Dijkstra::getNodesUsed()
 	std::vector<graph_msgs::GraphNode> route;
 	for (int in = 0; in < vNodes.size(); in++)
 	{
-		//ROS_INFO("N:%d->resNode:%d",in,vNodes[in].iResRobot);
+		// Checking if the node has a robot
 		bool bAdd = false;
-		if (vNodes[in].node.id >= 0)
+		if (vNodes[in]->iRobot >= 0)
 		{
 			bAdd = true;
 		}
-		if (vNodes[in].iResRobot >= 0)
+		if (vNodes[in]->iResRobot >= 0)
 		{
 			bAdd = true;
 		}
-		for (int iz = 0; iz < vNodes[in].viZones.size(); iz++)
+		// Checking if the zone is free
+		for (int i = 0; i < vZones.size() && !bAdd; i++)
 		{
-			//ROS_INFO(" aaaa Checking Zone: %d Node: %d",vNodes[in].viZones[iz],vNodes[in].iNode);
-			if (!checkZoneFree(vNodes[in].viZones[iz], -1))
+			for (int j = 0; j < vZones[i].vpNodes.size(); j++)
 			{
-				//ROS_INFO(" aaaa Zone USED: %d",vNodes[in].viZones[iz]);
-				bAdd = true;
-			}
-			else
-			{
-				//ROS_INFO(" aaaa Zone NOT USED: %d",vNodes[in].viZones[iz]);
+				// If node is on a zone, we check if the zone is free
+				if (vZones[i].vpNodes[j]->node.id == vNodes[in]->node.id)
+				{
+					if (!checkZoneFree(vZones[i].iIDZone, -1))
+					{
+						bAdd = true;
+					}
+				}
 			}
 		}
 		if (bAdd)
 		{
-			route.push_back(vNodes[in].node);
-			//ROS_INFO("Add N: %d",in);
+			route.push_back(vNodes[in]->node);
 		}
 	}
 	return route;
@@ -604,9 +601,9 @@ int Dijkstra::getRoute(int initial_node, int end_node, std::vector<int> *route)
 	// Buscamos las posiciones dentro del vector, si es que existen los nodos
 	for (int i = 0; i < size; i++)
 	{
-		if (vNodes[i].getId() == initial_node) //Existe el nodo
+		if (vNodes[i]->getId() == initial_node) //Existe el nodo
 			positionInitialNode = i;
-		else if (vNodes[i].getId() == end_node) //Existe el nodo
+		else if (vNodes[i]->getId() == end_node) //Existe el nodo
 			positionEndNode = i;
 	}
 	if (positionInitialNode < 0)
@@ -633,7 +630,7 @@ int Dijkstra::getRoute(int initial_node, int end_node, std::vector<int> *route)
 	{
 		//Vamos añadiendo los nodos a la ruta
 		int k = positionEndNode;
-		int id = vNodes[k].getId();
+		int id = vNodes[k]->getId();
 		while (id != NO_PARENT)
 		{ // Recorremos la ruta de manera inversa hasta llegar al nodo inicial, cuyo padre es null
 			if (rRoutes->addNode(initial_node, end_node, id) != 0)
@@ -644,7 +641,7 @@ int Dijkstra::getRoute(int initial_node, int end_node, std::vector<int> *route)
 			{ //Los dos primeros parámetros indentifican la ruta, el último añade los nodos por donde transcurre la ruta
 				ROS_ERROR("Dijkstra::getRoute: Error adding the node %d on route (%d, %d)", id, initial_node, end_node);
 			}
-			id = vNodes[k].getParent();
+			id = vNodes[k]->getParent();
 			k = getNodeIndex(id);
 		}
 		//Ruta añadida
@@ -663,7 +660,7 @@ int Dijkstra::getRoute(int initial_node, int end_node, std::vector<int> *route)
  * 	\brief Gets the best calculated route between selected nodes
  *  \return 0 if OK. And the the array with the nodes of the route
 */
-int Dijkstra::getRoute(int initial_node, int end_node, std::vector<Node> *route)
+int Dijkstra::getRoute(int initial_node, int end_node, std::vector<Node *> *route)
 {
 	int positionInitialNode = -1, positionEndNode = -1;
 
@@ -683,9 +680,9 @@ int Dijkstra::getRoute(int initial_node, int end_node, std::vector<Node> *route)
 	// Buscamos las posiciones dentro del vector, si es que existen los nodos
 	for (int i = 0; i < size; i++)
 	{
-		if (vNodes[i].getId() == initial_node) // Existe el nodo
+		if (vNodes[i]->getId() == initial_node) // Existe el nodo
 			positionInitialNode = i;
-		else if (vNodes[i].getId() == end_node) // Existe el nodo
+		else if (vNodes[i]->getId() == end_node) // Existe el nodo
 			positionEndNode = i;
 	}
 	if (positionInitialNode < 0)
@@ -711,7 +708,7 @@ int Dijkstra::getRoute(int initial_node, int end_node, std::vector<Node> *route)
 	{
 		// Vamos añadiendo los nodos a la ruta
 		int k = positionEndNode;
-		int id = vNodes[k].getId();
+		int id = vNodes[k]->getId();
 		while (id != NO_PARENT)
 		{ // Recorremos la ruta de manera inversa hasta llegar al nodo inicial, cuyo padre es null
 			if (rRoutes->addNode(initial_node, end_node, vNodes[k]) != 0)
@@ -722,7 +719,7 @@ int Dijkstra::getRoute(int initial_node, int end_node, std::vector<Node> *route)
 			{ //Los dos primeros parámetros indentifican la ruta, el último añade los nodos por donde transcurre la ruta
 				ROS_ERROR("Dijkstra::getRoute: Error adding the node %d on route (%d, %d)", id, initial_node, end_node);
 			}
-			id = vNodes[k].getParent();
+			id = vNodes[k]->getParent();
 			k = getNodeIndex(id);
 		}
 		//Ruta añadida
@@ -754,7 +751,7 @@ int Dijkstra::resetNodes()
 {
 	for (int i = 0; i < (int)vNodes.size(); i++)
 	{
-		vNodes[i].reset();
+		vNodes[i]->reset();
 	}
 	return 0;
 }
@@ -764,7 +761,7 @@ int Dijkstra::resetNodes()
 */
 int Dijkstra::setInitialNode(int node)
 {
-	vNodes[node].setInitial();
+	vNodes[node]->setInitial();
 	return 0;
 }
 
@@ -773,29 +770,29 @@ int Dijkstra::setInitialNode(int node)
 */
 int Dijkstra::pushIntoQueue(int node)
 {
-	PointerNode pNode(&vNodes[node]);
+	PointerNode pNode(vNodes[node]);
 	pqQueue.push(pNode);
 
 	return 0;
 }
 
-/*! \fn int Dijkstra::popFromQueue(PointerNode *pn)
+/*! \fn PointerNode Dijkstra::popFromQueue()
  * 	\brief Pops the node with more priority
  *  \return -1 if the queue is empty
  *  \return 0 if OK
 */
-int Dijkstra::popFromQueue(PointerNode *pn)
+Dijkstra::PointerNode Dijkstra::popFromQueue()
 {
 	if (pqQueue.empty())
 	{
 		ROS_ERROR("Dijkstra::PopFromQueue: the queue is empty");
-		return -1;
+		return 0;
 	}
 
-	*pn = pqQueue.top(); // Get the node
-	pqQueue.pop();		 // Extracts the node
+	PointerNode pn = pqQueue.top(); // Get the node
+	pqQueue.pop();					// Extracts the node
 
-	return 0;
+	return pn;
 }
 
 /*! \fn int Dijkstra::queueNodes()
@@ -834,7 +831,7 @@ void Dijkstra::updateQueue()
 */
 int Dijkstra::calculateRoute(int initial_node, int end_node)
 {
-	PointerNode pNodeMin;
+	PointerNode *pNodeMin;
 	double diffX = 0.0; // Lo utilizaremos para el cálculo de la distancia en X entre dos nodos
 	double diffY = 0.0; // Lo utilizaremos para el cálculo de la distancia en Y entre dos nodos
 	double distance = 0.0;
@@ -849,45 +846,43 @@ int Dijkstra::calculateRoute(int initial_node, int end_node)
 	//cout << "Dijkstra::CalculateRoute: Traza: " << pqQueue.size() << " nodos encolados" << endl;
 	while (!pqQueue.empty())
 	{ //Mientras la cola no esté vacía
-		if (popFromQueue(&pNodeMin) == 0)
-		{ //Extraemos el nodo con distancia mínima de la cola
-			//cout << "\t Extraemos nodo " << pNodeMin.node->getId() << " .Quedan " << pqQueue.size() << endl;
-			//Para todos los nodos adyacentes al extraido calculamos distancias
-			for (int i = 0; i < (int)pNodeMin.node->node.arc_list.size(); i++)
+		//Extraemos el nodo con distancia mínima de la cola
+		PointerNode pNodeMin = popFromQueue();
+		//Para todos los nodos adyacentes al extraido calculamos distancias
+		for (int i = 0; i < (int)pNodeMin.node->node.arc_list.size(); i++)
+		{
+			int nodeAdjacent = pNodeMin.node->node.arc_list[i].node_dest;
+
+			int nodeAdjIndex = getNodeIndex(nodeAdjacent);
+			if (nodeAdjIndex < 0)
 			{
-				int nodeAdjacent = pNodeMin.node->node.arc_list[i].node_dest;
-
-				int nodeAdjIndex = getNodeIndex(nodeAdjacent);
-				if (nodeAdjIndex < 0)
-				{
-					ROS_ERROR("Dijkstra::calculateRoute: Error: node adjacent %d does not exist", nodeAdjacent);
-					return -1;
-				}
-
-				// Añadimos al peso la distancia entre los nodos
-				diffX = vNodes[nodeAdjIndex].node.pose.x - pNodeMin.node->node.pose.x;
-				diffY = vNodes[nodeAdjIndex].node.pose.y - pNodeMin.node->node.pose.y;
-				distance = sqrt(diffX * diffX + diffY * diffY) * 1000.0;
-				int weight = (int)(pNodeMin.node->node.arc_list[i].distance);
-
-				if (!vNodes[nodeAdjIndex].isUsed())
-				{ // Si no hemos utilizado el nodo
-					// if distancia[v] > distancia[u] + weight (u, v)
-					if (vNodes[nodeAdjIndex].getDistance() > (pNodeMin.node->getDistance() + weight))
-					{
-						// distancia[v] = distancia[u] + peso (u, v)
-						vNodes[nodeAdjIndex].setDistance(pNodeMin.node->getDistance() + weight);
-						// parent[v] = u
-						vNodes[nodeAdjIndex].setParent(pNodeMin.node->getId());
-					}
-				} // else
+				ROS_ERROR("Dijkstra::calculateRoute: Error: node adjacent %d does not exist", nodeAdjacent);
+				return -1;
 			}
-			pNodeMin.node->setUsed(); // The node is used
-			updateQueue();
+
+			// Añadimos al peso la distancia entre los nodos
+			diffX = vNodes[nodeAdjIndex]->node.pose.x - pNodeMin.node->node.pose.x;
+			diffY = vNodes[nodeAdjIndex]->node.pose.y - pNodeMin.node->node.pose.y;
+			distance = sqrt(diffX * diffX + diffY * diffY) * 1000.0;
+			int weight = (int)(pNodeMin.node->node.arc_list[i].distance);
+
+			if (!vNodes[nodeAdjIndex]->isUsed())
+			{ // Si no hemos utilizado el nodo
+				// if distancia[v] > distancia[u] + weight (u, v)
+				if (vNodes[nodeAdjIndex]->getDistance() > (pNodeMin.node->getDistance() + weight))
+				{
+					// distancia[v] = distancia[u] + peso (u, v)
+					vNodes[nodeAdjIndex]->setDistance(pNodeMin.node->getDistance() + weight);
+					// parent[v] = u
+					vNodes[nodeAdjIndex]->setParent(pNodeMin.node->getId());
+				}
+			} // else
 		}
+		pNodeMin.node->setUsed(); // The node is used
+		updateQueue();
 	}
 	// Cuando se vacíe la cola llegaremos al final del algoritmo puesto que habremos recorrido todos los nodos conexos del grafo
-	if (vNodes[end_node].getParent() == NO_PARENT)
+	if (vNodes[end_node]->getParent() == NO_PARENT)
 	{ // Si el nodo final no tiene nodo antecesor es que el grafo no es conexo
 		ROS_ERROR("Dijkstra::calculateRoute: Error: nodes %d and %d are not conex", initial_node, end_node);
 		return -1;
@@ -904,7 +899,7 @@ int Dijkstra::getNodeIndex(int nodeID)
 	int ret = -1;
 	for (int i = 0; i < (int)vNodes.size(); i++)
 	{
-		if (vNodes[i].getId() == nodeID)
+		if (vNodes[i]->getId() == nodeID)
 		{
 			ret = i;
 			break;
@@ -932,4 +927,79 @@ int Dijkstra::getArcBetweenNodes(int from_node, int to_node)
 		return -1;
 	}
 	return 0;
+}
+
+/*! \fn void Graph::printZones()
+ * 	\brief Print zones of current graph
+*/
+void Dijkstra::printZones()
+{
+	if (vZones.size() > 0)
+	{
+		ROS_INFO("");
+		ROS_INFO("Graph::print %d zones:", vZones.size());
+		for (int i = 0; i < vZones.size(); i++)
+		{
+			ROS_INFO("Zone: %i", vZones[i].iIDZone);
+			ROS_INFO("  Max num of robots: %i", vZones[i].iMaxRobots);
+			ROS_INFO("  %i nodes on this zone:", vZones[i].vpNodes.size());
+			for (int j = 0; j < vZones[i].vpNodes.size(); j++)
+			{
+				ROS_INFO("  - Node %i", vZones[i].vpNodes[j]->node.id);
+			}
+		}
+	}
+	else
+		ROS_INFO("The graph has 0 zones");
+	ROS_INFO("");
+}
+
+/*! \fn void Graph::printNodes()
+ * 	\brief Print nodes of current graph
+*/
+void Dijkstra::printNodes()
+{
+	if (vNodes.size() > 0)
+	{
+		ROS_INFO("");
+		ROS_INFO("Graph::print %d nodes:", vNodes.size());
+		for (int i = 0; i < vNodes.size(); i++)
+		{
+			ROS_INFO("Node %i:", vNodes[i]->node.id);
+			ROS_INFO("  Name: %s", vNodes[i]->node.name.c_str());
+			ROS_INFO("  Zone: %i", vNodes[i]->node.zone);
+			ROS_INFO("  iRobot %i:", vNodes[i]->iRobot);
+			ROS_INFO("  iResRobot %i:", vNodes[i]->iResRobot);
+			ROS_INFO("  Pose:");
+			ROS_INFO("    x: %f", vNodes[i]->node.pose.x);
+			ROS_INFO("    y: %f", vNodes[i]->node.pose.y);
+			ROS_INFO("    z: %f", vNodes[i]->node.pose.z);
+			ROS_INFO("    theta: %f", vNodes[i]->node.pose.theta);
+			ROS_INFO("    frame_id: %s", vNodes[i]->node.pose.frame_id.c_str());
+			printArcs(vNodes[i]->node);
+		}
+	}
+	else
+		ROS_INFO("The graph has 0 nodes");
+	ROS_INFO("");
+}
+
+/*! \fn void Graph::printArcs()
+ * 	\brief Print arcs of current node
+*/
+void Dijkstra::printArcs(graph_msgs::GraphNode node)
+{
+	if (node.arc_list.size() > 0)
+	{
+		ROS_INFO("  Arcs:");
+		for (int i = 0; i < node.arc_list.size(); i++)
+		{
+			ROS_INFO("    Arc %i:", i);
+			ROS_INFO("      Destination node: %i", node.arc_list[i].node_dest);
+			ROS_INFO("      Max speed: %f", node.arc_list[i].max_speed);
+			ROS_INFO("      Distance: %f", node.arc_list[i].distance);
+		}
+	}
+	else
+		ROS_INFO("  Arcs: Empty");
 }

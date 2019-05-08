@@ -80,52 +80,39 @@ int Graph::shutDown()
     return OK;
 }
 
-/*! \fn void Graph::print()
- * 	\brief Print current graph
+/*! \fn void Graph::printNodes()
+ * 	\brief Print nodes of current graph
 */
-void Graph::print()
+void Graph::printNodes()
 {
-    if (dijkstraGraph->vNodes.size() > 0)
-    {
-        ROS_INFO("");
-        ROS_INFO("Graph::print %d nodes:", dijkstraGraph->vNodes.size());
-        for (int i = 0; i < dijkstraGraph->vNodes.size(); i++)
-        {
-            ROS_INFO("Node %i:", dijkstraGraph->vNodes[i].node.id);
-            ROS_INFO("  Name: %s", dijkstraGraph->vNodes[i].node.name.c_str());
-            ROS_INFO("  Zone: %i", dijkstraGraph->vNodes[i].node.zone);
-            ROS_INFO("  Pose:");
-            ROS_INFO("    x: %f", dijkstraGraph->vNodes[i].node.pose.x);
-            ROS_INFO("    y: %f", dijkstraGraph->vNodes[i].node.pose.y);
-            ROS_INFO("    z: %f", dijkstraGraph->vNodes[i].node.pose.z);
-            ROS_INFO("    theta: %f", dijkstraGraph->vNodes[i].node.pose.theta);
-            ROS_INFO("    frame_id: %s", dijkstraGraph->vNodes[i].node.pose.frame_id.c_str());
-            printArcs(dijkstraGraph->vNodes[i].node);
-        }
-    }
-    else
-        ROS_INFO("The graph has 0 nodes");
-    ROS_INFO("");
+    dijkstraGraph->printNodes();
 }
 
-/*! \fn void Graph::printArcs()
- * 	\brief Print arcs of current node
+/*! \fn void Graph::print()
+ * 	\brief Print zones of current graph
 */
-void Graph::printArcs(graph_msgs::GraphNode node)
+void Graph::printZones()
 {
-    if (node.arc_list.size() > 0)
+    dijkstraGraph->printZones();
+}
+
+/*! \fn int Graph::addNode(int node, double x, double y, double z, double theta, std::string frame, char *name)
+ * 	\brief Adds a new node to the graph
+*/
+int Graph::addNode(graph_msgs::GraphNode node)
+{
+    dijkstraGraph->addNode(node);
+
+    for (int i = 0; i < node.arc_list.size(); i++)
     {
-        ROS_INFO("  Arcs:");
-        for (int i = 0; i < node.arc_list.size(); i++)
-        {
-            ROS_INFO("    Arc %i:", i);
-            ROS_INFO("      Destination node: %i", node.arc_list[i].node_dest);
-            ROS_INFO("      Max speed: %f", node.arc_list[i].max_speed);
-            ROS_INFO("      Distance: %f", node.arc_list[i].distance);
-        }
+        if (node.arc_list[i].distance == 0)
+            node.arc_list[i].distance = 1;
+        if (node.arc_list[i].max_speed == 0)
+            node.arc_list[i].max_speed = 1.5;
+        dijkstraGraph->addArc(node.id, node.arc_list[i]);
     }
-    else
-        ROS_INFO("  Arcs: Empty");
+
+    return 0;
 }
 
 /*! \fn int Graph::addNode(int node, double x, double y, double z, double theta, std::string frame, char *name)
@@ -144,55 +131,52 @@ graph_msgs::GraphNode Graph::addNode(int node, int zone, double x, double y, dou
     new_node.pose.theta = theta;
     new_node.pose.frame_id = frame;
 
-    //TODO
     dijkstraGraph->addNode(new_node);
-    dijkstraGraph->addZone(zone, 1);
-    dijkstraGraph->addNodeToZone(node, zone);
 
     return new_node;
 }
 
-/*! \fn int Graph::addArc(graph_msgs::GraphNode *from_node, int to_node)
+/*! \fn int Graph::addArc(int from_node_id, int to_node_id)
  * 	\brief Adds an arc from a node to another with constant weight
 */
-int Graph::addArc(graph_msgs::GraphNode from_node, int to_node)
+int Graph::addArc(int from_node_id, int to_node_id)
 {
     graph_msgs::GraphArc new_arc;
-    new_arc.node_dest = to_node;
+    new_arc.node_dest = to_node_id;
     new_arc.distance = 1;
     new_arc.max_speed = 1.5;
 
-    dijkstraGraph->addArc(from_node.id, new_arc);
+    dijkstraGraph->addArc(from_node_id, new_arc);
 
     return 0;
 }
 
-/*! \fn int Graph::addArc(graph_msgs::GraphNode *from_node, int to_node, float weight)
+/*! \fn int Graph::addArc(int from_node_id, int to_node_id, float weight)
  * 	\brief Adds an arc from a node to another with weight
 */
-int Graph::addArc(graph_msgs::GraphNode from_node, int to_node, float weight)
+int Graph::addArc(int from_node_id, int to_node_id, float weight)
 {
     graph_msgs::GraphArc new_arc;
-    new_arc.node_dest = to_node;
+    new_arc.node_dest = to_node_id;
     new_arc.distance = weight;
     new_arc.max_speed = 1.5;
 
-    dijkstraGraph->addArc(from_node.id, new_arc);
+    dijkstraGraph->addArc(from_node_id, new_arc);
 
     return 0;
 }
 
-/*! \fn int Graph::addArc(graph_msgs::GraphNode *from_node, int to_node, float weight, float max_speed)
+/*! \fn int Graph::addArc(int from_node_id, int to_node_id, float weight, float max_speed)
  * 	\brief Adds an arc from a node to another with weight and max_speed
 */
-int Graph::addArc(graph_msgs::GraphNode from_node, int to_node, float weight, float max_speed)
+int Graph::addArc(int from_node_id, int to_node_id, float weight, float max_speed)
 {
     graph_msgs::GraphArc new_arc;
-    new_arc.node_dest = to_node;
+    new_arc.node_dest = to_node_id;
     new_arc.distance = weight;
     new_arc.max_speed = max_speed;
 
-    dijkstraGraph->addArc(from_node.id, new_arc);
+    dijkstraGraph->addArc(from_node_id, new_arc);
 
     return 0;
 }
@@ -213,7 +197,6 @@ graph_msgs::GraphNodeArray Graph::getNodesUsedMsg()
     std::vector<graph_msgs::GraphNode> nodes_vector = dijkstraGraph->getNodesUsed();
 
     graph_msgs::GraphNodeArray nodes_msg;
-    nodes_msg.nodes.resize(nodes_vector.size());
     for (int i = 0; i < nodes_vector.size(); i++)
     {
         nodes_msg.nodes.push_back(nodes_vector[i]);
@@ -510,8 +493,8 @@ graph_msgs::GraphNode Graph::getNode(unsigned int node_id)
 {
     for (int i = 0; i < dijkstraGraph->vNodes.size(); i++)
     {
-        if (dijkstraGraph->vNodes[i].node.id == node_id)
-            return dijkstraGraph->vNodes[i].node;
+        if (dijkstraGraph->vNodes[i]->node.id == node_id)
+            return dijkstraGraph->vNodes[i]->node;
         //ROS_ERROR("Dijkstra::getNode: node %d, pNodes[i]->iNode:%d  ", node_id,vNodes[i].iNode);
     }
     //ROS_ERROR("Dijkstra::getNode: node %d  NULL ", node_id);
@@ -554,13 +537,12 @@ std::string Graph::deserialize()
 {
     ROS_INFO("Graph::deserialize File: %s", fileName);
 
-    //graph_msgs::GraphNode *node =
-    graph_msgs::GraphNode node = addNode(0, 1, 0, 0, 0, 0, "map", "Node name 1");
-    addArc(node, 1);
-    addArc(node, 2);
+    addNode(0, 1, 0, 0, 0, 0, "map", "Node name 1");
+    addArc(0, 1);
+    addArc(0, 2);
 
-    node = addNode(1, 1, 1, 0, 0, 0.5, "map", "Node name 2");
-    addArc(node, 2);
+    addNode(1, 1, 1, 0, 0, 0.5, "map", "Node name 2");
+    addArc(1, 2);
 
     addNode(2, 1, 0, 1, 0, 0.75, "map", "Node name 3");
 

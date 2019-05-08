@@ -72,7 +72,7 @@ using namespace std;
 //! Class Rcomponent
 class GraphNode
 {
-  protected:
+protected:
     //! Controls if has been initialized succesfully
     bool initialized, ros_initialized;
     //! Controls the execution of the GraphNode's thread
@@ -117,7 +117,7 @@ class GraphNode
     //! Mutex to exclude concurrent access to alarm vectors
     pthread_mutex_t mutexGraph;
 
-  public:
+public:
     //! Public constructor
     GraphNode(ros::NodeHandle h);
     //! Public destructor
@@ -144,7 +144,7 @@ class GraphNode
     //! @return pthread_hz
     double getUpdateRate();
 
-  protected:
+protected:
     //! Configures and initializes the component
     //! @return OK
     //! @return INITIALIZED if the component is already intialized
@@ -462,7 +462,7 @@ int GraphNode::setup()
     }
     initialized = true;
 
-    graph_route->print();
+    //graph_route->printNodes();
 
     return OK;
 }
@@ -857,9 +857,6 @@ void GraphNode::rosPublish()
 
         robotnik_fms_msgs::RobotStatus RS = vRobotStatus[i];
 
-        //marker_array_robots_msg.markers.resize(iMaxRobots);
-        //marker_array_robots_msg.markers.clear();
-
         visualization_msgs::Marker MRobot;
 
         if (RS.id >= 0)
@@ -985,17 +982,13 @@ void GraphNode::rosPublish()
 
     if (route.nodes.size() > 0)
     {
-
         for (int i = 0; i < route.nodes.size(); i++)
         {
-            aquí es donde se publican los nodos repetidos;
-            robotnik_fms_msgs::NodeInfo Node_inf;
             graph_msgs::GraphNode nod;
             nod = route.nodes[i];
 
             graph_frame = nod.pose.frame_id;
 
-            rviz_nodes.Nodes.push_back(Node_inf);
             std::string sID = "ID:" + std::to_string(nod.id);
 
             if (graph_route->getRobotFromId(nod.id) >= 0)
@@ -1018,22 +1011,22 @@ void GraphNode::rosPublish()
         for (int i = 0; i < route.nodes.size(); i++)
         {
             robotnik_fms_msgs::NodeInfo Node_inf;
-            graph_msgs::GraphNode *nod;
-            nod = &route.nodes[i];
+            graph_msgs::GraphNode nod;
+            nod = route.nodes[i];
             marker_array_msg.markers[i].header.stamp = ros::Time::now();
-            marker_array_msg.markers[i].header.frame_id = nod->pose.frame_id;
+            marker_array_msg.markers[i].header.frame_id = nod.pose.frame_id;
             marker_array_msg.markers[i].ns = "basic_shapes";
             marker_array_msg.markers[i].id = i + 2000;
             marker_array_msg.markers[i].type = shape;
-            marker_array_msg.markers[i].color.r = 0.0f + nod->id;
-            marker_array_msg.markers[i].color.g = 1.0f + graph_route->getRobotFromId(nod->id);
-            marker_array_msg.markers[i].color.b = 0.0f + nod->id;
-            marker_array_msg.markers[i].color.a = 1.0f + nod->id;
+            marker_array_msg.markers[i].color.r = 0.0f + nod.id;
+            marker_array_msg.markers[i].color.g = 1.0f + graph_route->getRobotFromId(nod.id);
+            marker_array_msg.markers[i].color.b = 0.0f + nod.id;
+            marker_array_msg.markers[i].color.a = 1.0f + nod.id;
 
             marker_array_msg.markers[i].action = visualization_msgs::Marker::ADD;
-            marker_array_msg.markers[i].pose.position.x = nod->pose.x / fGraph_markers_scale;
-            marker_array_msg.markers[i].pose.position.y = nod->pose.y / fGraph_markers_scale;
-            marker_array_msg.markers[i].pose.position.z = nod->pose.z;
+            marker_array_msg.markers[i].pose.position.x = nod.pose.x / fGraph_markers_scale;
+            marker_array_msg.markers[i].pose.position.y = nod.pose.y / fGraph_markers_scale;
+            marker_array_msg.markers[i].pose.position.z = nod.pose.z;
             marker_array_msg.markers[i].pose.orientation.x = 0.0;
             marker_array_msg.markers[i].pose.orientation.y = 0.0;
             marker_array_msg.markers[i].pose.orientation.z = 0.0;
@@ -1045,21 +1038,21 @@ void GraphNode::rosPublish()
 
             marker_array_msg.markers[i].lifetime = ros::Duration((1.0 / dGraphFreq_) * 10.0);
 
-            if (graph_route->getRobotFromId(nod->id) >= 0)
+            if (graph_route->getRobotFromId(nod.id) >= 0)
             {
                 std::string txt = "";
 
                 visualization_msgs::Marker MText;
                 MText.header.stamp = ros::Time::now();
-                MText.header.frame_id = nod->pose.frame_id;
+                MText.header.frame_id = nod.pose.frame_id;
                 MText.ns = "basic_shapes";
                 MText.id = i + 1000;
                 MText.type = visualization_msgs::Marker::TEXT_VIEW_FACING;
                 MText.action = visualization_msgs::Marker::ADD;
-                MText.text = txt + std::to_string(graph_route->getRobotFromId(nod->id));
-                MText.pose.position.x = nod->pose.x / fGraph_markers_scale;
-                MText.pose.position.y = nod->pose.y / fGraph_markers_scale;
-                MText.pose.position.z = nod->pose.z + .3;
+                MText.text = txt + std::to_string(graph_route->getRobotFromId(nod.id));
+                MText.pose.position.x = nod.pose.x / fGraph_markers_scale;
+                MText.pose.position.y = nod.pose.y / fGraph_markers_scale;
+                MText.pose.position.z = nod.pose.z + .3;
 
                 MText.pose.orientation.x = 0.0;
                 MText.pose.orientation.y = 0.0;
@@ -1101,13 +1094,13 @@ void GraphNode::rosPublish()
         for (int i = 0; i < graph_route->dijkstraGraph->vNodes.size(); i++)
         {
             robotnik_fms_msgs::NodeInfo Node_inf;
-            Node nod = graph_route->dijkstraGraph->vNodes[i];
+            Node *nod = graph_route->dijkstraGraph->vNodes[i];
 
             std::string sZones = "Z";
-            for (int j = 0; j < nod.viZones.size(); j++)
+            for (int j = 0; j < nod->viZones.size(); j++)
             {
-                Node_inf.zones.push_back(nod.viZones[j]);
-                sZones = sZones + std::to_string(nod.viZones[j]);
+                Node_inf.zones.push_back(nod->viZones[j]);
+                sZones = sZones + std::to_string(nod->viZones[j]);
             }
 
             Graph.Nodes.push_back(Node_inf);
@@ -1116,10 +1109,10 @@ void GraphNode::rosPublish()
 
             visualization_msgs::Marker M;
             M.header.stamp = ros::Time::now();
-            M.header.frame_id = nod.node.pose.frame_id;
+            M.header.frame_id = nod->node.pose.frame_id;
             M.ns = "basic_shapes";
             M.id = iID + 10000;
-            if (isnan(nod.node.pose.theta))
+            if (isnan(nod->node.pose.theta))
             {
                 M.type = visualization_msgs::Marker::SPHERE;
                 M.pose.orientation.x = 0.0;
@@ -1130,12 +1123,12 @@ void GraphNode::rosPublish()
             else
             {
                 M.type = visualization_msgs::Marker::ARROW;
-                M.pose.orientation = tf::createQuaternionMsgFromYaw(nod.node.pose.theta);
+                M.pose.orientation = tf::createQuaternionMsgFromYaw(nod->node.pose.theta);
             }
             M.action = visualization_msgs::Marker::ADD;
-            M.pose.position.x = nod.node.pose.x / fGraph_markers_scale;
-            M.pose.position.y = nod.node.pose.y / fGraph_markers_scale;
-            M.pose.position.z = nod.node.pose.z;
+            M.pose.position.x = nod->node.pose.x / fGraph_markers_scale;
+            M.pose.position.y = nod->node.pose.y / fGraph_markers_scale;
+            M.pose.position.z = nod->node.pose.z;
 
             float fR = 1.0;
             float fG = 1.0;
@@ -1221,21 +1214,21 @@ void GraphNode::rosPublish()
                 txt = txt + ":";
             visualization_msgs::Marker MText;
             MText.header.stamp = ros::Time::now();
-            MText.header.frame_id = nod.node.pose.frame_id;
+            MText.header.frame_id = nod->node.pose.frame_id;
             MText.ns = "basic_shapes";
             MText.id = iID;
             MText.type = visualization_msgs::Marker::TEXT_VIEW_FACING;
             MText.action = visualization_msgs::Marker::ADD;
-            txt = txt + std::string(nod.node.name);
-            if (nod.iResRobot >= 0)
-                txt = txt + " Res:" + std::to_string(nod.iResRobot);
-            if (nod.iRobot >= 0)
-                txt = txt + " R:" + std::to_string(nod.iRobot);
+            txt = txt + std::string(nod->node.name);
+            if (nod->iResRobot >= 0)
+                txt = txt + " Res:" + std::to_string(nod->iResRobot);
+            if (nod->iRobot >= 0)
+                txt = txt + " R:" + std::to_string(nod->iRobot);
             MText.text = txt;
             //ROS_INFO("%s NodesUsed:%s",txt.c_str(),text_nodes_used.c_str());
-            MText.pose.position.x = nod.node.pose.x / fGraph_markers_scale;
-            MText.pose.position.y = nod.node.pose.y / fGraph_markers_scale;
-            MText.pose.position.z = nod.node.pose.z + 0.1;
+            MText.pose.position.x = nod->node.pose.x / fGraph_markers_scale;
+            MText.pose.position.y = nod->node.pose.y / fGraph_markers_scale;
+            MText.pose.position.z = nod->node.pose.z + 0.1;
             MText.pose.orientation.x = 0.0;
             MText.pose.orientation.y = 0.0;
             MText.pose.orientation.z = 0.0;
@@ -1251,23 +1244,22 @@ void GraphNode::rosPublish()
             marker_array_msg.markers.push_back(MText);
             iID++;
 
-            //marker_array_arrow_msg.markers.resize(nod.vAdjacent.size());
-            for (int j = 0; j < nod.node.arc_list.size(); j++)
+            for (int j = 0; j < nod->node.arc_list.size(); j++)
             {
-                int iNext = nod.node.arc_list[j].node_dest;
+                int iNext = nod->node.arc_list[j].node_dest;
                 graph_msgs::GraphNode nodDest = graph_route->getNodeFromId(iNext);
 
                 if (nodDest.id >= 0)
                 {
                     //ROS_INFO("Adding Arc:%d from Node:%d[%f,%f]F:%s name:%s to Node:%d[%f,%f]F:%s name:%s",j,nod.iNode,nod.dX,nod.dY,nod.sFrame_id.c_str(),std::string(nod.cName).c_str(),nodDest->iNode,nodDest->dX,nodDest->dY,nodDest->sFrame_id.c_str(),std::string(nodDest->cName).c_str());
 
-                    if (nod.node.pose.frame_id == nodDest.pose.frame_id)
+                    if (nod->node.pose.frame_id == nodDest.pose.frame_id)
                     {
 
                         visualization_msgs::Marker M;
 
                         M.header.stamp = ros::Time::now();
-                        M.header.frame_id = nod.node.pose.frame_id;
+                        M.header.frame_id = nod->node.pose.frame_id;
                         M.ns = "basic_shapes";
                         M.id = iID;
 
@@ -1293,9 +1285,9 @@ void GraphNode::rosPublish()
 
                         M.points.resize(2);
 
-                        M.points[0].x = nod.node.pose.x / fGraph_markers_scale;
-                        M.points[0].y = nod.node.pose.y / fGraph_markers_scale;
-                        M.points[0].z = nod.node.pose.z;
+                        M.points[0].x = nod->node.pose.x / fGraph_markers_scale;
+                        M.points[0].y = nod->node.pose.y / fGraph_markers_scale;
+                        M.points[0].z = nod->node.pose.z;
 
                         M.points[1].x = nodDest.pose.x / fGraph_markers_scale;
                         M.points[1].y = nodDest.pose.y / fGraph_markers_scale;

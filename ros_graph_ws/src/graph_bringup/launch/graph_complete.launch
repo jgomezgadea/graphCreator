@@ -2,7 +2,7 @@
 <launch>
 
     <!-- map_server -->
-    <node pkg="map_server" type="map_server" name="map_server" args="$(find graph_bringup)/maps/map.yaml" launch-prefix="gdb -ex run --args"/>
+    <node pkg="map_server" type="map_server" name="map_server" args="$(find graph_bringup)/maps/map.yaml"/>
 
     <!-- rosbridge_server -->
     <include file="$(find rosbridge_server)/launch/rosbridge_websocket.launch" />
@@ -12,7 +12,7 @@
         <param name="graph_file" value="$(find graph_bringup)/config/graph.xml" type="string" />
         <rosparam command="load" file="$(find graph_bringup)/config/config_routes.yaml" />
     </node>
-
+    <!--launch-prefix="gdb -ex run - -args"-->
 
 </launch>
 

@@ -30,7 +30,7 @@ using namespace std;
 //! Class Node utilizada por Dijkstra para representar los nodos del grafo
 class Node
 {
-  public:
+public:
 	//! Node
 	graph_msgs::GraphNode node;
 	//! Distance from previous node
@@ -47,12 +47,17 @@ class Node
 	//! iRobot Reserved
 	int iResRobot;
 
-  public:
+public:
 	//! Constructor
 	Node()
 	{
 		node = graph_msgs::GraphNode();
 		node.id = -1;
+		iDist = INFINITE;
+		iParent = NO_PARENT;
+		bUsed = false;
+		iRobot = -1;
+		iResRobot = -1;
 	}
 	//! Constructor
 	Node(graph_msgs::GraphNode new_node)
@@ -171,34 +176,38 @@ class Node
 	{
 		return node.name;
 	}
-
-	//! Adds a new Zone
-	//! return -1 if the zone already on the node
-	//! return 0 if OK
-	int addZoneToNode(int iZone)
-	{
-		for (int i = 0; i < (int)viZones.size(); i++)
-		{
-			if (viZones[i] == iZone)
-				return -1;
-		}
-		viZones.push_back(iZone);
-		return 0;
-	}
-	//! Prints on console the node
+	//! Print node
 	void print()
 	{
-		ROS_INFO("Node: %i:", node.id);
-		ROS_INFO("  iDist: %i:", iDist);
-		ROS_INFO("  iParent: %i ", iParent);
-		ROS_INFO("  bUsed: %s ", bUsed);
-		ROS_INFO("  iRobot: %i ", iRobot);
-		ROS_INFO("  iResRobot: %i ", iResRobot);
-		ROS_INFO("  Zones: %i ", iRobot);
-		for (int i; i < viZones.size(); i++)
+		ROS_INFO("Node %i:", node.id);
+		ROS_INFO("  Name: %s", node.name.c_str());
+		ROS_INFO("  Zone: %i", node.zone);
+		ROS_INFO("  iRobot %i:", iRobot);
+		ROS_INFO("  iResRobot %i:", iResRobot);
+		ROS_INFO("  Pose:");
+		ROS_INFO("    x: %f", node.pose.x);
+		ROS_INFO("    y: %f", node.pose.y);
+		ROS_INFO("    z: %f", node.pose.z);
+		ROS_INFO("    theta: %f", node.pose.theta);
+		ROS_INFO("    frame_id: %s", node.pose.frame_id.c_str());
+		printArcs(node);
+	}
+	//! Print node arcs
+	void printArcs(graph_msgs::GraphNode node)
+	{
+		if (node.arc_list.size() > 0)
 		{
-			ROS_INFO("    %i ", viZones[i]);
+			ROS_INFO("  Arcs:");
+			for (int i = 0; i < node.arc_list.size(); i++)
+			{
+				ROS_INFO("    Arc %i:", i);
+				ROS_INFO("      Destination node: %i", node.arc_list[i].node_dest);
+				ROS_INFO("      Max speed: %f", node.arc_list[i].max_speed);
+				ROS_INFO("      Distance: %f", node.arc_list[i].distance);
+			}
 		}
+		else
+			ROS_INFO("  Arcs: Empty");
 	}
 };
 
@@ -226,13 +235,13 @@ class Dijkstra
 		//! Clase que contiene la lista de nodos de una ruta calculada
 		class NodesRoute
 		{
-		  public:
+		public:
 			//! Array con los nodos de esa ruta
 			std::vector<int> vListNodes;
 			//! Vector con los atributos detallados de cada nodo de la ruta
-			std::vector<Node> vListPointerNode;
+			std::vector<Node *> vListPointerNode;
 
-		  public:
+		public:
 			//! Public constructor
 			NodesRoute() {}
 			//! Public destructor
@@ -243,13 +252,13 @@ class Dijkstra
 		};
 
 		//! Clase que contiene la lista de nodos de una ruta
-	  private:
+	private:
 		//! Matriz para almacenar todas las posibles combinaciones
 		NodesRoute **iRoute;
 		//! Número de nodos del grafo
 		int nodes;
 
-	  public:
+	public:
 		//! Public Constructor
 		Route(int num_nodes)
 		{
@@ -287,13 +296,13 @@ class Dijkstra
 		}
 		//! Añade un nodo en la ruta para llegar al nodo objetivo "to_node"
 		//! La ruta se añade de manera inversa, por lo que insertamos elementos siempre al principio del vector
-		int addNode(int from_node, int to_node, Node node)
+		int addNode(int from_node, int to_node, Node *node)
 		{
 			if ((from_node < 0) || (from_node > nodes - 1) || (to_node < 0) || (to_node > nodes - 1))
 			{
 				return -1;
 			}
-			std::vector<Node>::iterator it;
+			std::vector<Node *>::iterator it;
 
 			it = iRoute[from_node][to_node].vListPointerNode.begin();
 			it = iRoute[from_node][to_node].vListPointerNode.insert(it, node);
@@ -311,11 +320,11 @@ class Dijkstra
 
 			return iRoute[from_node][to_node].vListNodes;
 		}
-		std::vector<Node> getDetailRoute(int from_node, int to_node)
+		std::vector<Node *> getDetailRoute(int from_node, int to_node)
 		{
 			if ((from_node < 0) || (from_node > nodes - 1) || (to_node < 0) || (to_node > nodes - 1))
 			{
-				std::vector<Node> aux;
+				std::vector<Node *> aux;
 				return aux;
 			}
 			//cout << "GetDetailedRoute. Size = " << iRoute[from_node][to_node].vListPointerNode.size() << endl;
@@ -388,7 +397,7 @@ class Dijkstra
 	//! Class Zone
 	class Zone
 	{
-	  public:
+	public:
 		//! ID Zone
 		int iIDZone;
 		//! Max Robots in Zone
@@ -420,11 +429,11 @@ class Dijkstra
 			for (int i = 0; i < (int)vpNodes.size(); i++)
 			{
 				if (vpNodes[i]->node.id == pNode->node.id)
+				{
 					return -1;
+				}
 			}
 			vpNodes.push_back(pNode);
-			//pNode->print();
-			pNode->addZoneToNode(this->iIDZone);
 			return 0;
 		}
 	};
@@ -432,10 +441,10 @@ class Dijkstra
 	//! Class PointerNode se utiliza para poder meter las referencias de los nodos en una cola con prioridad
 	class PointerNode
 	{
-	  public:
+	public:
 		Node *node;
 
-	  public:
+	public:
 		PointerNode(Node *new_node)
 		{
 			node = new_node;
@@ -449,7 +458,7 @@ class Dijkstra
 	//! Clase utilizada para hacer la comparación entre nodos, cada vez que insertamos uno en la cola de prioridad
 	class NodeComparison
 	{
-	  public:
+	public:
 		NodeComparison() {}
 		bool operator()(const PointerNode &lhs, const PointerNode &rhs) const
 		{ //Utiliza punteros a nodo, puesto que la distancia del nodo puede ser modificada una vez introducida en la cola
@@ -458,7 +467,7 @@ class Dijkstra
 		}
 	};
 
-  private:
+private:
 	//! Controls if it's possible to edit the graph
 	bool bEdit;
 	//!	Objeto de tipo Route con todas las rutas posibles
@@ -468,20 +477,20 @@ class Dijkstra
 	//! max value of a node id
 	int iMaxNodeId;
 
-  public:
+public:
 	//! Vector con los nodos del grafo
-	std::vector<Node> vNodes;
+	std::vector<Node *> vNodes;
 
 	//! Zones Vector
 	std::vector<Zone> vZones;
 
-  public:
+public:
 	//! Public constructor
 	Dijkstra();
 	//! Public Destructor
 	~Dijkstra();
 	//! Disables the edition of nodes and arcs. Necesario para poder calcular rutas sin incoherencias
-	std::string finalizeEdition(std::vector<Node> graph);
+	std::string finalizeEdition(std::vector<Node *> graph);
 	//! Enable the edition of nodes and arcs. Necesario para poder añadir nodos y aristas. Todos los cálculos realizados se perderán
 	void enableEdition();
 	//! Returns if the graph is being edited
@@ -496,7 +505,7 @@ class Dijkstra
 	int deleteArcs(int from_node);
 	//! Gets the optimum calculated route between selected nodes
 	int getRoute(int inital_node, int end_node, std::vector<int> *route);
-	int getRoute(int inital_node, int end_node, std::vector<Node> *route);
+	int getRoute(int inital_node, int end_node, std::vector<Node *> *route);
 
 	//! Get list of nodes used or blocked
 	std::vector<graph_msgs::GraphNode> getNodesUsed();
@@ -529,7 +538,14 @@ class Dijkstra
 	//! Get Node From ID
 	Node *getNodeFromId(int iIDNode);
 
-  private:
+	//! Print nodes of current graph
+	void printNodes();
+	//! Print zones of current graph
+	void printZones();
+	//! Print node arcs
+	void printArcs(graph_msgs::GraphNode node);
+
+private:
 	//! Set the initial node
 	int setInitialNode(int node);
 	//! Reset the value of the nodes
@@ -541,7 +557,7 @@ class Dijkstra
 	//! Push a node into the queue
 	int pushIntoQueue(int node);
 	//! Pops the node with more priority
-	int popFromQueue(PointerNode *pn);
+	PointerNode popFromQueue();
 	//! Queues all the nodes
 	int queueNodes();
 	//! Updates the queue after modifiying values of the nodes.

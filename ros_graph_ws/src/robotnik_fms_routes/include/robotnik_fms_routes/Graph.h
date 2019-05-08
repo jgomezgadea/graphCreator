@@ -35,17 +35,17 @@ enum ReturnValue
 class Graph
 {
 
-  private:
+private:
 	//! Nombre del fichero json
 	char fileName[128];
 	//! Controls if has been initialized succesfully
 	bool bInitialized;
 
-  public:
+public:
 	//! Grafo con los nodos y arcos del sistema
 	Dijkstra *dijkstraGraph;
 
-  public:
+public:
 	//! Constructor
 	Graph(const char *xmlFile);
 	//! Destructor
@@ -54,18 +54,20 @@ class Graph
 	std::string setup();
 	//!
 	int shutDown();
-	//! Print current graph
-	void print();
-	//! Print node arcs
-	void printArcs(graph_msgs::GraphNode node);
+	//! Print nodes of current graph
+	void printNodes();
+	//! Print zones of current graph
+	void printZones();
+	//! Adds a new node
+	int addNode(graph_msgs::GraphNode node);
 	//! Adds a new node
 	graph_msgs::GraphNode addNode(int node, int zone, double x, double y, double z, double theta, std::string frame, std::string name);
 	//! Adds arc from a node to another with constant weight
-	int addArc(graph_msgs::GraphNode from_node, int to_node);
+	int addArc(int from_node_id, int to_node_id);
 	//! Adds arc from a node to another with weight
-	int addArc(graph_msgs::GraphNode from_node, int to_node, float weight);
+	int addArc(int from_node_id, int to_node_id, float weight);
 	//! Adds arc from a node to another with weight and max speed
-	int addArc(graph_msgs::GraphNode from_node, int to_node, float weight, float max_speed);
+	int addArc(int from_node_id, int to_node_id, float weight, float max_speed);
 
 	/* TODO
 	//! Delete all the nodes
@@ -117,7 +119,7 @@ class Graph
 	//! Get iResRobot from ID
 	int getResRobotFromId(int iIDNode);
 
-  private:
+private:
 	//! Serializes a json file, saving the graph
 	std::string serialize();
 	//! Deserializes a json file, extracting the graph

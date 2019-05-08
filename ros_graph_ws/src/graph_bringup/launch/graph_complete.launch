@@ -1,5 +1,8 @@
 <?xml version="1.0"?>
 <launch>
+    <arg name="debug" default="false"/>
+    <arg     if="$(arg debug)" name="launch_prefix" default="gdb -ex run --args"/>
+    <arg unless="$(arg debug)" name="launch_prefix" default=""/>
 
     <!-- map_server -->
     <node pkg="map_server" type="map_server" name="map_server" args="$(find graph_bringup)/maps/map.yaml"/>
@@ -8,11 +11,10 @@
     <include file="$(find rosbridge_server)/launch/rosbridge_websocket.launch" />
 
     <!-- routes  -->
-    <node pkg="robotnik_fms_routes" type="robotnik_fms_routes_node" name="robotnik_fms_routes_node" output="screen" respawn="false" launch-prefix="gdb -ex run --args">
-        <param name="graph_file" value="$(find graph_bringup)/config/graph.xml" type="string" />
+    <node pkg="robotnik_fms_routes" type="robotnik_fms_routes_node" name="robotnik_fms_routes_node" output="screen" respawn="false" launch-prefix="$(arg launch_prefix)">
+        <param name="graph_file" value="$(find graph_bringup)/config/graph.json" type="string" />
         <rosparam command="load" file="$(find graph_bringup)/config/config_routes.yaml" />
     </node>
-    <!--launch-prefix="gdb -ex run - -args"-->
 
 </launch>
 

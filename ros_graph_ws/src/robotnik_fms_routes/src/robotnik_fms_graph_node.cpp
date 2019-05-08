@@ -452,7 +452,7 @@ int GraphNode::setup()
     ///////////////////////////////////////////////////
     // Setups the component or another subcomponents if it's necessary //
     ///////////////////////////////////////////////////
-    graph_route = new Graph(graph_file_.c_str());
+    graph_route = new Graph(graph_file_);
 
     std::string sError;
 
@@ -796,7 +796,7 @@ void GraphNode::status_subscriberCB(robotnik_fms_msgs::RobotStatus msg)
 void GraphNode::rosReadParams()
 {
     pnh_.param("desired_freq", desired_freq_, 10.0);
-    pnh_.param<string>("graph_file", graph_file_, "route.xml");
+    pnh_.param<string>("graph_file", graph_file_, "graph.json");
     pnh_.param("display_alarm_monitor", iDisplay_Alarm_Monitor_, 7);
     ROS_INFO("GraphNode::rosReadParams: graph file = %s", graph_file_.c_str());
 
@@ -1402,7 +1402,7 @@ bool GraphNode::routeServiceServerCb(robotnik_fms_msgs::GetRoute::Request &reque
 bool GraphNode::reloadGraphServiceServerCb(robotnik_fms_msgs::ReloadGraph::Request &request, robotnik_fms_msgs::ReloadGraph::Response &response)
 {
     pthread_mutex_lock(&mutexGraph);
-    string new_file;
+    std::string new_file;
 
     if (request.file.size() > 0)
     {
@@ -1417,7 +1417,7 @@ bool GraphNode::reloadGraphServiceServerCb(robotnik_fms_msgs::ReloadGraph::Reque
 
     PUSH_EVENT_HMI(" Reading new File:" + new_file);
 
-    Graph *graph_route_aux = new Graph(new_file.c_str());
+    Graph *graph_route_aux = new Graph(new_file);
 
     std::string msg;
     if (graph_route_aux->setup() != "OK")

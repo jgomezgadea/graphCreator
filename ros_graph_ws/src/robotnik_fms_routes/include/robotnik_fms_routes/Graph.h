@@ -10,11 +10,18 @@
 #define __GRAPH_H
 
 #include <iostream>
+#include <fstream>
 #include <string>
 
 #include <robotnik_fms_routes/Dijkstra.h>
 #include <geometry_msgs/Pose2D.h>
 #include <graph_msgs/GraphNodeArray.h>
+
+// JSONIZATION
+#include <jsonization/json.hpp>
+#include <jsonization/jsonization.h>
+
+#include <graph_msgs/GraphNodeArray.json.h>
 
 //XERCES_CPP_NAMESPACE_USE
 using namespace std;
@@ -36,8 +43,8 @@ class Graph
 {
 
 private:
-	//! Nombre del fichero json
-	char fileName[128];
+	//! Path of the json file
+	std::string graph_path_;
 	//! Controls if has been initialized succesfully
 	bool bInitialized;
 
@@ -47,7 +54,7 @@ public:
 
 public:
 	//! Constructor
-	Graph(const char *xmlFile);
+	Graph(std::string graph_path);
 	//! Destructor
 	~Graph();
 	//!
@@ -58,6 +65,8 @@ public:
 	void printNodes();
 	//! Print zones of current graph
 	void printZones();
+	//! Adds a new node
+	int setGraph(graph_msgs::GraphNodeArray graph);
 	//! Adds a new node
 	int addNode(graph_msgs::GraphNode node);
 	//! Adds a new node

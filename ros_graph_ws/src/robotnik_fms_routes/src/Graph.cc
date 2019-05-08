@@ -11,12 +11,12 @@
 #include <ros/ros.h>
 #include <robotnik_fms_routes/Graph.h>
 
-/*! \fn Graph::Graph(char *fileName)
+/*! \fn Graph::Graph(std::string graph_path)
  * 	\brief Constructor
 */
-Graph::Graph(const char *f)
+Graph::Graph(std::string graph_path)
 {
-    strcpy(fileName, f);
+    graph_path_ = graph_path;
     dijkstraGraph = new Dijkstra();
     bInitialized = false;
 }
@@ -94,6 +94,22 @@ void Graph::printNodes()
 void Graph::printZones()
 {
     dijkstraGraph->printZones();
+}
+
+/*! \fn int Graph::setGraph(graph_msgs::GraphNodeArray graph)
+ * 	\brief Adds a new node to the graph
+*/
+int Graph::setGraph(graph_msgs::GraphNodeArray graph)
+{
+    delete dijkstraGraph;
+    dijkstraGraph = new Dijkstra();
+
+    for (int i = 0; i < graph.nodes.size(); i++)
+    {
+        dijkstraGraph->addNode(graph.nodes[i]);
+    }
+
+    return 0;
 }
 
 /*! \fn int Graph::addNode(int node, double x, double y, double z, double theta, std::string frame, char *name)
@@ -559,7 +575,15 @@ int Graph::deleteAll()
 */
 std::string Graph::serialize()
 {
-    return "TODO";
+    ros::jsonization::Json jsonized_msg;
+    ros::jsonization::jsonize(jsonized_msg, getNodesMsg());
+
+    std::ofstream ofile;
+    ofile.open(graph_path_);
+    ofile << jsonized_msg;
+    ofile.close();
+
+    return "OK";
 }
 
 /*! \fn int Graph::deserialize()
@@ -567,16 +591,18 @@ std::string Graph::serialize()
 */
 std::string Graph::deserialize()
 {
-    ROS_INFO("Graph::deserialize File: %s", fileName);
+    ROS_INFO("Graph::deserialize File: %s", graph_path_.c_str());
 
-    addNode(0, 1, 0, 0, 0, 0, "map", "Node name 1");
-    addArc(0, 1);
-    addArc(0, 2);
+    std::ifstream ifile;
+    ifile.open(graph_path_);
 
-    addNode(1, 1, 1, 0, 0, 0.5, "map", "Node name 2");
-    addArc(1, 2);
+    ros::jsonization::Json jsonized_msg;
+    jsonized_msg << ifile;
 
-    addNode(2, 1, 0, 1, 0, 0.75, "map", "Node name 3");
+    graph_msgs::GraphNodeArray msg;
+    ros::jsonization::dejsonize(jsonized_msg, msg);
+
+    setGraph(msg);
 
     // TODO ROS_INFO("Graph::Deserialize: Processing JSON Found %s Nodes, %s Zones", std::to_string(nodes), std::to_string(zones));
     return "OK";

@@ -27,7 +27,6 @@ Dijkstra::Dijkstra()
 */
 Dijkstra::~Dijkstra()
 {
-	delete rRoutes;
 }
 
 /*! \fn int Dijkstra::finalizeEdition(graph_msgs::GraphNodeArray *graphData)

@@ -6,6 +6,7 @@
 
  
   <maintainer email="jmaparicio@robotnik.es">Jesús Aparicio</maintainer>
+  <maintainer email="jgomez@robotnik.es">Jose Gómez</maintainer>
 
   <license>TODO</license>
 
@@ -24,6 +25,7 @@
   <depend>diagnostic_updater</depend>
   <depend>xerces-c</depend>
   <depend>tf</depend>
+  <depend>jsonization</depend>
   
   <!-- The export tag contains other, unspecified, tags -->
   <export>

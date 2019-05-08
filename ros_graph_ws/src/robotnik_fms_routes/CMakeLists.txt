@@ -18,6 +18,7 @@ find_package(catkin REQUIRED COMPONENTS
   diagnostic_updater
   diagnostic_msgs
   tf
+  jsonization
 )
 
 

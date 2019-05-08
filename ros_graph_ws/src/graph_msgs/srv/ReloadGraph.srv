@@ -1,0 +1,5 @@
+# file to load (optional)
+string file
+---
+bool ret
+string msg

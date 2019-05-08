@@ -31,6 +31,7 @@ GRAPHVIEW.GraphView = function (options) {
         self.deleteGraph();
 
         // Fill graph with received nodes
+        // TODO Puede que no nos lleguen ordenados los id's (ni que estén todos)
         message.Nodes.forEach(node => {
           self.addNode(node.name);
         });

@@ -50,10 +50,6 @@ include_directories(
 add_executable(robotnik_fms_routes_node
                         include/robotnik_fms_routes/timer.h
                         include/robotnik_fms_routes/Dijkstra.h
-                        include/robotnik_fms_routes/DOMCount.hpp
-                        include/robotnik_fms_routes/DOMPrintErrorHandler.hpp
-                        include/robotnik_fms_routes/DOMPrintFilter.hpp
-                        include/robotnik_fms_routes/DOMTreeErrorReporter.hpp
                         include/robotnik_fms_routes/Graph.h
                         src/robotnik_fms_graph_node.cpp
                         src/Dijkstra.cc src/Graph.cc)

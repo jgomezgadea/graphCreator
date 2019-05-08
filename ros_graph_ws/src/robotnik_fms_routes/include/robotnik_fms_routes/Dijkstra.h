@@ -507,6 +507,8 @@ public:
 	int getRoute(int inital_node, int end_node, std::vector<int> *route);
 	int getRoute(int inital_node, int end_node, std::vector<Node *> *route);
 
+	//! Get list of graph nodes
+	std::vector<Node *> getNodes();
 	//! Get list of nodes used or blocked
 	std::vector<graph_msgs::GraphNode> getNodesUsed();
 

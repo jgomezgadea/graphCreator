@@ -577,6 +577,15 @@ std::vector<graph_msgs::GraphNode> Dijkstra::getNodesUsed()
 	return route;
 }
 
+/*! \fn std::vector<Node *> Dijkstra::GetNodes()
+ * 	\brief Gets the list of nodes used or blocked
+ *  \return 0 if OK
+*/
+std::vector<Node *> Dijkstra::getNodes()
+{
+	return vNodes;
+}
+
 /*! \fn int Dijkstra::getRoute(int initial_node, int end_node, std::vector<int> *route)
  * 	\brief Gets the best calculated route between selected nodes
  *  \return 0 if OK

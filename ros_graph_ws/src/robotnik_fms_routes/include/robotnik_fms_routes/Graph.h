@@ -89,6 +89,10 @@ public:
 	int getNodePosition(int num_node, geometry_msgs::Pose2D *pos);
 	//! Obtiene el arco entre dos nodos
 	int getArcBetweenNodes(int from_id, int to_id, graph_msgs::GraphArc arc);
+	//! Get list of the graph nodes
+	std::vector<graph_msgs::GraphNode> getNodes();
+	//! Get msg with the graph nodes
+	graph_msgs::GraphNodeArray getNodesMsg();
 	//! Get list of used nodes
 	std::vector<graph_msgs::GraphNode> getNodesUsed();
 	//! Get msg with the used nodes

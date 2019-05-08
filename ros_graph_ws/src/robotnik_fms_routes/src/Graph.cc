@@ -181,6 +181,38 @@ int Graph::addArc(int from_node_id, int to_node_id, float weight, float max_spee
     return 0;
 }
 
+/*! \fn std::vector<graph_msgs::GraphNode> Graph::getNodes()
+ * 	\brief Get msg with the graph nodes
+*/
+std::vector<graph_msgs::GraphNode> Graph::getNodes()
+{
+    std::vector<Node *> nodes = dijkstraGraph->getNodes();
+
+    std::vector<graph_msgs::GraphNode> new_nodes;
+    for (int i = 0; i < nodes.size(); i++)
+    {
+        new_nodes.push_back(nodes[i]->node);
+    }
+
+    return new_nodes;
+}
+
+/*! \fn graph_msgs::GraphNodeArray Graph::getGraphMsg()
+ * 	\brief Get msg with the graph nodes
+*/
+graph_msgs::GraphNodeArray Graph::getNodesMsg()
+{
+    std::vector<graph_msgs::GraphNode> nodes_vector = getNodes();
+
+    graph_msgs::GraphNodeArray nodes_msg;
+    for (int i = 0; i < nodes_vector.size(); i++)
+    {
+        nodes_msg.nodes.push_back(nodes_vector[i]);
+    }
+
+    return nodes_msg;
+}
+
 /*! \fn std::vector<Node *> Graph::GetNodesUsed()
  * 	\brief Gets the list of nodes used
 */
@@ -189,7 +221,7 @@ std::vector<graph_msgs::GraphNode> Graph::getNodesUsed()
     return dijkstraGraph->getNodesUsed();
 }
 
-/*! \fn std::vector<Node *> Graph::GetNodesUsedMsg()
+/*! \fn graph_msgs::GraphNodeArray Graph::GetNodesUsedMsg()
  * 	\brief Get msg with the used nodes
 */
 graph_msgs::GraphNodeArray Graph::getNodesUsedMsg()

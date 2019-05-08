@@ -94,9 +94,9 @@ protected:
     string graph_file_;
 
     //! Publish the component state
-    ros::Publisher state_publisher_;
+    ros::Publisher state_pub_;
 
-    ros::Publisher graph_scale_publisher_;
+    ros::Publisher graph_scale_rviz_pub_;
 
     ros::ServiceServer route_service_server_;         // service server
     ros::ServiceServer reload_graph_service_server_;  // service server
@@ -209,9 +209,9 @@ protected:
     void timerPublishCallback(const ros::TimerEvent &);
 
     // Status Publisher
-    ros::Publisher used_nodes_pub_old;
-    ros::Publisher used_nodes_id_pub;
-    ros::Publisher graph_pub;
+    ros::Publisher used_nodes_rviz_pub_;
+    ros::Publisher used_nodes_id_rviz_pub_;
+    ros::Publisher graph_rviz_pub_;
 
     std::vector<ros::Subscriber> vRobotStatusSubs;
     std::vector<robotnik_fms_msgs::RobotStatus> vRobotStatus;
@@ -224,7 +224,8 @@ protected:
     ros::Publisher markers_pub_robots;
 
     // New status publishers
-    ros::Publisher used_nodes_pub;
+    ros::Publisher used_nodes_pub_;
+    ros::Publisher graph_pub_;
 
     //! Diagnostic updater callback
     void diagnosticUpdate(diagnostic_updater::DiagnosticStatusWrapper &stat);
@@ -728,14 +729,15 @@ int GraphNode::rosSetup()
     }
 
     // Publishers
-    state_publisher_ = pnh_.advertise<robotnik_fms_msgs::State>("state", 1);
-    used_nodes_pub_old = pnh_.advertise<robotnik_fms_msgs::NodesInfo>("nodes_used", 1);
-    used_nodes_id_pub = pnh_.advertise<robotnik_fms_msgs::NodesID>("nodes_id_used", 1);
-    graph_pub = pnh_.advertise<robotnik_fms_msgs::NodesInfo>("graph", 1);
-    graph_scale_publisher_ = pnh_.advertise<std_msgs::Float32>("graph_marker_scale", 1);
+    state_pub_ = pnh_.advertise<robotnik_fms_msgs::State>("state", 1);
+    used_nodes_rviz_pub_ = pnh_.advertise<robotnik_fms_msgs::NodesInfo>("used_nodes_rviz", 1);
+    used_nodes_id_rviz_pub_ = pnh_.advertise<robotnik_fms_msgs::NodesID>("used_nodes_id_rviz", 1);
+    graph_rviz_pub_ = pnh_.advertise<robotnik_fms_msgs::NodesInfo>("graph_rviz", 1);
+    graph_scale_rviz_pub_ = pnh_.advertise<std_msgs::Float32>("graph_marker_scale", 1);
 
     // New publishers
-    used_nodes_pub = pnh_.advertise<graph_msgs::GraphNodeArray>("used_nodes", 1);
+    used_nodes_pub_ = pnh_.advertise<graph_msgs::GraphNodeArray>("used_nodes", 1);
+    graph_pub_ = pnh_.advertise<graph_msgs::GraphNodeArray>("graph", 1);
 
     ros_initialized = true;
 
@@ -960,14 +962,14 @@ void GraphNode::rosPublish()
     pthread_mutex_lock(&mutexGraph);
     msg.nodes = graph_route->getNumNodes();
     pthread_mutex_unlock(&mutexGraph);
-    state_publisher_.publish(msg);
+    state_pub_.publish(msg);
 
     std_msgs::Float32 msgscale;
     msgscale.data = fGraph_markers_scale;
 
     //ROS_INFO("scale %f",fGraph_markers_scale);
 
-    graph_scale_publisher_.publish(msgscale);
+    graph_scale_rviz_pub_.publish(msgscale);
 
     //std::vector<graph_msgs::GraphNode *> route;
     graph_msgs::GraphNodeArray route;
@@ -1071,15 +1073,17 @@ void GraphNode::rosPublish()
         }
         markers_pub_nodes_used.publish(marker_array_msg);
 
-        used_nodes_pub_old.publish(rviz_nodes);
-        used_nodes_id_pub.publish(rviz_nodesId);
+        used_nodes_rviz_pub_.publish(rviz_nodes);
+        used_nodes_id_rviz_pub_.publish(rviz_nodesId);
 
-        used_nodes_pub.publish(route);
+        used_nodes_pub_.publish(route);
     }
     else
     {
-        rviz_nodesId.id.push_back("-");
-        used_nodes_id_pub.publish(rviz_nodesId);
+        used_nodes_rviz_pub_.publish(robotnik_fms_msgs::NodesInfo());
+        used_nodes_id_rviz_pub_.publish(rviz_nodesId);
+
+        used_nodes_pub_.publish(graph_msgs::GraphNodeArray());
     }
     visualization_msgs::MarkerArray marker_array_msg;
     //visualization_msgs::MarkerArray marker_array_arrow_msg;
@@ -1306,7 +1310,8 @@ void GraphNode::rosPublish()
         }
         //markers_pub_graph_arcs.publish(marker_array_arrow_msg);
         markers_pub_graph.publish(marker_array_msg);
-        graph_pub.publish(Graph);
+        graph_rviz_pub_.publish(Graph);
+        graph_pub_.publish(graph_route->getNodesMsg());
     }
 }
 

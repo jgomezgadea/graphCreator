@@ -506,7 +506,8 @@ public:
 	//! Gets the optimum calculated route between selected nodes
 	int getRoute(int inital_node, int end_node, std::vector<int> *route);
 	int getRoute(int inital_node, int end_node, std::vector<Node *> *route);
-
+	//! Controls if the graph is being edited
+	void setEditable(bool editable);
 	//! Get list of graph nodes
 	std::vector<Node *> getNodes();
 	//! Get list of nodes used or blocked
@@ -521,7 +522,7 @@ public:
 	bool unBlockAll(int iRobot);
 
 	//! Adds a new node
-	int addNode(graph_msgs::GraphNode node);
+	std::string addNode(graph_msgs::GraphNode node);
 
 	//! Adds edge from a node to another
 	int addArc(int from_node, graph_msgs::GraphArc new_arc);

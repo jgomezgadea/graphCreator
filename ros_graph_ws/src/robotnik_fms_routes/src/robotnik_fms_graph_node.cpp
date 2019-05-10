@@ -21,16 +21,13 @@
 
 #include <ros/ros.h>
 #include <robotnik_fms_routes/Graph.h>
-#include <ros/ros.h>
 #include <pthread.h>
 #include <string>
 #include <vector>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 
-#include <robotnik_msgs/State.h>
 #include <robotnik_fms_msgs/State.h>
 #include <robotnik_fms_msgs/GetRoute.h>
 #include <robotnik_fms_msgs/ReloadGraph.h>
@@ -39,7 +36,6 @@
 #include <robotnik_fms_msgs/GetBlockedNode.h>
 #include "diagnostic_msgs/DiagnosticStatus.h"
 #include "diagnostic_updater/diagnostic_updater.h"
-#include "diagnostic_updater/update_functions.h"
 #include "diagnostic_updater/DiagnosticStatusWrapper.h"
 #include "diagnostic_updater/publisher.h"
 
@@ -53,16 +49,17 @@
 
 #include <robotnik_msgs/alarmmonitor.h>
 #include <robotnik_msgs/alarmsmonitor.h>
+#include <robotnik_msgs/State.h>
+
+#include <graph_msgs/Node.h>
+#include <graph_msgs/SetNodePos.h>
+#include <graph_msgs/NodeId.h>
 
 #include <tf/transform_datatypes.h>
 
 #include <std_msgs/Float32.h>
 
 #include <robot_local_control_msgs/RobotStatus.h>
-
-#include <tf/transform_listener.h>
-
-#include <fstream>
 
 //! Size of string for logging
 #define DEFAULT_THREAD_DESIRED_HZ 40.0
@@ -102,8 +99,11 @@ protected:
     ros::ServiceServer reload_graph_service_server_;  // service server
     ros::ServiceServer get_node_info_service_server_; // service server
 
+    ros::ServiceServer add_node_service_server_;
+    ros::ServiceServer set_node_service_server_;
+    ros::ServiceServer delete_node_service_server_;
+
     ros::ServiceServer block_node_service_server_;         // service server
-    ros::ServiceServer reserve_node_service_server_;       // service server
     ros::ServiceServer check_blocked_node_service_server_; // service server
 
     //! General status diagnostic updater
@@ -199,7 +199,13 @@ protected:
     bool reloadGraphServiceServerCb(robotnik_fms_msgs::ReloadGraph::Request &request, robotnik_fms_msgs::ReloadGraph::Response &response);
     // Callback for getting the node info
     bool getNodeInfoServiceServerCb(robotnik_fms_msgs::GetNodeInfo::Request &request, robotnik_fms_msgs::GetNodeInfo::Response &response);
-    // Callback for block a node
+    //! Callback for add a node
+    bool addNodeServiceServerCb(graph_msgs::Node::Request &request, graph_msgs::Node::Response &response);
+    //! Callback for set a node
+    bool setNodeServiceServerCb(graph_msgs::SetNodePos::Request &request, graph_msgs::SetNodePos::Response &response);
+    //! Callback for set a node
+    bool deleteNodeServiceServerCb(graph_msgs::NodeId::Request &request, graph_msgs::NodeId::Response &response);
+    //! Callback for block a node
     bool blockNodeServiceServerCb(robotnik_fms_msgs::BlockNode::Request &request, robotnik_fms_msgs::BlockNode::Response &response);
     // Callback for get blocked node
     bool getBlockedNodeServiceServerCb(robotnik_fms_msgs::GetBlockedNode::Request &request, robotnik_fms_msgs::GetBlockedNode::Response &response);
@@ -746,7 +752,9 @@ int GraphNode::rosSetup()
     reload_graph_service_server_ = pnh_.advertiseService("reload_graph", &GraphNode::reloadGraphServiceServerCb, this);
     get_node_info_service_server_ = pnh_.advertiseService("get_node_info", &GraphNode::getNodeInfoServiceServerCb, this);
     block_node_service_server_ = pnh_.advertiseService("block_node", &GraphNode::blockNodeServiceServerCb, this);
-    //reserve_node_service_server_        = pnh_.advertiseService("reserve_node", &GraphNode::reserveNodeServiceServerCb, this);
+    add_node_service_server_ = pnh_.advertiseService("add_node", &GraphNode::addNodeServiceServerCb, this);
+    set_node_service_server_ = pnh_.advertiseService("set_node_pos", &GraphNode::setNodeServiceServerCb, this);
+    delete_node_service_server_ = pnh_.advertiseService("delete_node", &GraphNode::deleteNodeServiceServerCb, this);
     check_blocked_node_service_server_ = pnh_.advertiseService("get_blocked_node", &GraphNode::getBlockedNodeServiceServerCb, this);
 
     timerPublish = pnh_.createTimer(ros::Duration(dGraphFreq_), &GraphNode::timerPublishCallback, this);
@@ -1651,6 +1659,69 @@ bool GraphNode::blockNode(bool bBlock, int idNode, int iRobot, string *msg)
             return true;
         }
     }
+}
+
+/*! \fn bool GraphNode::addNodeServiceServerCb(graph_msgs::Node::Request &request, graph_msgs::Node::Response &response)
+* 	\brief Adds a new node to the graph
+    */
+bool GraphNode::addNodeServiceServerCb(graph_msgs::Node::Request &request, graph_msgs::Node::Response &response)
+{
+    pthread_mutex_lock(&mutexGraph);
+    std::string msg = graph_route->addNode(request.node);
+    if (msg == "OK")
+    {
+        response.success = true;
+    }
+    else
+    {
+        response.success = false;
+    }
+    response.message = "AddNodeService Robot: Adding node " + std::to_string(request.node.id) + ": " + msg;
+
+    pthread_mutex_unlock(&mutexGraph);
+    return true;
+}
+
+/*! \fn bool GraphNode::setNodeServiceServerCb(graph_msgs::SetNodePos::Request &request, graph_msgs::SetNodePos::Response &response)
+* 	\brief Adds a new node to the graph
+    */
+bool GraphNode::setNodeServiceServerCb(graph_msgs::SetNodePos::Request &request, graph_msgs::SetNodePos::Response &response)
+{
+    pthread_mutex_lock(&mutexGraph);
+    std::string msg = graph_route->setNodePosition(request.node_id, request.pose);
+    if (msg == "OK")
+    {
+        response.success = true;
+    }
+    else
+    {
+        response.success = false;
+    }
+    response.message = "SetNodeService Robot: Setting pose of node " + std::to_string(request.node_id) + ": " + msg;
+
+    pthread_mutex_unlock(&mutexGraph);
+    return true;
+}
+
+/*! \fn bool GraphNode::setNodeServiceServerCb(graph_msgs::SetNodePos::Request &request, graph_msgs::SetNodePos::Response &response)
+* 	\brief Adds a new node to the graph
+    */
+bool GraphNode::deleteNodeServiceServerCb(graph_msgs::NodeId::Request &request, graph_msgs::NodeId::Response &response)
+{
+    pthread_mutex_lock(&mutexGraph);
+    std::string msg = graph_route->deleteNode(request.node_id);
+    if (msg == "OK")
+    {
+        response.success = true;
+    }
+    else
+    {
+        response.success = false;
+    }
+    response.message = "DeleteNodeService Robot: Deleting node " + std::to_string(request.node_id) + ": " + msg;
+
+    pthread_mutex_unlock(&mutexGraph);
+    return true;
 }
 
 // Callback handler for the service server

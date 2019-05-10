@@ -18,7 +18,7 @@ using namespace std;
 */
 Dijkstra::Dijkstra()
 {
-	bEdit = true;
+	bEdit = false; // TODO Now, bEdit has to be always disabled
 	iMaxNodeId = -1;
 }
 
@@ -67,7 +67,7 @@ std::string Dijkstra::finalizeEdition(std::vector<Node *> graph)
 			}
 			max_id = max(max_id, (int)graph[i]->node.id);
 		}
-		bEdit = false;
+		//bEdit = false;
 		rRoutes = new Route(max_id + 1); // Creamos matriz de posibles rutas
 		iMaxNodeId = max_id;
 	}
@@ -99,9 +99,9 @@ bool Dijkstra::isOnEdition()
 */
 int Dijkstra::deleteNodes()
 {
-	if (!bEdit)
+	if (bEdit)
 	{
-		ROS_ERROR("Dijkstra::DeleteNodes: Error: Graph's edition must be disabled");
+		ROS_ERROR("Dijkstra::DeleteNodes: Error: Graph's edition must be enabled");
 		return -2;
 	}
 
@@ -115,38 +115,41 @@ int Dijkstra::deleteNodes()
 	return 0;
 }
 
-/*! \fn int Dijkstra::addNode(graph_msgs::GraphNode node)
+/*! \fn std::string Dijkstra::addNode(graph_msgs::GraphNode node)
  * 	\brief  Adds a new node
  *  \returns The id of the node if OK
 */
 //!
-int Dijkstra::addNode(graph_msgs::GraphNode node)
+std::string Dijkstra::addNode(graph_msgs::GraphNode node)
 {
-	if (!bEdit)
+	if (bEdit)
 	{
-		ROS_ERROR("Dijkstra::addNode: Error: Graph's edition must be disabled");
-		return -2;
+		ROS_ERROR("Dijkstra::addNode: Error: Graph's edition must be enabled");
+		return "Dijkstra::addNode: Error: Graph's edition must be enabled";
 	}
 
 	int size = vNodes.size();
 
 	if (node.id < 0)
 	{
-		ROS_ERROR("Dijkstra::addNode: el id del nodo debe ser un numero positivo");
-		return -1;
+		ROS_ERROR("Dijkstra::addNode: Error: The ID has to be an integer");
+		return "Dijkstra::addNode: Error: The ID has to be an integer";
 	}
 
 	for (int i = 0; i < size; i++)
 	{
-		if (vNodes[i]->getId() == node.id) // Nodo con id repetido
-			return -1;
+		if (vNodes[i]->getId() == node.id)
+		{ // Nodo con id repetido
+			ROS_ERROR("Dijkstra::addNode: Error: The ID is in use");
+			return "Dijkstra::addNode: Error: The ID is in use";
+		}
 	}
 
 	vNodes.push_back(new Node(node));
 	addZone(node.zone, 1);
 	addNodeToZone(node.id, node.zone);
 
-	return node.id;
+	return "OK";
 }
 
 /*! \fn int Dijkstra::AddZone(int iIDZone, int iMaxRobots){
@@ -362,9 +365,9 @@ int Dijkstra::addArc(int from_node, graph_msgs::GraphArc new_arc)
 {
 	int locatedFrom = -1; //Id del nodo
 
-	if (!bEdit)
+	if (bEdit)
 	{ // Edición activa
-		ROS_ERROR("Dijkstra::addArc: Error: Graph's edition must be disabled");
+		ROS_ERROR("Dijkstra::addArc: Error: Graph's edition must be enabled");
 		return -2;
 	}
 
@@ -403,7 +406,7 @@ int Dijkstra::addArc(int from_node, graph_msgs::GraphArc new_arc)
 */
 int Dijkstra::deleteArc(int from_node, int to_node)
 {
-	if (!bEdit)
+	if (bEdit)
 	{
 		return -2;
 	}
@@ -430,7 +433,7 @@ int Dijkstra::deleteArc(int from_node, int to_node)
 */
 int Dijkstra::deleteArcs(int from_node)
 {
-	if (!bEdit)
+	if (bEdit)
 	{
 		return -2;
 	}
@@ -459,7 +462,7 @@ int Dijkstra::resetRoutes()
 {
 	if (bEdit)
 	{
-		ROS_ERROR("Dijkstra::resetRoutes: Error: Graph's edition must be disabled");
+		ROS_ERROR("Dijkstra::resetRoutes: Error: Graph's edition must be enabled");
 		return -2;
 	}
 	rRoutes->reset();
@@ -595,7 +598,7 @@ int Dijkstra::getRoute(int initial_node, int end_node, std::vector<int> *route)
 
 	if (bEdit)
 	{
-		ROS_ERROR("Dijkstra::getRoute: Error: Graph's edition must be disabled");
+		ROS_ERROR("Dijkstra::getRoute: Error: Graph's edition must be enabled");
 		return -2;
 	}
 
@@ -674,7 +677,7 @@ int Dijkstra::getRoute(int initial_node, int end_node, std::vector<Node *> *rout
 
 	if (bEdit)
 	{
-		ROS_ERROR("Dijkstra::getRoute: Error: Graph's edition must be disabled");
+		ROS_ERROR("Dijkstra::getRoute: Error: Graph's edition must be enabled");
 		return -2;
 	}
 
@@ -740,6 +743,14 @@ int Dijkstra::getRoute(int initial_node, int end_node, std::vector<Node *> *rout
 		ROS_ERROR("Dijkstra::GetRoute: Error: CalculateRoute failed");
 		return -1;
 	}
+}
+
+/*! \fn void Dijkstra::setEditable(bool edit)
+ * 	\brief Controls if the graph is being edited
+*/
+void Dijkstra::setEditable(bool editable)
+{
+	bEdit = editable;
 }
 
 /*! \fn int Dijkstra::resetQueue()
@@ -902,6 +913,7 @@ int Dijkstra::calculateRoute(int initial_node, int end_node)
  * 	\brief Gets the index of the node using his ID
  *  \return -1 if id does not exist
 */
+// TODO Optimizar para que no haya que usar getNodeFromId!!
 int Dijkstra::getNodeIndex(int nodeID)
 {
 	int ret = -1;

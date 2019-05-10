@@ -1,0 +1,5 @@
+# Service msg to add a node to the graph
+graph_msgs/GraphNode node
+---
+bool success
+string message

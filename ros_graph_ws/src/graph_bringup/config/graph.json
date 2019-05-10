@@ -1,1 +1,60 @@
-{"nodes":[{"arc_list":[{"distance":1.0,"max_speed":1.5,"node_dest":1},{"distance":1.0,"max_speed":1.5,"node_dest":2}],"id":0,"name":"Node name 1","pose":{"frame_id":"map","theta":0.0,"x":0.0,"y":0.0,"z":0.0},"zone":1},{"arc_list":[{"distance":1.0,"max_speed":1.5,"node_dest":2}],"id":1,"name":"Node name 2","pose":{"frame_id":"map","theta":0.5,"x":1.0,"y":0.0,"z":0.0},"zone":1},{"arc_list":null,"id":2,"name":"Node name 3","pose":{"frame_id":"map","theta":0.75,"x":0.0,"y":1.0,"z":0.0},"zone":1}]}
+{
+    "nodes": [
+        {
+            "arc_list": [
+                {
+                    "distance": 1.0,
+                    "max_speed": 1.5,
+                    "node_dest": 1
+                },
+                {
+                    "distance": 1.0,
+                    "max_speed": 1.5,
+                    "node_dest": 2
+                }
+            ],
+            "id": 0,
+            "name": "Node name 1",
+            "pose": {
+                "frame_id": "map",
+                "theta": 0.0,
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "zone": 1
+        },
+        {
+            "arc_list": [
+                {
+                    "distance": 1.0,
+                    "max_speed": 1.5,
+                    "node_dest": 2
+                }
+            ],
+            "id": 1,
+            "name": "Node name 2",
+            "pose": {
+                "frame_id": "map",
+                "theta": 0.5,
+                "x": 1.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "zone": 1
+        },
+        {
+            "arc_list": null,
+            "id": 2,
+            "name": "Node name 3",
+            "pose": {
+                "frame_id": "map",
+                "theta": 0.75,
+                "x": 0.0,
+                "y": 1.0,
+                "z": 0.0
+            },
+            "zone": 1
+        }
+    ]
+}

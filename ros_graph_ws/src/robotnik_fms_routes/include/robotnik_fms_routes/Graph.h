@@ -68,7 +68,7 @@ public:
 	//! Adds a new node
 	int setGraph(graph_msgs::GraphNodeArray graph);
 	//! Adds a new node
-	int addNode(graph_msgs::GraphNode node);
+	std::string addNode(graph_msgs::GraphNode node);
 	//! Adds a new node
 	graph_msgs::GraphNode addNode(int node, int zone, double x, double y, double z, double theta, std::string frame, std::string name);
 	//! Adds arc from a node to another with constant weight
@@ -96,6 +96,10 @@ public:
 	int getRoute(int from, int to, vector<graph_msgs::GraphNode> *detailed_nodes, vector<double> *max_speed);
 	//! Obtiene la posición del nodo indicado
 	int getNodePosition(int num_node, geometry_msgs::Pose2D *pos);
+	//! Modifica la posición del nodo indicado
+	std::string setNodePosition(int num_node, graph_msgs::GraphNodePose pos);
+	//! Elimina el nodo indicado
+	std::string deleteNode(int num_node);
 	//! Obtiene el arco entre dos nodos
 	int getArcBetweenNodes(int from_id, int to_id, graph_msgs::GraphArc arc);
 	//! Get list of the graph nodes

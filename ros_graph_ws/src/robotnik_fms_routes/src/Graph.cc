@@ -112,23 +112,26 @@ int Graph::setGraph(graph_msgs::GraphNodeArray graph)
     return 0;
 }
 
-/*! \fn int Graph::addNode(int node, double x, double y, double z, double theta, std::string frame, char *name)
+/*! \fn std::string Graph::addNode(graph_msgs::GraphNode node)
  * 	\brief Adds a new node to the graph
 */
-int Graph::addNode(graph_msgs::GraphNode node)
+std::string Graph::addNode(graph_msgs::GraphNode node)
 {
-    dijkstraGraph->addNode(node);
+    std::string res = dijkstraGraph->addNode(node);
 
-    for (int i = 0; i < node.arc_list.size(); i++)
+    if (res == "OK")
     {
-        if (node.arc_list[i].distance == 0)
-            node.arc_list[i].distance = 1;
-        if (node.arc_list[i].max_speed == 0)
-            node.arc_list[i].max_speed = 1.5;
-        dijkstraGraph->addArc(node.id, node.arc_list[i]);
+        for (int i = 0; i < node.arc_list.size(); i++)
+        {
+            if (node.arc_list[i].distance == 0)
+                node.arc_list[i].distance = 1;
+            if (node.arc_list[i].max_speed == 0)
+                node.arc_list[i].max_speed = 1.5;
+            dijkstraGraph->addArc(node.id, node.arc_list[i]);
+        }
     }
 
-    return 0;
+    return res;
 }
 
 /*! \fn int Graph::addNode(int node, double x, double y, double z, double theta, std::string frame, char *name)
@@ -414,6 +417,7 @@ int Graph::getRoute(int from, int to, vector<graph_msgs::GraphNode> *detailed_no
  *  \return 0 if OK
  *  \return -1 si el nodo no existe
 */
+// TODO correct seccond ROS_ERROR (should come from getNodeFromId)
 int Graph::getNodePosition(int node_id, geometry_msgs::Pose2D *pos)
 {
     if (dijkstraGraph->isOnEdition())
@@ -421,7 +425,7 @@ int Graph::getNodePosition(int node_id, geometry_msgs::Pose2D *pos)
         ROS_ERROR("Dijkstra::GetNodePosition: Edition must be disabled");
         return -2;
     }
-    else if ((node_id > dijkstraGraph->vNodes.size()) || (node_id < 0))
+    else if (node_id < 0)
     {
         ROS_ERROR("Dijkstra::GetNodePosition: node %d does not exist", node_id);
         return -1;
@@ -436,6 +440,64 @@ int Graph::getNodePosition(int node_id, geometry_msgs::Pose2D *pos)
 
         return 0;
     }
+}
+
+/*! \fn std::string Graph::setNodePosition(int node_id, graph_msgs::GraphNodePose pos)
+ * 	\brief Obtiene la posición del nodo
+ *  \return 0 if OK
+ *  \return -1 si el nodo no existe
+*/
+std::string Graph::setNodePosition(int node_id, graph_msgs::GraphNodePose pos)
+{
+    if (dijkstraGraph->isOnEdition())
+    {
+        ROS_ERROR("Dijkstra::GetNodePosition: Edition must be disabled");
+        return "Dijkstra::GetNodePosition: Edition must be disabled";
+    }
+
+    Node *node = dijkstraGraph->getNodeFromId(node_id);
+
+    if (node == 0)
+    {
+        ROS_ERROR("Dijkstra::GetNodePosition: node %d does not exist", node_id);
+        return "Dijkstra::GetNodePosition: node " + std::to_string(node_id) + " does not exist";
+    }
+    else
+    {
+        node->node.pose = pos;
+
+        return "OK";
+    }
+}
+
+/*! \fn std::string Graph::deleteNode(int node_id)
+ * 	\brief Obtiene la posición del nodo
+ *  \return 0 if OK
+ *  \return -1 si el nodo no existe
+*/
+std::string Graph::deleteNode(int node_id)
+{
+    /*if (dijkstraGraph->isOnEdition())
+    {
+        ROS_ERROR("Dijkstra::GetNodePosition: Edition must be disabled");
+        return "Dijkstra::GetNodePosition: Edition must be disabled";
+    }
+
+    int node_id = dijkstraGraph->getNodeIndex(node_id); (borrar este nodo)
+
+    if (node == 0)
+    {
+        ROS_ERROR("Dijkstra::GetNodePosition: node %d does not exist", node_id);
+        return "Dijkstra::GetNodePosition: node " + std::to_string(node_id) + " does not exist";
+    }
+    else
+    {
+
+        //TODO eliminar nodo node->...
+
+        return "OK";
+    }*/
+    return "OK";
 }
 
 /*! \fn int Graph::getArcBetweenNodes(int from_id, int to_id, graph_msgs::GraphArc arc)
@@ -580,7 +642,7 @@ std::string Graph::serialize()
 
     std::ofstream ofile;
     ofile.open(graph_path_);
-    ofile << jsonized_msg;
+    ofile << jsonized_msg.dump(4);
     ofile.close();
 
     return "OK";

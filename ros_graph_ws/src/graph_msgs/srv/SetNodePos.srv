@@ -1,8 +1,6 @@
-# Service msg to set the node pos and orientation in the graph
+# Service msg to set the node pos in the graph
 # Node in the graph
 int32 node_id
-# radians
-float32 orientation
 # pose
 graph_msgs/GraphNodePose pose
 ---

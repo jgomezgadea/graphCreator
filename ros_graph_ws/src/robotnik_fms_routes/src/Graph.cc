@@ -119,18 +119,6 @@ std::string Graph::addNode(graph_msgs::GraphNode node)
 {
     std::string res = dijkstraGraph->addNode(node);
 
-    if (res == "OK")
-    {
-        for (int i = 0; i < node.arc_list.size(); i++)
-        {
-            if (node.arc_list[i].distance == 0)
-                node.arc_list[i].distance = 1;
-            if (node.arc_list[i].max_speed == 0)
-                node.arc_list[i].max_speed = 1.5;
-            dijkstraGraph->addArc(node.id, node.arc_list[i]);
-        }
-    }
-
     return res;
 }
 
@@ -477,27 +465,7 @@ std::string Graph::setNodePosition(int node_id, graph_msgs::GraphNodePose pos)
 */
 std::string Graph::deleteNode(int node_id)
 {
-    /*if (dijkstraGraph->isOnEdition())
-    {
-        ROS_ERROR("Dijkstra::GetNodePosition: Edition must be disabled");
-        return "Dijkstra::GetNodePosition: Edition must be disabled";
-    }
-
-    int node_id = dijkstraGraph->getNodeIndex(node_id); (borrar este nodo)
-
-    if (node == 0)
-    {
-        ROS_ERROR("Dijkstra::GetNodePosition: node %d does not exist", node_id);
-        return "Dijkstra::GetNodePosition: node " + std::to_string(node_id) + " does not exist";
-    }
-    else
-    {
-
-        //TODO eliminar nodo node->...
-
-        return "OK";
-    }*/
-    return "OK";
+    return dijkstraGraph->deleteNode(node_id);
 }
 
 /*! \fn int Graph::getArcBetweenNodes(int from_id, int to_id, graph_msgs::GraphArc arc)

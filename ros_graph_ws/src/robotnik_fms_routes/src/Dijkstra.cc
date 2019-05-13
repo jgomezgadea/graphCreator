@@ -115,6 +115,53 @@ int Dijkstra::deleteNodes()
 	return 0;
 }
 
+/*! \fn std::string Dijkstra::deleteNode(int node_id)
+ * 	\brief  Deletes a node
+ *  \returns "OK"
+*/
+//!
+std::string Dijkstra::deleteNode(int node_id)
+{
+	int index = getNodeIndex(node_id);
+
+	if (bEdit)
+	{
+		ROS_ERROR("Dijkstra::addNode: Error: Graph's edition must be enabled");
+		return "Dijkstra::addNode: Error: Graph's edition must be enabled";
+	}
+	else if (index == -1)
+	{
+		ROS_ERROR("Dijkstra::GetNodePosition: node %d does not exist", node_id);
+		return "Dijkstra::GetNodePosition: node " + std::to_string(node_id) + " does not exist";
+	}
+
+	for (int i = 0; i < vZones.size(); i++)
+	{
+		for (int j = 0; j < vZones[i].vpNodes.size(); j++)
+		{
+			if (vZones[i].vpNodes[j]->node.id == node_id)
+			{
+				vZones[i].vpNodes.erase(vZones[i].vpNodes.begin() + j);
+			}
+		}
+	}
+
+	vNodes.erase(vNodes.begin() + index);
+
+	for (int i = 0; i < vNodes.size(); i++)
+	{
+		for (int j = 0; j < vNodes[i]->node.arc_list.size(); j++)
+		{
+			if (vNodes[i]->node.arc_list[j].node_dest == node_id)
+			{
+				vNodes[i]->node.arc_list.erase(vNodes[i]->node.arc_list.begin() + j);
+			}
+		}
+	}
+
+	return "OK";
+}
+
 /*! \fn std::string Dijkstra::addNode(graph_msgs::GraphNode node)
  * 	\brief  Adds a new node
  *  \returns The id of the node if OK
@@ -146,6 +193,20 @@ std::string Dijkstra::addNode(graph_msgs::GraphNode node)
 	}
 
 	vNodes.push_back(new Node(node));
+
+	for (int i = 0; i < node.arc_list.size(); i++)
+	{
+		if (node.arc_list[i].distance == 0)
+			node.arc_list[i].distance = 1;
+		if (node.arc_list[i].max_speed == 0)
+			node.arc_list[i].max_speed = 1.5;
+		if (addArc(node.id, node.arc_list[i]) < 0)
+		{
+			vNodes.pop_back();
+			return "Error adding arc " + i;
+		}
+	}
+
 	addZone(node.zone, 1);
 	addNodeToZone(node.id, node.zone);
 

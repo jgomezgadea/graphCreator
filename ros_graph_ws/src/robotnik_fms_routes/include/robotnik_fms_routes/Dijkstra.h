@@ -88,7 +88,7 @@ public:
 				if (node.arc_list[i].node_dest == arc.node_dest)
 				{ // Si está repetido no lo insertamos
 					//std::cout << "Node::AddNodeAdjacent: Error: node " << node_id << " already adjacent" << std::endl;
-					return -1;
+					return 1;
 				}
 			}
 		}
@@ -499,6 +499,8 @@ public:
 	int resetRoutes();
 	//! Deletes All the nodes
 	int deleteNodes();
+	//! Delete the node_id node
+	std::string deleteNode(int node_id);
 	//! Deletes selected edge
 	int deleteArc(int from_node, int to_node);
 	//! Deletes all the edge from the node

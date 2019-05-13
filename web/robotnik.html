@@ -11,9 +11,10 @@
   <script src="../build/mapView.js"></script>
 
   <script src="../build/vis/vis.js"></script>
-  <script src="../build/graphView.js"></script>
+  <script src="../build/networkView.js"></script>
 
   <link href="robotnik.css" rel="stylesheet" type="text/css" />
+  <link href="../build/vis/vis-network.min.css" rel="stylesheet" type="text/css" />
 
   <script>
     /**
@@ -59,8 +60,8 @@
         height: ((canvas_views.clientWidth - 14) * 9) / 16
       });
 
-      graphView = new GRAPHVIEW.GraphView({
-        divID: 'graph',
+      networkView = new NETWORKVIEW.NetworkView({
+        divID: 'network',
         ros: ros,
         rosNodesTopic: '/robotnik_fms_routes_node/graph',
         rosNodesMsg: 'graph_msgs/GraphNodeArray'
@@ -68,21 +69,22 @@
         //edges: edges
       });
 
-      graph.hidden = true;
+      network.hidden = true;
+      toggleView(); // TODO Quitar
     }
 
     // Change between map and graph
     function toggleView() {
       if (map.hidden) {
-        graph.hidden = true;
+        network.hidden = true;
         map.hidden = false;
         toggle_views.innerHTML = "View graph";
       } else {
         map.hidden = true;
-        graph.hidden = false;
-        graphView.stabilize();
+        network.hidden = false;
+        networkView.stabilize();
         toggle_views.innerHTML = "View map";
-        graphView.graph.setSize(canvas_views.clientWidth, (canvas_views.clientWidth * 9) / 16);
+        networkView.network.setSize(canvas_views.clientWidth, (canvas_views.clientWidth * 9) / 16);
       }
     }
 
@@ -90,7 +92,7 @@
     function resizedCanvas() {
       mapView.scene.canvas.height = (canvas_views.clientWidth * 9) / 16;
       mapView.scene.canvas.width = canvas_views.clientWidth;
-      graphView.graph.setSize(canvas_views.clientWidth, (canvas_views.clientWidth * 9) / 16);
+      networkView.network.setSize(canvas_views.clientWidth, (canvas_views.clientWidth * 9) / 16);
     }
 
   </script>
@@ -103,7 +105,8 @@
 
   <div id="canvas_views">
     <div id="map"></div>
-    <div id="graph"></div>
+    <div id="network"></div>
+    <pre id="eventSpan"></pre>
   </div>
 
   <p>

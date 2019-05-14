@@ -1,4 +1,4 @@
-int32[] node_id
+string[] node_id
 int32 robot_id
 ---
 bool blocked

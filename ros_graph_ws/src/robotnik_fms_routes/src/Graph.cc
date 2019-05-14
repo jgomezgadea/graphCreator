@@ -125,7 +125,7 @@ std::string Graph::addNode(graph_msgs::GraphNode node)
 /*! \fn int Graph::addNode(int node, double x, double y, double z, double theta, std::string frame, char *name)
  * 	\brief Adds a new node to the graph
 */
-graph_msgs::GraphNode Graph::addNode(int node, int zone, double x, double y, double z, double theta, std::string frame, std::string name)
+graph_msgs::GraphNode Graph::addNode(std::string node, int zone, double x, double y, double z, double theta, std::string frame, std::string name)
 {
     graph_msgs::GraphNode new_node;
 
@@ -143,10 +143,10 @@ graph_msgs::GraphNode Graph::addNode(int node, int zone, double x, double y, dou
     return new_node;
 }
 
-/*! \fn int Graph::addArc(int from_node_id, int to_node_id)
+/*! \fn int Graph::addArc(std::string from_node_id, std::string to_node_id)
  * 	\brief Adds an arc from a node to another with constant weight
 */
-int Graph::addArc(int from_node_id, int to_node_id)
+int Graph::addArc(std::string from_node_id, std::string to_node_id)
 {
     graph_msgs::GraphArc new_arc;
     new_arc.node_dest = to_node_id;
@@ -161,7 +161,7 @@ int Graph::addArc(int from_node_id, int to_node_id)
 /*! \fn int Graph::addArc(int from_node_id, int to_node_id, float weight)
  * 	\brief Adds an arc from a node to another with weight
 */
-int Graph::addArc(int from_node_id, int to_node_id, float weight)
+int Graph::addArc(std::string from_node_id, std::string to_node_id, float weight)
 {
     graph_msgs::GraphArc new_arc;
     new_arc.node_dest = to_node_id;
@@ -176,7 +176,7 @@ int Graph::addArc(int from_node_id, int to_node_id, float weight)
 /*! \fn int Graph::addArc(int from_node_id, int to_node_id, float weight, float max_speed)
  * 	\brief Adds an arc from a node to another with weight and max_speed
 */
-int Graph::addArc(int from_node_id, int to_node_id, float weight, float max_speed)
+int Graph::addArc(std::string from_node_id, std::string to_node_id, float weight, float max_speed)
 {
     graph_msgs::GraphArc new_arc;
     new_arc.node_dest = to_node_id;
@@ -247,7 +247,7 @@ graph_msgs::GraphNodeArray Graph::getNodesUsedMsg()
 /*! \fn int Graph::ReserveNode(int iRobot, int iIDNode)
  * 	\brief Reserve Node
 */
-bool Graph::reserveNode(int iRobot, int iIDNode)
+bool Graph::reserveNode(int iRobot, std::string iIDNode)
 {
     return dijkstraGraph->reserveNode(iRobot, iIDNode);
 }
@@ -260,10 +260,10 @@ bool Graph::unBlockAll(int iRobot)
     return dijkstraGraph->unBlockAll(iRobot);
 }
 
-/*! \fn int Graph::getRoute(int from, int to, vector<int> *route)
+/*! \fn int Graph::getRoute(int from, int to, vector<std::string> *route)
  * 	\brief Gets the list of nodes from initial node "from" to the end node "to"
 */
-int Graph::getRoute(int from, int to, vector<int> *route)
+int Graph::getRoute(std::string from, std::string to, vector<std::string> *route)
 {
     return dijkstraGraph->getRoute(from, to, route);
 }
@@ -271,9 +271,9 @@ int Graph::getRoute(int from, int to, vector<int> *route)
 /*! \fn int Graph::getRoute(int from, int to, vector<geometry_msgs::Pose2D> *nodes, vector<double> *max_speed){
  * 	\brief Obtiene las coordenadas de los nodos y de los imanes ordenadas para esa trayectoria, además de las velocidades entre dichos nodos
 */
-int Graph::getRoute(int from, int to, vector<geometry_msgs::Pose2D> *nodes, vector<double> *max_speed)
+int Graph::getRoute(std::string from, std::string to, vector<geometry_msgs::Pose2D> *nodes, vector<double> *max_speed)
 {
-    vector<int> route;
+    vector<std::string> route;
     int i = 0;
     geometry_msgs::Pose2D pos;
 
@@ -317,9 +317,9 @@ int Graph::getRoute(int from, int to, vector<geometry_msgs::Pose2D> *nodes, vect
 /*! \fn int Graph::getRoute(int from, int to, vector<graph_msgs::GraphNode> *detailed_nodes, vector<geometry_msgs::Pose2D> *nodes){
  * 	\brief Misma función salvo que también obtiene los nodos de la ruta en detalle, no solamente su posición
 */
-int Graph::getRoute(int from, int to, vector<graph_msgs::GraphNode> *detailed_nodes, vector<geometry_msgs::Pose2D> *nodes, vector<double> *max_speed)
+int Graph::getRoute(std::string from, std::string to, vector<graph_msgs::GraphNode> *detailed_nodes, vector<geometry_msgs::Pose2D> *nodes, vector<double> *max_speed)
 {
-    vector<int> route;
+    vector<std::string> route;
     int i = 0;
     geometry_msgs::Pose2D pos;
 
@@ -371,9 +371,9 @@ int Graph::getRoute(int from, int to, vector<graph_msgs::GraphNode> *detailed_no
 /*! \fn int Graph::getRoute(int from, int to, vector<Node> *detailed_nodes, vector<double> *max_speed){
  * 	\brief Misma función salvo que también obtiene los nodos de la ruta en detalle, no solamente su posición
 */
-int Graph::getRoute(int from, int to, vector<graph_msgs::GraphNode> *detailed_nodes, vector<double> *max_speed)
+int Graph::getRoute(std::string from, std::string to, vector<graph_msgs::GraphNode> *detailed_nodes, vector<double> *max_speed)
 {
-    vector<int> route;
+    vector<std::string> route;
     int i = 0;
 
     if (dijkstraGraph->getRoute(from, to, &route) != 0) // Ruta incorrecta
@@ -406,17 +406,12 @@ int Graph::getRoute(int from, int to, vector<graph_msgs::GraphNode> *detailed_no
  *  \return -1 si el nodo no existe
 */
 // TODO correct seccond ROS_ERROR (should come from getNodeFromId)
-int Graph::getNodePosition(int node_id, geometry_msgs::Pose2D *pos)
+int Graph::getNodePosition(std::string node_id, geometry_msgs::Pose2D *pos)
 {
     if (dijkstraGraph->isOnEdition())
     {
         ROS_ERROR("Dijkstra::GetNodePosition: Edition must be disabled");
         return -2;
-    }
-    else if (node_id < 0)
-    {
-        ROS_ERROR("Dijkstra::GetNodePosition: node %d does not exist", node_id);
-        return -1;
     }
     else
     {
@@ -435,7 +430,7 @@ int Graph::getNodePosition(int node_id, geometry_msgs::Pose2D *pos)
  *  \return 0 if OK
  *  \return -1 si el nodo no existe
 */
-std::string Graph::setNodePosition(int node_id, graph_msgs::GraphNodePose pos)
+std::string Graph::setNodePosition(std::string node_id, graph_msgs::GraphNodePose pos)
 {
     if (dijkstraGraph->isOnEdition())
     {
@@ -448,7 +443,7 @@ std::string Graph::setNodePosition(int node_id, graph_msgs::GraphNodePose pos)
     if (node == 0)
     {
         ROS_ERROR("Dijkstra::GetNodePosition: node %d does not exist", node_id);
-        return "Dijkstra::GetNodePosition: node " + std::to_string(node_id) + " does not exist";
+        return "Dijkstra::GetNodePosition: node " + node_id + " does not exist";
     }
     else
     {
@@ -463,7 +458,7 @@ std::string Graph::setNodePosition(int node_id, graph_msgs::GraphNodePose pos)
  *  \return 0 if OK
  *  \return -1 si el nodo no existe
 */
-std::string Graph::deleteNode(int node_id)
+std::string Graph::deleteNode(std::string node_id)
 {
     return dijkstraGraph->deleteNode(node_id);
 }
@@ -473,17 +468,12 @@ std::string Graph::deleteNode(int node_id)
  *  \return 0 if OK
  *  \return -1 si el nodo no existe
 */
-int Graph::getArcBetweenNodes(int from_id, int to_id, graph_msgs::GraphArc arc)
+int Graph::getArcBetweenNodes(std::string from_id, std::string to_id, graph_msgs::GraphArc arc)
 {
     if (dijkstraGraph->isOnEdition())
     {
         ROS_ERROR("Dijkstra::GetNodePosition: Edition must be disabled");
         return -2;
-    }
-    else if ((from_id > dijkstraGraph->vNodes.size()) || (from_id < 0))
-    {
-        ROS_ERROR("Dijkstra::GetNodePosition: node %d does not exist", from_id);
-        return -1;
     }
     else
     {
@@ -504,7 +494,7 @@ int Graph::getArcBetweenNodes(int from_id, int to_id, graph_msgs::GraphArc arc)
 /*! \fn Node* Dijkstra::CheckNodeFree(int idNode, int idRobot)
  * true if node Free, false if used or reserved by a robot
 */
-bool Graph::checkNodeFree(int idNode, int idRobot)
+bool Graph::checkNodeFree(std::string idNode, int idRobot)
 {
     return dijkstraGraph->checkNodeFree(idNode, idRobot);
 }
@@ -512,7 +502,7 @@ bool Graph::checkNodeFree(int idNode, int idRobot)
 /*! \fn Node* Dijkstra::CheckNodesFree(std::vector<int> idNode, int idRobot)
  * true if node Free, false if used or reserved by a robot
 */
-bool Graph::checkNodesFree(std::vector<int> vNodesId, int idRobot)
+bool Graph::checkNodesFree(std::vector<std::string> vNodesId, int idRobot)
 {
     bool bfree = true;
     for (int i = 0; i < vNodesId.size(); i++)
@@ -534,7 +524,7 @@ bool Graph::checkZoneFree(int idZone, int idRobot)
 /*! \fn graph_msgs::GraphNode Graph::getNodeFromID(int iIDNode)
  * 	\brief Get node by nodeID
 */
-graph_msgs::GraphNode Graph::getNodeFromId(int iIDNode)
+graph_msgs::GraphNode Graph::getNodeFromId(std::string iIDNode)
 {
     return dijkstraGraph->getNodeFromId(iIDNode)->node;
 }
@@ -542,32 +532,23 @@ graph_msgs::GraphNode Graph::getNodeFromId(int iIDNode)
 /*! \fn int Graph::getRobotFromId(int iIDNode)
  * 	\brief Get node by nodeID
 */
-int Graph::getRobotFromId(int iIDNode)
+int Graph::getRobotFromId(std::string iIDNode)
 {
     return dijkstraGraph->getNodeFromId(iIDNode)->iRobot;
 }
 
-/*! \fn bool Graph::setRobotById(int iIDNode)
+/*! \fn int Graph::getResRobotFromId(std::string iIDNode)
  * 	\brief Get node by nodeID
 */
-bool Graph::setRobotById(int iIDNode)
-{
-    dijkstraGraph->getNodeFromId(iIDNode)->iRobot = iIDNode;
-    return true;
-}
-
-/*! \fn int Graph::getResRobotFromId(int iIDNode)
- * 	\brief Get node by nodeID
-*/
-int Graph::getResRobotFromId(int iIDNode)
+int Graph::getResRobotFromId(std::string iIDNode)
 {
     return dijkstraGraph->getNodeFromId(iIDNode)->iResRobot;
 }
 
-/*! \fn graph_msgs::GraphNode Graph::getNode(unsigned int nodeID)
+/*! \fn graph_msgs::GraphNode Graph::getNode(std::string nodeID)
  * 	\brief Gets Node by nodeID
 */
-graph_msgs::GraphNode Graph::getNode(unsigned int node_id)
+graph_msgs::GraphNode Graph::getNode(std::string node_id)
 {
     for (int i = 0; i < dijkstraGraph->vNodes.size(); i++)
     {
@@ -623,16 +604,23 @@ std::string Graph::deserialize()
 {
     ROS_INFO("Graph::deserialize File: %s", graph_path_.c_str());
 
-    std::ifstream ifile;
-    ifile.open(graph_path_);
+    try
+    {
+        std::ifstream ifile;
+        ifile.open(graph_path_);
 
-    ros::jsonization::Json jsonized_msg;
-    jsonized_msg << ifile;
+        ros::jsonization::Json jsonized_msg;
+        jsonized_msg << ifile;
 
-    graph_msgs::GraphNodeArray msg;
-    ros::jsonization::dejsonize(jsonized_msg, msg);
+        graph_msgs::GraphNodeArray msg;
+        ros::jsonization::dejsonize(jsonized_msg, msg);
 
-    setGraph(msg);
+        setGraph(msg);
+    }
+    catch (ros::jsonization::JsonBadTypeException)
+    {
+        ROS_ERROR("Graph::deserialize Error: Bad structure on file %s", graph_path_.c_str());
+    }
 
     // TODO ROS_INFO("Graph::Deserialize: Processing JSON Found %s Nodes, %s Zones", std::to_string(nodes), std::to_string(zones));
     return "OK";

@@ -1,5 +1,5 @@
-int32 from_node
-int32 to_node
+string from_node
+string to_node
 ---
 # list of nodes
 graph_msgs/GraphNode[] nodes

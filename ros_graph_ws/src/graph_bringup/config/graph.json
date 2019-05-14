@@ -5,15 +5,15 @@
                 {
                     "distance": 1.0,
                     "max_speed": 1.5,
-                    "node_dest": 1
+                    "node_dest": "1"
                 },
                 {
                     "distance": 1.0,
                     "max_speed": 1.5,
-                    "node_dest": 2
+                    "node_dest": "2"
                 }
             ],
-            "id": 0,
+            "id": "0",
             "name": "Node name 1",
             "pose": {
                 "frame_id": "map",
@@ -29,10 +29,10 @@
                 {
                     "distance": 1.0,
                     "max_speed": 1.5,
-                    "node_dest": 2
+                    "node_dest": "2"
                 }
             ],
-            "id": 1,
+            "id": "1",
             "name": "Node name 2",
             "pose": {
                 "frame_id": "map",
@@ -45,7 +45,7 @@
         },
         {
             "arc_list": null,
-            "id": 2,
+            "id": "2",
             "name": "Node name 3",
             "pose": {
                 "frame_id": "map",

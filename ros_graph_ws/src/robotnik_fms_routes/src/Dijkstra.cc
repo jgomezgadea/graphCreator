@@ -19,7 +19,6 @@ using namespace std;
 Dijkstra::Dijkstra()
 {
 	bEdit = false; // TODO Now, bEdit has to be always disabled
-	iMaxNodeId = -1;
 }
 
 /*! \fn Dijkstra::~Dijkstra()
@@ -62,14 +61,12 @@ std::string Dijkstra::finalizeEdition(std::vector<Node *> graph)
 				if (!bNodeFound)
 				{ // Nodo adyacente no existe
 					ROS_ERROR("Dijkstra::FinalizeEdition: Error: Arco entre nodo %d y nodo %d", graph[i]->node.id, graph[i]->node.arc_list[j].node_dest);
-					return "Dijkstra::FinalizeEdition: Error: Arco entre node:" + std::to_string(graph[i]->node.id) + " y node:" + std::to_string(graph[i]->node.arc_list[j].node_dest);
+					return "Dijkstra::FinalizeEdition: Error: Arco entre node:" + graph[i]->node.id + " y node:" + graph[i]->node.arc_list[j].node_dest;
 				}
 			}
-			max_id = max(max_id, (int)graph[i]->node.id);
 		}
 		//bEdit = false;
-		rRoutes = new Route(max_id + 1); // Creamos matriz de posibles rutas
-		iMaxNodeId = max_id;
+		rRoutes = new Route(graph.size()); // Creamos matriz de posibles rutas
 	}
 	return "OK";
 }
@@ -80,7 +77,6 @@ std::string Dijkstra::finalizeEdition(std::vector<Node *> graph)
 void Dijkstra::enableEdition()
 {
 	bEdit = true;
-	iMaxNodeId = -1;
 
 	delete rRoutes;
 }
@@ -110,7 +106,6 @@ int Dijkstra::deleteNodes()
 		vNodes[i]->deleteAdjacent();
 	}
 	vNodes.clear();
-	iMaxNodeId = -1;
 
 	return 0;
 }
@@ -120,7 +115,7 @@ int Dijkstra::deleteNodes()
  *  \returns "OK"
 */
 //!
-std::string Dijkstra::deleteNode(int node_id)
+std::string Dijkstra::deleteNode(string node_id)
 {
 	int index = getNodeIndex(node_id);
 
@@ -132,7 +127,7 @@ std::string Dijkstra::deleteNode(int node_id)
 	else if (index == -1)
 	{
 		ROS_ERROR("Dijkstra::GetNodePosition: node %d does not exist", node_id);
-		return "Dijkstra::GetNodePosition: node " + std::to_string(node_id) + " does not exist";
+		return "Dijkstra::GetNodePosition: node " + node_id + " does not exist";
 	}
 
 	for (int i = 0; i < vZones.size(); i++)
@@ -177,10 +172,10 @@ std::string Dijkstra::addNode(graph_msgs::GraphNode node)
 
 	int size = vNodes.size();
 
-	if (node.id < 0)
+	if (node.id == "")
 	{
-		ROS_ERROR("Dijkstra::addNode: Error: The ID has to be an integer");
-		return "Dijkstra::addNode: Error: The ID has to be an integer";
+		ROS_ERROR("Dijkstra::addNode: Error: The ID cannot be an empty string");
+		return "Dijkstra::addNode: Error: The ID cannot be an empty string";
 	}
 
 	for (int i = 0; i < size; i++)
@@ -232,7 +227,7 @@ int Dijkstra::addZone(int iIDZone, int iMaxRobots)
  * 	\brief Gets Pointer to a Node
  *  \return NULL if Error
 */
-Node *Dijkstra::getNodeFromId(int iIDNode)
+Node *Dijkstra::getNodeFromId(std::string iIDNode)
 {
 	int iNode = getNodeIndex(iIDNode);
 
@@ -242,11 +237,11 @@ Node *Dijkstra::getNodeFromId(int iIDNode)
 		return vNodes[iNode];
 }
 
-/*! \fn int Dijkstra::addNodetoZone(int iIDNode,int iIDZone){
+/*! \fn int Dijkstra::addNodetoZone(std::string iIDNode,int iIDZone){
  * 	\brief Adds Node to a Zone
  *  \return 0 if OK
 */
-int Dijkstra::addNodeToZone(int iIDNode, int iIDZone)
+int Dijkstra::addNodeToZone(std::string iIDNode, int iIDZone)
 {
 	Node *node = getNodeFromId(iIDNode);
 
@@ -346,11 +341,11 @@ bool Dijkstra::checkZoneFree(int iIDZone, int iIDRobot)
 	}
 }
 
-/*! \fn int Dijkstra::CheckNodeFree(int iIDNode,int iIDRobot){
+/*! \fn int Dijkstra::CheckNodeFree(std::string iIDNode,int iIDRobot){
  * 	\brief Checks if Node free for use
  *  \return true if free, false if not
 */
-bool Dijkstra::checkNodeFree(int iIDNode, int iIDRobot)
+bool Dijkstra::checkNodeFree(std::string iIDNode, int iIDRobot)
 {
 	//char cAux[LOG_STRING_LENGTH] = "\0";
 	int i = 0;
@@ -419,10 +414,10 @@ bool Dijkstra::checkNodeFree(int iIDNode, int iIDRobot)
 	}
 }
 
-/*! \fn int Dijkstra::addArc(int from_node, graph_msgs::GraphArc *pointerToArc)
+/*! \fn string Dijkstra::addArc(string from_node, graph_msgs::GraphArc *pointerToArc)
  * 	\brief Adds an arc from a node to another with weight
 */
-int Dijkstra::addArc(int from_node, graph_msgs::GraphArc new_arc)
+int Dijkstra::addArc(std::string from_node, graph_msgs::GraphArc new_arc)
 {
 	int locatedFrom = -1; //Id del nodo
 
@@ -461,60 +456,6 @@ int Dijkstra::addArc(int from_node, graph_msgs::GraphArc new_arc)
 	return vNodes[locatedFrom]->addNodeAdjacent(new_arc);
 }
 
-/*! \fn int Dijkstra::deleteArc(int from_node, int to_node)
- * 	\brief Deletes selected arc
- *  \return 0 if OK
-*/
-int Dijkstra::deleteArc(int from_node, int to_node)
-{
-	if (bEdit)
-	{
-		return -2;
-	}
-	int size = vNodes.size();
-
-	if (size == 0)
-	{
-		cout << "Dijkstra::addArc: Error: No nodes" << endl;
-		return -1;
-	}
-
-	if ((from_node < 0) || (from_node > size - 1) || (to_node < 0) || (to_node > size - 1))
-	{
-		cout << "Dijkstra::addArc: Error: Incorrect nodes number" << endl;
-		return -1;
-	}
-
-	return vNodes[from_node]->deleteAdjacent(to_node);
-}
-
-/*! \fn int Dijkstra::deleteArcs(int from_node)
- * 	\brief Deletes all the arc from the node
- *  \return 0 if OK
-*/
-int Dijkstra::deleteArcs(int from_node)
-{
-	if (bEdit)
-	{
-		return -2;
-	}
-	int size = vNodes.size();
-
-	if (size == 0)
-	{
-		cout << "Dijkstra::addArc: Error: No nodes" << endl;
-		return -1;
-	}
-
-	if ((from_node < 0) || (from_node > size - 1))
-	{
-		cout << "Dijkstra::addArc: Error: Incorrect nodes number" << endl;
-		return -1;
-	}
-
-	return vNodes[from_node]->deleteAdjacent();
-}
-
 /*! \fn int Dijkstra::resetRoutes()
  * 	\brief Reset the calculated routes
  *  \return 0 if OK
@@ -530,13 +471,13 @@ int Dijkstra::resetRoutes()
 	return 0;
 }
 
-/*! \fn int Dijkstra::GetNearestNodeID(double x, double y, std::string frame)
+/*! \fn std::string Dijkstra::GetNearestNodeID(double x, double y, std::string frame)
  * 	\brief return Nearest Node ID
 */
-int Dijkstra::getNearestNodeID(double x, double y, std::string frame)
+std::string Dijkstra::getNearestNodeID(double x, double y, std::string frame)
 {
 	double dist = 999999999.9;
-	int current_node = -1;
+	std::string current_node = "";
 	for (int in = 0; in < vNodes.size(); in++)
 	{
 		if (vNodes[in]->node.pose.z == 0)
@@ -557,14 +498,14 @@ int Dijkstra::getNearestNodeID(double x, double y, std::string frame)
 	return current_node;
 }
 
-/*! \fn int Dijkstra::ReserveNode(int iRobot,int iIDNode)
+/*! \fn bool Dijkstra::reserveNode(int iRobot,std::string iIDNode)
  * 	\brief Reserve Node for Robot
 */
-bool Dijkstra::reserveNode(int iRobot, int iIDNode)
+bool Dijkstra::reserveNode(int iRobot, std::string iIDNode)
 {
 	for (int in = 0; in < vNodes.size(); in++)
 	{
-		if (in == iIDNode)
+		if (vNodes[in]->node.id == iIDNode)
 		{
 			//if (vNodes[in]->iResRobot!=iRobot) ROS_INFO("Reserve Node:%d for Robot:%d",iIDNode,iRobot);
 			vNodes[in]->iResRobot = iRobot;
@@ -653,7 +594,7 @@ std::vector<Node *> Dijkstra::getNodes()
  * 	\brief Gets the best calculated route between selected nodes
  *  \return 0 if OK
 */
-int Dijkstra::getRoute(int initial_node, int end_node, std::vector<int> *route)
+int Dijkstra::getRoute(std::string initial_node, std::string end_node, std::vector<std::string> *route)
 {
 	int positionInitialNode = -1, positionEndNode = -1;
 
@@ -663,11 +604,6 @@ int Dijkstra::getRoute(int initial_node, int end_node, std::vector<int> *route)
 		return -2;
 	}
 
-	if ((initial_node < 0) || (end_node < 0))
-	{
-		ROS_ERROR("Dijkstra::getRoute: Error: node id must be greater than 0");
-		return -1;
-	}
 	int size = vNodes.size();
 
 	// Buscamos las posiciones dentro del vector, si es que existen los nodos
@@ -702,7 +638,7 @@ int Dijkstra::getRoute(int initial_node, int end_node, std::vector<int> *route)
 	{
 		//Vamos añadiendo los nodos a la ruta
 		int k = positionEndNode;
-		int id = vNodes[k]->getId();
+		std::string id = vNodes[k]->getId();
 		while (id != NO_PARENT)
 		{ // Recorremos la ruta de manera inversa hasta llegar al nodo inicial, cuyo padre es null
 			if (rRoutes->addNode(initial_node, end_node, id) != 0)
@@ -732,7 +668,7 @@ int Dijkstra::getRoute(int initial_node, int end_node, std::vector<int> *route)
  * 	\brief Gets the best calculated route between selected nodes
  *  \return 0 if OK. And the the array with the nodes of the route
 */
-int Dijkstra::getRoute(int initial_node, int end_node, std::vector<Node *> *route)
+int Dijkstra::getRoute(std::string initial_node, std::string end_node, std::vector<Node *> *route)
 {
 	int positionInitialNode = -1, positionEndNode = -1;
 
@@ -742,11 +678,6 @@ int Dijkstra::getRoute(int initial_node, int end_node, std::vector<Node *> *rout
 		return -2;
 	}
 
-	if ((initial_node < 0) || (end_node < 0))
-	{
-		ROS_ERROR("Dijkstra::getRoute: Error: node id must be greater than 0");
-		return -1;
-	}
 	int size = vNodes.size();
 
 	// Buscamos las posiciones dentro del vector, si es que existen los nodos
@@ -780,7 +711,7 @@ int Dijkstra::getRoute(int initial_node, int end_node, std::vector<Node *> *rout
 	{
 		// Vamos añadiendo los nodos a la ruta
 		int k = positionEndNode;
-		int id = vNodes[k]->getId();
+		std::string id = vNodes[k]->getId();
 		while (id != NO_PARENT)
 		{ // Recorremos la ruta de manera inversa hasta llegar al nodo inicial, cuyo padre es null
 			if (rRoutes->addNode(initial_node, end_node, vNodes[k]) != 0)
@@ -839,18 +770,18 @@ int Dijkstra::resetNodes()
 /*! \fn int Dijkstra::setInitialNode(int node)
  * 	\brief Set the initial node
 */
-int Dijkstra::setInitialNode(int node)
+int Dijkstra::setInitialNode(int node_pos)
 {
-	vNodes[node]->setInitial();
+	vNodes[node_pos]->setInitial();
 	return 0;
 }
 
 /*! \fn int Dijkstra::pushIntoQueue(int node)
  * 	\brief Push a node into the queue
 */
-int Dijkstra::pushIntoQueue(int node)
+int Dijkstra::pushIntoQueue(int node_pos)
 {
-	PointerNode pNode(vNodes[node]);
+	PointerNode pNode(vNodes[node_pos]);
 	pqQueue.push(pNode);
 
 	return 0;
@@ -931,7 +862,7 @@ int Dijkstra::calculateRoute(int initial_node, int end_node)
 		//Para todos los nodos adyacentes al extraido calculamos distancias
 		for (int i = 0; i < (int)pNodeMin.node->node.arc_list.size(); i++)
 		{
-			int nodeAdjacent = pNodeMin.node->node.arc_list[i].node_dest;
+			std::string nodeAdjacent = pNodeMin.node->node.arc_list[i].node_dest;
 
 			int nodeAdjIndex = getNodeIndex(nodeAdjacent);
 			if (nodeAdjIndex < 0)
@@ -975,7 +906,7 @@ int Dijkstra::calculateRoute(int initial_node, int end_node)
  *  \return -1 if id does not exist
 */
 // TODO Optimizar para que no haya que usar getNodeFromId!!
-int Dijkstra::getNodeIndex(int nodeID)
+int Dijkstra::getNodeIndex(std::string nodeID)
 {
 	int ret = -1;
 	for (int i = 0; i < (int)vNodes.size(); i++)
@@ -987,27 +918,6 @@ int Dijkstra::getNodeIndex(int nodeID)
 		}
 	}
 	return ret;
-}
-
-/*! \fn int Dijkstra::getArcBetweenNodes(int from_node, int to_node){
- * 	\brief Gets the arc's values between nodes
- *  \return 0 if OK
-*/
-int Dijkstra::getArcBetweenNodes(int from_node, int to_node)
-{
-	// La edición debe estar finalizada
-	if (bEdit)
-	{
-		ROS_ERROR("Dijkstra::GetMagnetsBetweenNodes: Edition must be disabled");
-		return -2;
-	}
-	// Comprobación rango de nodos
-	if ((from_node > iMaxNodeId) || (from_node < 0) || (to_node > iMaxNodeId) || (to_node < 0))
-	{
-		ROS_ERROR("Dijkstra::GetMagnetsBetweenNodes: Bad id of nodes: %d to %d", from_node, to_node);
-		return -1;
-	}
-	return 0;
 }
 
 /*! \fn void Graph::printZones()

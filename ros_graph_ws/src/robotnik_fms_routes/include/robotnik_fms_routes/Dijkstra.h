@@ -23,7 +23,7 @@ using namespace std;
 #define __DIJKSTRA_H
 
 #define INFINITE 99999999
-#define NO_PARENT -99999
+#define NO_PARENT "NO_PARENT"
 
 #define MAX_STRING_LENGTH 300
 
@@ -36,7 +36,7 @@ public:
 	//! Distance from previous node
 	int iDist;
 	//! Id from previous node
-	int iParent;
+	std::string iParent;
 	//! Flag para marcar cuando se utiliza el nodo para el cálculo de
 	// distancias (solo se utiliza una vez), para no volverlo a encolar
 	bool bUsed;
@@ -112,13 +112,13 @@ public:
 		bUsed = false;
 	}
 	//! Sets the parent's node in the route
-	void setParent(int parent)
+	void setParent(std::string parent)
 	{
 		iParent = parent;
 	}
 	//! Deletes selected adjacent node
 	//!	\returns 0 if OK
-	int deleteAdjacent(int node_id)
+	int deleteAdjacent(std::string node_id)
 	{
 		int size = node.arc_list.size();
 		if (size > 0)
@@ -162,12 +162,12 @@ public:
 		iDist = distance;
 	}
 	//! returns the value of the parent
-	int getParent()
+	std::string getParent()
 	{
 		return iParent;
 	}
 	//! returns the value of the id
-	int getId()
+	std::string getId()
 	{
 		return node.id;
 	}
@@ -179,7 +179,7 @@ public:
 	//! Print node
 	void print()
 	{
-		ROS_INFO("Node %i:", node.id);
+		ROS_INFO("Node %s:", node.id);
 		ROS_INFO("  Name: %s", node.name.c_str());
 		ROS_INFO("  Zone: %i", node.zone);
 		ROS_INFO("  iRobot %i:", iRobot);
@@ -237,7 +237,7 @@ class Dijkstra
 		{
 		public:
 			//! Array con los nodos de esa ruta
-			std::vector<int> vListNodes;
+			std::vector<std::string> vListNodes;
 			//! Vector con los atributos detallados de cada nodo de la ruta
 			std::vector<Node *> vListPointerNode;
 
@@ -254,109 +254,75 @@ class Dijkstra
 		//! Clase que contiene la lista de nodos de una ruta
 	private:
 		//! Matriz para almacenar todas las posibles combinaciones
-		NodesRoute **iRoute;
+		std::map<std::string, NodesRoute> iRoute;
 		//! Número de nodos del grafo
 		int nodes;
 
 	public:
 		//! Public Constructor
-		Route(int num_nodes)
+		Route(int graph_size)
 		{
-			nodes = num_nodes;
-			//ROS_INFO("Route::Route: nodes = %i", nodes);
-			iRoute = new NodesRoute *[nodes];
-			for (int i = 0; i < nodes; i++)
-			{
-				iRoute[i] = new NodesRoute[nodes];
-			}
+			nodes = graph_size;
 		}
 		//! destructor
 		~Route()
 		{
-
-			for (int i = 0; i < nodes; i++)
-				delete[] iRoute[i];
-
-			delete[] iRoute;
 		}
 		//! Añade un nodo en la ruta para llegar al nodo objetivo "to_node"
 		//! La ruta se añade de manera inversa, por lo que insertamos elementos siempre al principio del vector
-		int addNode(int from_node, int to_node, int node)
+		int addNode(std::string from_node, std::string to_node, std::string node)
 		{
-			if ((from_node < 0) || (from_node > nodes - 1) || (to_node < 0) || (to_node > nodes - 1))
-			{
-				return -1;
-			}
-			std::vector<int>::iterator it;
+			std::vector<std::string>::iterator it;
 
-			it = iRoute[from_node][to_node].vListNodes.begin();
-			it = iRoute[from_node][to_node].vListNodes.insert(it, node);
+			it = iRoute[from_node + to_node].vListNodes.begin();
+			it = iRoute[from_node + to_node].vListNodes.insert(it, node);
 			//std::cout << "Route::AddNode: Added from " << from_node << " to " << to_node << ": " << node << std::endl;
 			return 0;
 		}
 		//! Añade un nodo en la ruta para llegar al nodo objetivo "to_node"
 		//! La ruta se añade de manera inversa, por lo que insertamos elementos siempre al principio del vector
-		int addNode(int from_node, int to_node, Node *node)
+		int addNode(std::string from_node, std::string to_node, Node *node)
 		{
-			if ((from_node < 0) || (from_node > nodes - 1) || (to_node < 0) || (to_node > nodes - 1))
-			{
-				return -1;
-			}
 			std::vector<Node *>::iterator it;
 
-			it = iRoute[from_node][to_node].vListPointerNode.begin();
-			it = iRoute[from_node][to_node].vListPointerNode.insert(it, node);
+			it = iRoute[from_node + to_node].vListPointerNode.begin();
+			it = iRoute[from_node + to_node].vListPointerNode.insert(it, node);
 			//std::cout << "Route::AddNode: Added from " << from_node << " to " << to_node << ": " << node << std::endl;
 			return 0;
 		}
 		//! Devuelve la ruta deseada
-		std::vector<int> getRoute(int from_node, int to_node)
+		std::vector<std::string> getRoute(std::string from_node, std::string to_node)
 		{
-			if ((from_node < 0) || (from_node > nodes - 1) || (to_node < 0) || (to_node > nodes - 1))
-			{
-				std::vector<int> aux;
-				return aux;
-			}
-
-			return iRoute[from_node][to_node].vListNodes;
+			return iRoute[from_node + to_node].vListNodes;
 		}
-		std::vector<Node *> getDetailRoute(int from_node, int to_node)
+		std::vector<Node *> getDetailRoute(std::string from_node, std::string to_node)
 		{
-			if ((from_node < 0) || (from_node > nodes - 1) || (to_node < 0) || (to_node > nodes - 1))
-			{
-				std::vector<Node *> aux;
-				return aux;
-			}
 			//cout << "GetDetailedRoute. Size = " << iRoute[from_node][to_node].vListPointerNode.size() << endl;
-			return iRoute[from_node][to_node].vListPointerNode;
+			return iRoute[from_node + to_node].vListPointerNode;
 		}
 
 		//! Consulta si existe la ruta
-		bool existRoute(int from_node, int to_node)
+		bool existRoute(std::string from_node, std::string to_node)
 		{
-			if ((from_node < 0) || (from_node > nodes - 1) || (to_node < 0) || (to_node > nodes - 1))
-			{
-				return false;
-			}
-			if (iRoute[from_node][to_node].vListNodes.size() > 0)
+			if (iRoute[from_node + to_node].vListNodes.size() > 0)
 				return true;
 			else
 				return false;
 		}
 		//! Imprime la ruta
-		void print(int from_node, int to_node)
+		void print(std::string from_node, std::string to_node)
 		{
 			if (existRoute(from_node, to_node))
 			{
-				int size = iRoute[from_node][to_node].vListNodes.size();
+				int size = iRoute[from_node + to_node].vListNodes.size();
 				int i = 0;
 				std::cout << "Route::Print: Route from " << from_node << " to " << to_node << ": " << size << " nodes" << std::endl
 						  << "\t";
 				for (i = 0; i < size - 1; i++)
 				{
-					std::cout << iRoute[from_node][to_node].vListNodes[i] << " -> ";
+					std::cout << iRoute[from_node + to_node].vListNodes[i] << " -> ";
 				}
-				std::cout << iRoute[from_node][to_node].vListNodes[i] << std::endl;
+				std::cout << iRoute[from_node + to_node].vListNodes[i] << std::endl;
 			}
 			else
 				std::cout << "Route::Print: This route doesn't exist" << std::endl;
@@ -369,28 +335,17 @@ class Dijkstra
 		}
 
 		//! Deletes the selected route
-		int deleteRoute(int from_node, int to_node)
+		int deleteRoute(std::string from_node, std::string to_node)
 		{
-			if ((from_node < 0) || (from_node > nodes - 1) || (to_node < 0) || (to_node > nodes - 1))
-			{
-				//std::cout << "Route::DeleteRoute: This route doesn't exist: " << from_node << " -> " << to_node << std::endl;
-				return -1;
-			}
-			iRoute[from_node][to_node].vListNodes.clear();		 //Limpiamos la ruta
-			iRoute[from_node][to_node].vListPointerNode.clear(); //Limpiamos la ruta
+			iRoute[from_node + to_node].vListNodes.clear();		  //Limpiamos la ruta
+			iRoute[from_node + to_node].vListPointerNode.clear(); //Limpiamos la ruta
 			return 0;
 		}
 
 		//! Deletes all the routes
 		void reset()
 		{
-			for (int i = 0; i < nodes; i++)
-			{
-				for (int j = 0; j < nodes; j++)
-				{
-					deleteRoute(i, j);
-				}
-			}
+			iRoute.clear();
 		}
 	};
 
@@ -474,8 +429,6 @@ private:
 	Route *rRoutes;
 	//! Cola de prioridad necesaria para el algoritmo
 	std::priority_queue<PointerNode, std::deque<PointerNode>, NodeComparison> pqQueue;
-	//! max value of a node id
-	int iMaxNodeId;
 
 public:
 	//! Vector con los nodos del grafo
@@ -500,14 +453,10 @@ public:
 	//! Deletes All the nodes
 	int deleteNodes();
 	//! Delete the node_id node
-	std::string deleteNode(int node_id);
-	//! Deletes selected edge
-	int deleteArc(int from_node, int to_node);
-	//! Deletes all the edge from the node
-	int deleteArcs(int from_node);
+	std::string deleteNode(std::string node_id);
 	//! Gets the optimum calculated route between selected nodes
-	int getRoute(int inital_node, int end_node, std::vector<int> *route);
-	int getRoute(int inital_node, int end_node, std::vector<Node *> *route);
+	int getRoute(std::string inital_node, std::string end_node, std::vector<std::string> *route);
+	int getRoute(std::string inital_node, std::string end_node, std::vector<Node *> *route);
 	//! Controls if the graph is being edited
 	void setEditable(bool editable);
 	//! Get list of graph nodes
@@ -515,10 +464,10 @@ public:
 	//! Get list of nodes used or blocked
 	std::vector<graph_msgs::GraphNode> getNodesUsed();
 
-	bool reserveNode(int iRobot, int iIDNode);
+	bool reserveNode(int iRobot, std::string iIDNode);
 
 	//! GetNearestNode
-	int getNearestNodeID(double x, double y, string frame);
+	std::string getNearestNodeID(double x, double y, string frame);
 
 	//! bool unBlockAll(int iRobot)
 	bool unBlockAll(int iRobot);
@@ -527,21 +476,21 @@ public:
 	std::string addNode(graph_msgs::GraphNode node);
 
 	//! Adds edge from a node to another
-	int addArc(int from_node, graph_msgs::GraphArc new_arc);
+	int addArc(std::string from_node, graph_msgs::GraphArc new_arc);
 	//! Gets the arc between two nodes
-	int getArcBetweenNodes(int from_node, int to_node);
+	int getArcBetweenNodes(std::string from_node, std::string to_node);
 	//! Gets the index of the node using his ID
-	int getNodeIndex(int nodeID);
+	int getNodeIndex(std::string nodeID);
 	//! Add Node to Zone
-	int addNodeToZone(int iIDNode, int iIDZone);
+	int addNodeToZone(std::string iIDNode, int iIDZone);
 	//! Add Zone to Graph
 	int addZone(int iIDZone, int iMaxRobots);
 
-	bool checkNodeFree(int iIDNode, int iIDRobot);
+	bool checkNodeFree(std::string iIDNode, int iIDRobot);
 	bool checkZoneFree(int iIDZone, int iIDRobot);
 
 	//! Get Node From ID
-	Node *getNodeFromId(int iIDNode);
+	Node *getNodeFromId(std::string iIDNode);
 
 	//! Print nodes of current graph
 	void printNodes();
@@ -552,7 +501,7 @@ public:
 
 private:
 	//! Set the initial node
-	int setInitialNode(int node);
+	int setInitialNode(int node_pos);
 	//! Reset the value of the nodes
 	int resetNodes();
 	//! Calculates the optimum route
@@ -560,7 +509,7 @@ private:
 	//! Resets the priority queue
 	int resetQueue();
 	//! Push a node into the queue
-	int pushIntoQueue(int node);
+	int pushIntoQueue(int node_pos);
 	//! Pops the node with more priority
 	PointerNode popFromQueue();
 	//! Queues all the nodes

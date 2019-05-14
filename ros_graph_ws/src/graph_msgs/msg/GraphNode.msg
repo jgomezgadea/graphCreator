@@ -1,4 +1,4 @@
-int32 id
+string id
 string name
 int32 zone
 GraphNodePose pose

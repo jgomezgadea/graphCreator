@@ -1,5 +1,5 @@
 # Service msg
-int32 node_id
+string node_id
 ---
 bool success
 string message

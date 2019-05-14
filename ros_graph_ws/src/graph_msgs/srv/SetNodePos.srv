@@ -1,6 +1,6 @@
 # Service msg to set the node pos in the graph
 # Node in the graph
-int32 node_id
+string node_id
 # pose
 graph_msgs/GraphNodePose pose
 ---

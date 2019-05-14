@@ -16,6 +16,12 @@ NETWORKVIEW.NetworkView = function (options) {
     this.nodes = new vis.DataSet();
     this.edges = new vis.DataSet();
 
+    this.addNodes = new ROSLIB.Service({
+      ros: options.ros,
+      name: options.rosAddNodeService || '/robotnik_fms_routes_node/add_node',
+      serviceType: options.rosAddNodeMsg || 'graph_msgs/Node'
+    })
+
     this.rosNodes = new ROSLIB.Topic({
       ros: options.ros,
       name: options.rosNodesTopic || '/robotnik_fms_routes_node/graph',
@@ -65,6 +71,8 @@ NETWORKVIEW.NetworkView = function (options) {
       enabled: true,
       initiallyActive: true,
       addNode: function (nodeData, callback) {
+        console.log(nodeData);
+
         callback(nodeData);
       },
       addEdge: true,

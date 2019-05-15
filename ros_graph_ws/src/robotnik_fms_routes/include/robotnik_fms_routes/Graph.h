@@ -101,6 +101,8 @@ public:
 	std::string setNodePosition(std::string node_id, graph_msgs::GraphNodePose pos);
 	//! Elimina el nodo indicado
 	std::string deleteNode(std::string node_id);
+	//! Elimina el arco indicado
+	std::string deleteArc(std::string from_id, std::string to_id);
 	//! Obtiene el arco entre dos nodos
 	int getArcBetweenNodes(std::string from_id, std::string to_id, graph_msgs::GraphArc arc);
 	//! Get list of the graph nodes

@@ -30,6 +30,13 @@ NETWORKVIEW.NetworkView = function (options) {
     serviceType: options.rosDeleteNodeMsg || 'graph_msgs/NodeId'
   })
 
+  // delete_arc service
+  this.deleteArcService = new ROSLIB.Service({
+    ros: options.ros,
+    name: options.rosDeleteArcService || '/robotnik_fms_routes_node/delete_arc',
+    serviceType: options.rosDeleteArcMsg || 'graph_msgs/ArcId'
+  })
+
   // TOPICS
 
   // graph topic
@@ -105,7 +112,6 @@ NETWORKVIEW.NetworkView = function (options) {
 
       // DELETE NODE function
       deleteNode: function (nodeData, callback) {
-        console.log(nodeData);
         var request = new ROSLIB.ServiceRequest({
           node_id: nodeData.nodes[0]
         });
@@ -116,7 +122,17 @@ NETWORKVIEW.NetworkView = function (options) {
       },
 
       // DELETE EDGE function
-      deleteEdge: true,
+      deleteEdge: function (nodeData, callback) {
+        var ids = nodeData.edges[0].split(" ");
+        var request = new ROSLIB.ServiceRequest({
+          from_id: ids[0],
+          to_id: ids[1]
+        });
+        self.deleteArcService.callService(request, function (result) {
+          console.log(result.message);
+        });
+        callback(nodeData);
+      },
 
       // NODE STYLE
       controlNodeStyle: {
@@ -204,7 +220,7 @@ NETWORKVIEW.NetworkView.prototype.addNode = function (node) {
 };
 
 NETWORKVIEW.NetworkView.prototype.addEdge = function (from_id, arc) {
-  this.edges.add({ from: from_id, to: arc.node_dest, arrows: 'to' })
+  this.edges.add({ id: from_id + " " + arc.node_dest, from: from_id, to: arc.node_dest, arrows: 'to' })
 };
 
 NETWORKVIEW.NetworkView.prototype.deleteNetwork = function () {

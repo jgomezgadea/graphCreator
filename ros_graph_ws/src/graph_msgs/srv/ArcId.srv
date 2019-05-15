@@ -1,0 +1,6 @@
+# Service msg
+string from_id
+string to_id
+---
+bool success
+string message

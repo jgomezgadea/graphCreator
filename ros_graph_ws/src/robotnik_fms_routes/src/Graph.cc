@@ -463,6 +463,16 @@ std::string Graph::deleteNode(std::string node_id)
     return dijkstraGraph->deleteNode(node_id);
 }
 
+/*! \fn std::string Graph::deleteNode(int node_id)
+ * 	\brief Obtiene la posición del nodo
+ *  \return 0 if OK
+ *  \return -1 si el nodo no existe
+*/
+std::string Graph::deleteArc(std::string from_id, std::string to_id)
+{
+    return dijkstraGraph->deleteArc(from_id, to_id);
+}
+
 /*! \fn int Graph::getArcBetweenNodes(int from_id, int to_id, graph_msgs::GraphArc arc)
  * 	\brief Obtiene el arco entre nodos
  *  \return 0 if OK

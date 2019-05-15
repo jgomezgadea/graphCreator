@@ -22,6 +22,7 @@ add_service_files(
   SetNodePos.srv
   Node.srv
   NodeId.srv
+  ArcId.srv
 )
 
 ## Generate actions in the 'action' folder

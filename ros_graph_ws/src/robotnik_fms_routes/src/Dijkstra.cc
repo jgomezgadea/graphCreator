@@ -110,24 +110,24 @@ int Dijkstra::deleteNodes()
 	return 0;
 }
 
-/*! \fn std::string Dijkstra::deleteNode(int node_id)
+/*! \fn std::string Dijkstra::deleteNode(std::string node_id)
  * 	\brief  Deletes a node
  *  \returns "OK"
 */
 //!
-std::string Dijkstra::deleteNode(string node_id)
+std::string Dijkstra::deleteNode(std::string node_id)
 {
 	int index = getNodeIndex(node_id);
 
 	if (bEdit)
 	{
-		ROS_ERROR("Dijkstra::addNode: Error: Graph's edition must be enabled");
-		return "Dijkstra::addNode: Error: Graph's edition must be enabled";
+		ROS_ERROR("Dijkstra::deleteNode: Error: Graph's edition must be enabled");
+		return "Dijkstra::deleteNode: Error: Graph's edition must be enabled";
 	}
 	else if (index == -1)
 	{
-		ROS_ERROR("Dijkstra::GetNodePosition: node %d does not exist", node_id);
-		return "Dijkstra::GetNodePosition: node " + node_id + " does not exist";
+		ROS_ERROR("Dijkstra::deleteNode: node %d does not exist", node_id);
+		return "Dijkstra::deleteNode: node " + node_id + " does not exist";
 	}
 
 	for (int i = 0; i < vZones.size(); i++)
@@ -155,6 +155,47 @@ std::string Dijkstra::deleteNode(string node_id)
 	}
 
 	return "OK";
+}
+
+/*! \fn std::string Dijkstra::deleteArc(std::string from_id, std::string to_id)
+ * 	\brief  Deletes an arc
+ *  \returns "OK"
+*/
+//!
+std::string Dijkstra::deleteArc(std::string from_id, std::string to_id)
+{
+	int from_index = getNodeIndex(from_id);
+
+	if (bEdit)
+	{
+		ROS_ERROR("Dijkstra::deleteArc: Error: Graph's edition must be enabled");
+		return "Dijkstra::deleteArc: Error: Graph's edition must be enabled";
+	}
+	else if (from_index == -1)
+	{
+		ROS_ERROR("Dijkstra::deleteArc: node %d does not exist", from_id);
+		return "Dijkstra::deleteArc: node " + from_id + " does not exist";
+	}
+
+	int find = false;
+	for (int i = 0; i < vNodes[from_index]->node.arc_list.size(); i++)
+	{
+		if (vNodes[from_index]->node.arc_list[i].node_dest == to_id)
+		{
+			find = true;
+			vNodes[from_index]->node.arc_list.erase(vNodes[from_index]->node.arc_list.begin() + i);
+		}
+	}
+
+	if (!find)
+	{
+		ROS_ERROR("Dijkstra::deleteArc: arc from %s to %s does not exist", from_id, to_id);
+		return "Dijkstra::deleteArc: arc from " + from_id + " to " + to_id + " does not exist";
+	}
+	else
+	{
+		return "OK";
+	}
 }
 
 /*! \fn std::string Dijkstra::addNode(graph_msgs::GraphNode node)

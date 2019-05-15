@@ -452,8 +452,10 @@ public:
 	int resetRoutes();
 	//! Deletes All the nodes
 	int deleteNodes();
-	//! Delete the node_id node
+	//! Delete the "node_id" node
 	std::string deleteNode(std::string node_id);
+	//! Delete the arc from "from_id" to "to_id"
+	std::string deleteArc(std::string from_id, std::string to_id);
 	//! Gets the optimum calculated route between selected nodes
 	int getRoute(std::string inital_node, std::string end_node, std::vector<std::string> *route);
 	int getRoute(std::string inital_node, std::string end_node, std::vector<Node *> *route);

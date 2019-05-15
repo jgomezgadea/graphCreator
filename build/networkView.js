@@ -30,6 +30,13 @@ NETWORKVIEW.NetworkView = function (options) {
     serviceType: options.rosDeleteNodeMsg || 'graph_msgs/NodeId'
   })
 
+  // add_arc service
+  this.addArcService = new ROSLIB.Service({
+    ros: options.ros,
+    name: options.rosAddArcService || '/robotnik_fms_routes_node/add_arc',
+    serviceType: options.rosAddArcMsg || 'graph_msgs/ArcId'
+  })
+
   // delete_arc service
   this.deleteArcService = new ROSLIB.Service({
     ros: options.ros,
@@ -100,7 +107,18 @@ NETWORKVIEW.NetworkView = function (options) {
       },
 
       // ADD EDGE function
-      addEdge: true,
+      addEdge: function (nodeData, callback) {
+        var request = new ROSLIB.ServiceRequest({
+          from_id: nodeData.from,
+          to_id: nodeData.to
+        });
+        self.addArcService.callService(request, function (result) {
+          console.log(result.message);
+        });
+        nodeData.arrows = 'to';
+        nodeData.id = nodeData.from + " " + nodeData.to;
+        callback(nodeData);
+      },
 
       // EDIT NODE function
       editNode: function (nodeData, callback) {

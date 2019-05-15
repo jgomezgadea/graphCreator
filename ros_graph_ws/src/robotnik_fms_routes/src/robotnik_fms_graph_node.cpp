@@ -213,9 +213,9 @@ protected:
     bool deleteNodeServiceServerCb(graph_msgs::NodeId::Request &request, graph_msgs::NodeId::Response &response);
 
     //! Callback for add an arc
-    //bool addArcServiceServerCb(graph_msgs::Node::Request &request, graph_msgs::Node::Response &response); //TODO
+    bool addArcServiceServerCb(graph_msgs::ArcId::Request &request, graph_msgs::ArcId::Response &response);
     //! Callback for set dest of an arc
-    //bool setArcServiceServerCb(graph_msgs::SetNodePos::Request &request, graph_msgs::SetNodePos::Response &response); //TODO
+    bool setArcDestServiceServerCb(graph_msgs::ArcId::Request &request, graph_msgs::ArcId::Response &response);
     //! Callback for delete an arc
     bool deleteArcServiceServerCb(graph_msgs::ArcId::Request &request, graph_msgs::ArcId::Response &response);
 
@@ -770,8 +770,8 @@ int GraphNode::rosSetup()
     set_node_service_server_ = pnh_.advertiseService("set_node_pos", &GraphNode::setNodeServiceServerCb, this);
     delete_node_service_server_ = pnh_.advertiseService("delete_node", &GraphNode::deleteNodeServiceServerCb, this);
 
-    //add_arc_service_server_ = pnh_.advertiseService("add_arc", &GraphNode::addArcServiceServerCb, this); //TODO
-    //set_arc_service_server_ = pnh_.advertiseService("set_arc_dest", &GraphNode::setArcServiceServerCb, this); //TODO
+    add_arc_service_server_ = pnh_.advertiseService("add_arc", &GraphNode::addArcServiceServerCb, this);
+    set_arc_service_server_ = pnh_.advertiseService("set_arc_dest", &GraphNode::setArcDestServiceServerCb, this);
     delete_arc_service_server_ = pnh_.advertiseService("delete_arc", &GraphNode::deleteArcServiceServerCb, this);
 
     block_node_service_server_ = pnh_.advertiseService("block_node", &GraphNode::blockNodeServiceServerCb, this);
@@ -1739,6 +1739,50 @@ bool GraphNode::deleteNodeServiceServerCb(graph_msgs::NodeId::Request &request, 
         response.success = false;
     }
     response.message = "DeleteNodeService Robot: Deleting node " + request.node_id + ": " + msg;
+
+    pthread_mutex_unlock(&mutexGraph);
+    return true;
+}
+
+/*! \fn bool GraphNode::addArcServiceServerCb(graph_msgs::NodeId::Request &request, graph_msgs::NodeId::Response &response)
+* 	\brief Adds a new node to the graph
+    */
+bool GraphNode::addArcServiceServerCb(graph_msgs::ArcId::Request &request, graph_msgs::ArcId::Response &response)
+{
+    pthread_mutex_lock(&mutexGraph);
+
+    response.message = "DeleteArcService Robot: Deleting arc from " + request.from_id + " to " + request.to_id;
+    if (graph_route->addArc(request.from_id, request.to_id) == 0)
+    {
+        response.success = true;
+        response.message += ": OK";
+    }
+    else
+    {
+        response.success = false;
+        response.message += ": Error on delete";
+    }
+
+    pthread_mutex_unlock(&mutexGraph);
+    return true;
+}
+
+/*! \fn bool GraphNode::setArcDestServiceServerCb(graph_msgs::NodeId::Request &request, graph_msgs::NodeId::Response &response)
+* 	\brief Adds a new node to the graph
+    */
+bool GraphNode::setArcDestServiceServerCb(graph_msgs::ArcId::Request &request, graph_msgs::ArcId::Response &response)
+{
+    pthread_mutex_lock(&mutexGraph);
+    std::string msg = graph_route->deleteArc(request.from_id, request.to_id);
+    if (msg == "OK")
+    {
+        response.success = true;
+    }
+    else
+    {
+        response.success = false;
+    }
+    response.message = "DeleteArcService Robot: Deleting arc from " + request.from_id + " to " + request.to_id + ": " + msg;
 
     pthread_mutex_unlock(&mutexGraph);
     return true;

@@ -8,7 +8,7 @@
             "type": "node",
             "request": "launch",
             "name": "Launch Program",
-            "program": "${workspaceFolder}/build/ros2d.js"
+            "program": "${workspaceFolder}/build/networkView.js"
         }
     ]
 }

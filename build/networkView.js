@@ -10,53 +10,58 @@ NETWORKVIEW.NetworkView = function (options) {
   options = options || {};
   this.divID = options.divID || 'network';
 
-  if (options.ros !== undefined) { // If we use ROS
+  this.message = undefined;
+  this.nodes = new vis.DataSet();
+  this.edges = new vis.DataSet();
 
-    this.message = undefined;
-    this.nodes = new vis.DataSet();
-    this.edges = new vis.DataSet();
+  // SERVICES
 
-    this.addNodes = new ROSLIB.Service({
-      ros: options.ros,
-      name: options.rosAddNodeService || '/robotnik_fms_routes_node/add_node',
-      serviceType: options.rosAddNodeMsg || 'graph_msgs/Node'
-    })
+  // add_node service
+  this.addNodeService = new ROSLIB.Service({
+    ros: options.ros,
+    name: options.rosAddNodeService || '/robotnik_fms_routes_node/add_node',
+    serviceType: options.rosAddNodeMsg || 'graph_msgs/Node'
+  })
 
-    this.rosNodes = new ROSLIB.Topic({
-      ros: options.ros,
-      name: options.rosNodesTopic || '/robotnik_fms_routes_node/graph',
-      messageType: options.rosNodesMsg || 'graph_msgs/GraphNodeArray'
-    })
+  // delete_node service
+  this.deleteNodeService = new ROSLIB.Service({
+    ros: options.ros,
+    name: options.rosDeleteNodeService || '/robotnik_fms_routes_node/delete_node',
+    serviceType: options.rosDeleteNodeMsg || 'graph_msgs/NodeId'
+  })
 
-    var self = this;
-    this.rosNodes.subscribe(function (message) {
+  // TOPICS
 
-      if (self.hasChanged(message)) {
+  // graph topic
+  this.rosNodesTopic = new ROSLIB.Topic({
+    ros: options.ros,
+    name: options.rosNodesTopic || '/robotnik_fms_routes_node/graph',
+    messageType: options.rosNodesMsg || 'graph_msgs/GraphNodeArray'
+  })
 
-        // Delete actual network
-        self.deleteNetwork();
+  // graph callback
+  var self = this;
+  this.rosNodesTopic.subscribe(function (message) {
 
-        // Fill network with received nodes
-        // TODO Puede que no nos lleguen ordenados los id's (ni que estén todos)
-        message.nodes.forEach(node => {
-          self.addNode(node);
-          node.arc_list.forEach(arc => {
-            self.addEdge(node.id, arc);
-          })
-        });
+    if (self.hasChanged(message)) {
 
-        self.stabilize();
-        //self.rosNodes.unsubscribe();
-      }
+      // Delete actual network
+      self.deleteNetwork();
 
-    });
+      // Fill network with received nodes
+      // TODO Puede que no nos lleguen ordenados los id's (ni que estén todos)
+      message.nodes.forEach(node => {
+        self.addNode(node);
+        node.arc_list.forEach(arc => {
+          self.addEdge(node.id, arc);
+        })
+      });
 
-  } else { // Get data if is not getted from ros
+      self.stabilize();
+      //self.rosNodesTopic.unsubscribe();
+    }
 
-    this.nodes = options.nodes || new vis.DataSet();
-    this.edges = options.edges || new vis.DataSet();
-
-  }
+  });
 
   // Create the network
   this.container = document.getElementById(this.divID);
@@ -65,23 +70,55 @@ NETWORKVIEW.NetworkView = function (options) {
     edges: this.edges
   };
 
+  // Add buttons callback
   this.options = {
     interaction: { hover: true },
     manipulation: {
       enabled: true,
       initiallyActive: true,
-      addNode: function (nodeData, callback) {
-        console.log(nodeData);
 
+      // ADD NODE function
+      addNode: function (nodeData, callback) {
+        var request = new ROSLIB.ServiceRequest({
+          node: {
+            id: nodeData.id,
+            zone: 0,
+            name: nodeData.label
+          }
+        });
+        self.addNodeService.callService(request, function (result) {
+          console.log(result.message);
+        });
         callback(nodeData);
       },
+
+      // ADD EDGE function
       addEdge: true,
+
+      // EDIT NODE function
       editNode: function (nodeData, callback) {
         callback(nodeData);
       },
+
+      // EDIT EDGE function
       editEdge: true,
-      deleteNode: true,
+
+      // DELETE NODE function
+      deleteNode: function (nodeData, callback) {
+        console.log(nodeData);
+        var request = new ROSLIB.ServiceRequest({
+          node_id: nodeData.nodes[0]
+        });
+        self.deleteNodeService.callService(request, function (result) {
+          console.log(result.message);
+        });
+        callback(nodeData);
+      },
+
+      // DELETE EDGE function
       deleteEdge: true,
+
+      // NODE STYLE
       controlNodeStyle: {
         // all node options are valid.
       }
@@ -92,70 +129,70 @@ NETWORKVIEW.NetworkView = function (options) {
 
 
 
-  this.network.on("click", function (params) {
+  /*this.network.on("click", function (params) {
     params.event = "[original event]";
     document.getElementById('eventSpan').innerHTML = '<h2>Click event:</h2>' + JSON.stringify(params, null, 4);
     console.log('click event, getNodeAt returns: ' + this.getNodeAt(params.pointer.DOM));
   });
-  /*this.network.on("doubleClick", function (params) {
-    params.event = "[original event]";
-    document.getElementById('eventSpan').innerHTML = '<h2>doubleClick event:</h2>' + JSON.stringify(params, null, 4);
+  this.network.on("doubleClick", function (params) {
+      params.event = "[original event]";
+      document.getElementById('eventSpan').innerHTML = '<h2>doubleClick event:</h2>' + JSON.stringify(params, null, 4);
   });
   this.network.on("oncontext", function (params) {
-    params.event = "[original event]";
-    document.getElementById('eventSpan').innerHTML = '<h2>oncontext (right click) event:</h2>' + JSON.stringify(params, null, 4);
+      params.event = "[original event]";
+      document.getElementById('eventSpan').innerHTML = '<h2>oncontext (right click) event:</h2>' + JSON.stringify(params, null, 4);
   });
   this.network.on("dragStart", function (params) {
-    // There's no point in displaying this event on screen, it gets immediately overwritten
-    params.event = "[original event]";
-    console.log('dragStart Event:', params);
-    console.log('dragStart event, getNodeAt returns: ' + this.getNodeAt(params.pointer.DOM));
+      // There's no point in displaying this event on screen, it gets immediately overwritten
+      params.event = "[original event]";
+      console.log('dragStart Event:', params);
+      console.log('dragStart event, getNodeAt returns: ' + this.getNodeAt(params.pointer.DOM));
   });
   this.network.on("dragging", function (params) {
-    params.event = "[original event]";
-    document.getElementById('eventSpan').innerHTML = '<h2>dragging event:</h2>' + JSON.stringify(params, null, 4);
+      params.event = "[original event]";
+      document.getElementById('eventSpan').innerHTML = '<h2>dragging event:</h2>' + JSON.stringify(params, null, 4);
   });
   this.network.on("dragEnd", function (params) {
-    params.event = "[original event]";
-    document.getElementById('eventSpan').innerHTML = '<h2>dragEnd event:</h2>' + JSON.stringify(params, null, 4);
-    console.log('dragEnd Event:', params);
-    console.log('dragEnd event, getNodeAt returns: ' + this.getNodeAt(params.pointer.DOM));
+      params.event = "[original event]";
+      document.getElementById('eventSpan').innerHTML = '<h2>dragEnd event:</h2>' + JSON.stringify(params, null, 4);
+      console.log('dragEnd Event:', params);
+      console.log('dragEnd event, getNodeAt returns: ' + this.getNodeAt(params.pointer.DOM));
   });
   this.network.on("zoom", function (params) {
-    document.getElementById('eventSpan').innerHTML = '<h2>zoom event:</h2>' + JSON.stringify(params, null, 4);
+      document.getElementById('eventSpan').innerHTML = '<h2>zoom event:</h2>' + JSON.stringify(params, null, 4);
   });
   this.network.on("showPopup", function (params) {
-    document.getElementById('eventSpan').innerHTML = '<h2>showPopup event: </h2>' + JSON.stringify(params, null, 4);
+      document.getElementById('eventSpan').innerHTML = '<h2>showPopup event: </h2>' + JSON.stringify(params, null, 4);
   });
   this.network.on("hidePopup", function () {
-    console.log('hidePopup Event');
+      console.log('hidePopup Event');
   });
   this.network.on("select", function (params) {
-    console.log('select Event:', params);
+      console.log('select Event:', params);
   });
   this.network.on("selectNode", function (params) {
-    console.log('selectNode Event:', params);
+      console.log('selectNode Event:', params);
   });
   this.network.on("selectEdge", function (params) {
-    console.log('selectEdge Event:', params);
+      console.log('selectEdge Event:', params);
   });
   this.network.on("deselectNode", function (params) {
-    console.log('deselectNode Event:', params);
+      console.log('deselectNode Event:', params);
   });
   this.network.on("deselectEdge", function (params) {
-    console.log('deselectEdge Event:', params);
+      console.log('deselectEdge Event:', params);
   });
   this.network.on("hoverNode", function (params) {
-    console.log('hoverNode Event:', params);
+      console.log('hoverNode Event:', params);
   });
   this.network.on("hoverEdge", function (params) {
-    console.log('hoverEdge Event:', params);
+      console.log('hoverEdge Event:', params);
   });
   this.network.on("blurNode", function (params) {
-    console.log('blurNode Event:', params);
+      console.log('blurNode Event:', params);
   });
   this.network.on("blurEdge", function (params) {
-    console.log('blurEdge Event:', params);
+      console.log('blurEdge Event:', params);
   });*/
 };
 
@@ -183,7 +220,7 @@ NETWORKVIEW.NetworkView.prototype.stabilize = function () {
  * Compare between network and graph message
  * 
  * @param callback - function with the following params:
- *   * message - the published message with the graph
+ *     * message - the published message with the graph
  * @returns bool - true if the graph has changed
  */
 NETWORKVIEW.NetworkView.prototype.hasChanged = function (message) {

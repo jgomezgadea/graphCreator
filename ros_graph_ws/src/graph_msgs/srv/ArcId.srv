@@ -1,5 +1,7 @@
 # Service msg
+string from_id_old
 string from_id
+string to_id_old
 string to_id
 ---
 bool success

@@ -141,6 +141,18 @@ public:
 
 		return 0;
 	}
+	//! Get arc index
+	int getArcIndex(std::string node_dest)
+	{
+		for (int i = 0; i < node.arc_list.size(); i++)
+		{
+			if (node.arc_list[i].node_dest == node_dest)
+			{
+				return i;
+			}
+		}
+		return -1;
+	}
 	//! Returns if the node has been used in the algorithm
 	bool isUsed()
 	{
@@ -479,6 +491,8 @@ public:
 
 	//! Adds edge from a node to another
 	int addArc(std::string from_node, graph_msgs::GraphArc new_arc);
+	//! Modify the pos of an arc
+	int setArcPos(std::string from_id_old, std::string from_id, std::string to_id_old, std::string to_id);
 	//! Gets the arc between two nodes
 	int getArcBetweenNodes(std::string from_node, std::string to_node);
 	//! Gets the index of the node using his ID

@@ -188,6 +188,16 @@ int Graph::addArc(std::string from_node_id, std::string to_node_id, float weight
     return 0;
 }
 
+/*! \fn int Graph::setArcPos(std::string from_id_old, std::string from_id, std::string to_id_old, std::string to_id)
+ * 	\brief Modify the pos of an arc
+*/
+int Graph::setArcPos(std::string from_id_old, std::string from_id, std::string to_id_old, std::string to_id)
+{
+    dijkstraGraph->setArcPos(from_id_old, from_id, to_id_old, to_id);
+
+    return 0;
+}
+
 /*! \fn std::vector<graph_msgs::GraphNode> Graph::getNodes()
  * 	\brief Get msg with the graph nodes
 */

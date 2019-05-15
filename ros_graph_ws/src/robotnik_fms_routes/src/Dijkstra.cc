@@ -455,12 +455,12 @@ bool Dijkstra::checkNodeFree(std::string iIDNode, int iIDRobot)
 	}
 }
 
-/*! \fn string Dijkstra::addArc(string from_node, graph_msgs::GraphArc *pointerToArc)
+/*! \fn string Dijkstra::addArc(std::string from_node, graph_msgs::GraphArc new_arc)
  * 	\brief Adds an arc from a node to another with weight
 */
-int Dijkstra::addArc(std::string from_node, graph_msgs::GraphArc new_arc)
+int Dijkstra::addArc(std::string from_node_id, graph_msgs::GraphArc new_arc)
 {
-	int locatedFrom = -1; //Id del nodo
+	int node_pos = -1; //Id del nodo
 
 	if (bEdit)
 	{ // Edición activa
@@ -468,33 +468,102 @@ int Dijkstra::addArc(std::string from_node, graph_msgs::GraphArc new_arc)
 		return -2;
 	}
 
-	int size = vNodes.size();
-
-	if (size == 0)
+	if (from_node_id == new_arc.node_dest)
 	{
-		ROS_ERROR("Dijkstra::addArc: Error: No nodes");
+		ROS_ERROR("Dijkstra::addArc: Error: graph cycles are not permitted: from %s to %s", from_node_id, new_arc.node_dest);
 		return -1;
 	}
 
-	if (from_node == new_arc.node_dest)
+	node_pos = getNodeIndex(from_node_id);
+
+	if (node_pos < 0)
 	{
-		ROS_ERROR("Dijkstra::addArc: Error: graph cycles are not permitted: from %d to %d", from_node, new_arc.node_dest);
+		ROS_ERROR("Dijkstra::addArc: Error: Incorrect node id (%s)", from_node_id);
 		return -1;
 	}
 
-	for (int i = 0; i < size; i++)
-	{
-		if (vNodes[i]->getId() == from_node) //Existe el nodo
-			locatedFrom = i;
-	}
+	return vNodes[node_pos]->addNodeAdjacent(new_arc);
+}
 
-	if (locatedFrom < 0)
+/*! \fn string Dijkstra::setArcPos(std::string from_id_old, std::string from_id, std::string to_id_old, std::string to_id)
+ * 	\brief Modify the pos of an arc
+*/
+int Dijkstra::setArcPos(std::string from_id_old, std::string from_id, std::string to_id_old, std::string to_id)
+{
+	if (bEdit)
+	{ // Edición activa
+		ROS_ERROR("Dijkstra::setArcPos: Error: Graph's edition must be enabled");
+		return -2;
+	}
+	if (from_id == to_id)
 	{
-		ROS_ERROR("Dijkstra::addArc: Error: Incorrect node number (%d)", from_node);
+		ROS_ERROR("Dijkstra::setArcPos: Error: graph cycles are not allowed: from %s to %s", from_id, to_id);
 		return -1;
 	}
 
-	return vNodes[locatedFrom]->addNodeAdjacent(new_arc);
+	// Changed from
+	if (from_id_old != from_id)
+	{
+		int old_node_index = getNodeIndex(from_id_old);
+		if (old_node_index == -1)
+		{
+			ROS_ERROR("Dijkstra::setArcPos: Error: node id %s not found", from_id_old);
+			return -1;
+		}
+
+		int old_arc_index = vNodes[old_node_index]->getArcIndex(to_id_old);
+		if (old_arc_index == -1)
+		{
+			ROS_ERROR("Dijkstra::setArcPos: Error: arc between nodes %s and %s found", from_id_old, to_id_old);
+			return -1;
+		}
+
+		int new_node_index = getNodeIndex(from_id);
+		if (new_node_index == -1)
+		{
+			ROS_ERROR("Dijkstra::setArcPos: Error: node id %s not found", from_id);
+			return -1;
+		}
+
+		vNodes[new_node_index]->node.arc_list.push_back(vNodes[old_node_index]->node.arc_list[old_arc_index]);
+		vNodes[old_node_index]->node.arc_list.erase(vNodes[old_node_index]->node.arc_list.begin() + old_arc_index);
+	}
+
+	// Changed to
+	if (to_id_old != to_id)
+	{
+		int new_node_index = getNodeIndex(from_id);
+		if (new_node_index == -1)
+		{
+			ROS_ERROR("Dijkstra::setArcPos: Error: node id %s not found", new_node_index);
+			return -1;
+		}
+
+		int old_arc_index = vNodes[new_node_index]->getArcIndex(to_id_old);
+		if (old_arc_index == -1)
+		{
+			ROS_ERROR("Dijkstra::setArcPos: Error: arc between nodes %s and %s found", from_id_old, to_id_old);
+			return -1;
+		}
+
+		vNodes[new_node_index]->node.arc_list[old_arc_index].node_dest = to_id;
+	}
+
+	return 0;
+
+	/*int node_pos = -1; // Id del nodo
+
+	
+
+	node_pos = getNodeIndex(from_node_id);
+
+	if (node_pos < 0)
+	{
+		ROS_ERROR("Dijkstra::addArc: Error: Incorrect node id (%s)", from_node_id);
+		return -1;
+	}
+
+	return vNodes[node_pos]->node.arc_list.addNodeAdjacent(new_arc);*/
 }
 
 /*! \fn int Dijkstra::resetRoutes()

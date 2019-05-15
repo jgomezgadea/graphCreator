@@ -37,6 +37,13 @@ NETWORKVIEW.NetworkView = function (options) {
     serviceType: options.rosAddArcMsg || 'graph_msgs/ArcId'
   })
 
+  // set_arc_pos service
+  this.setArcPosService = new ROSLIB.Service({
+    ros: options.ros,
+    name: options.rosSetArcPosService || '/robotnik_fms_routes_node/set_arc_pos',
+    serviceType: options.rosSetArcPosMsg || 'graph_msgs/ArcId'
+  })
+
   // delete_arc service
   this.deleteArcService = new ROSLIB.Service({
     ros: options.ros,
@@ -108,16 +115,21 @@ NETWORKVIEW.NetworkView = function (options) {
 
       // ADD EDGE function
       addEdge: function (nodeData, callback) {
-        var request = new ROSLIB.ServiceRequest({
-          from_id: nodeData.from,
-          to_id: nodeData.to
-        });
-        self.addArcService.callService(request, function (result) {
-          console.log(result.message);
-        });
-        nodeData.arrows = 'to';
-        nodeData.id = nodeData.from + " " + nodeData.to;
-        callback(nodeData);
+        if (nodeData.from !== nodeData.to) {
+          var request = new ROSLIB.ServiceRequest({
+            from_id: nodeData.from,
+            to_id: nodeData.to
+          });
+          self.addArcService.callService(request, function (result) {
+            console.log(result.message);
+          });
+          nodeData.arrows = 'to';
+          nodeData.id = nodeData.from + " " + nodeData.to;
+          callback(nodeData);
+        }
+        else {
+          console.log("Error: Graph cycles are not allowed");
+        }
       },
 
       // EDIT NODE function
@@ -126,7 +138,27 @@ NETWORKVIEW.NetworkView = function (options) {
       },
 
       // EDIT EDGE function
-      editEdge: true,
+      editEdge: function (nodeData, callback) {
+        var old = nodeData.id.split(" ");
+        if (nodeData.from !== nodeData.to) {
+          var request = new ROSLIB.ServiceRequest({
+            from_id_old: old[0],
+            to_id_old: old[1],
+            from_id: nodeData.from,
+            to_id: nodeData.to
+          });
+          self.setArcPosService.callService(request, function (result) {
+            console.log(result.message);
+          });
+          nodeData.id = nodeData.from + " " + nodeData.to;
+          nodeData.arrows = 'to';
+          callback(nodeData);
+          self.edges.remove(old[0] + " " + old[1]);
+        }
+        else {
+          console.log("Error: Graph cycles are not allowed");
+        }
+      },
 
       // DELETE NODE function
       deleteNode: function (nodeData, callback) {

@@ -83,9 +83,37 @@
   <button id="toggle_views" type="button" onclick="toggleView()">View graph</button>
 
   <div id="canvas_views">
+    <!-- MAP view -->
     <div id="map"></div>
+
+    <!-- PopUps for NETWORK view-->
+    <div id="node-popUp">
+      <span id="node-operation">node</span> <br>
+      <table style="margin:auto;">
+        <tr>
+          <td>Name</td>
+          <td><input id="node-label" value="new value" /></td>
+        </tr>
+      </table>
+      <input type="button" value="save" id="node-saveButton" />
+      <input type="button" value="cancel" id="node-cancelButton" />
+    </div>
+
+    <div id="edge-popUp">
+      <span id="edge-operation">edge</span> <br>
+      <table style="margin:auto;">
+        <tr>
+          <td>Name</td>
+          <td><input id="edge-label" value="new value" /></td>
+        </tr>
+      </table>
+      <input type="button" value="save" id="edge-saveButton" />
+      <input type="button" value="cancel" id="edge-cancelButton" />
+    </div>
+
+    <!-- NETWORK view -->
     <div id="network"></div>
-    <pre id="eventSpan"></pre>
+    <!--pre id="eventSpan"></pre-->
   </div>
 
   <p>

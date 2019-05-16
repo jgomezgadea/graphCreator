@@ -435,29 +435,41 @@ int Graph::getNodePosition(std::string node_id, geometry_msgs::Pose2D *pos)
     }
 }
 
-/*! \fn std::string Graph::setNodePosition(int node_id, graph_msgs::GraphNodePose pos)
+/*! \fn std::string Graph::setNode(graph_msgs::GraphNode)
  * 	\brief Obtiene la posición del nodo
  *  \return 0 if OK
  *  \return -1 si el nodo no existe
 */
-std::string Graph::setNodePosition(std::string node_id, graph_msgs::GraphNodePose pos)
+std::string Graph::setNode(graph_msgs::GraphNode node_info)
 {
     if (dijkstraGraph->isOnEdition())
     {
-        ROS_ERROR("Dijkstra::GetNodePosition: Edition must be disabled");
-        return "Dijkstra::GetNodePosition: Edition must be disabled";
+        ROS_ERROR("Dijkstra::SetNode: Edition must be disabled");
+        return "Dijkstra::SetNode: Edition must be disabled";
     }
 
-    Node *node = dijkstraGraph->getNodeFromId(node_id);
+    Node *node = dijkstraGraph->getNodeFromId(node_info.id);
 
     if (node == 0)
     {
-        ROS_ERROR("Dijkstra::GetNodePosition: node %d does not exist", node_id);
-        return "Dijkstra::GetNodePosition: node " + node_id + " does not exist";
+        ROS_ERROR("Dijkstra::SetNode: node %d does not exist", node_info.id);
+        return "Dijkstra::SetNode: node " + node_info.id + " does not exist";
+    }
+    else if (node_info.id == "")
+    {
+        ROS_ERROR("Dijkstra::SetNode: Error: The ID cannot be an empty string");
+        return "Dijkstra::SetNode: Error: The ID cannot be an empty string";
+    }
+    else if (node_info.name == "")
+    {
+        ROS_ERROR("Dijkstra::SetNode: Error: The name cannot be an empty string");
+        return "Dijkstra::SetNode: Error: The name cannot be an empty string";
     }
     else
     {
-        node->node.pose = pos;
+        node->node.name = node_info.name;
+        node->node.zone = node_info.zone;
+        node->node.pose = node_info.pose;
 
         return "OK";
     }

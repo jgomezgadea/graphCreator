@@ -23,6 +23,13 @@ NETWORKVIEW.NetworkView = function (options) {
     serviceType: options.rosAddNodeMsg || 'graph_msgs/Node'
   })
 
+  // set_node service
+  this.setNodeService = new ROSLIB.Service({
+    ros: options.ros,
+    name: options.rosSetNodeService || '/robotnik_fms_routes_node/set_node',
+    serviceType: options.rosSetNodeMsg || 'graph_msgs/Node'
+  })
+
   // delete_node service
   this.deleteNodeService = new ROSLIB.Service({
     ros: options.ros,
@@ -99,33 +106,39 @@ NETWORKVIEW.NetworkView = function (options) {
       initiallyActive: true,
 
       // ADD NODE function
-      addNode: function (nodeData, callback) {
+      addNode: function (data, callback) {
         var request = new ROSLIB.ServiceRequest({
           node: {
-            id: nodeData.id,
+            id: data.id,
             zone: 0,
-            name: nodeData.label
+            name: data.label
           }
         });
         self.addNodeService.callService(request, function (result) {
           console.log(result.message);
         });
-        callback(nodeData);
+        callback(data);
       },
 
       // ADD EDGE function
-      addEdge: function (nodeData, callback) {
-        if (nodeData.from !== nodeData.to) {
-          var request = new ROSLIB.ServiceRequest({
-            from_id: nodeData.from,
-            to_id: nodeData.to
-          });
-          self.addArcService.callService(request, function (result) {
-            console.log(result.message);
-          });
-          nodeData.arrows = 'to';
-          nodeData.id = nodeData.from + " " + nodeData.to;
-          callback(nodeData);
+      addEdge: function (data, callback) {
+        // Check is not a cycle
+        if (data.from !== data.to) {
+          // Check edge not exist
+          if (self.edges.get(data.from + " " + data.to) === null) {
+            var request = new ROSLIB.ServiceRequest({
+              from_id: data.from,
+              to_id: data.to
+            });
+            self.addArcService.callService(request, function (result) {
+              console.log(result.message);
+            });
+            data.arrows = 'to';
+            data.id = data.from + " " + data.to;
+            callback(data);
+          } else {
+            console.log("Error: The edge already exists");
+          }
         }
         else {
           console.log("Error: Graph cycles are not allowed");
@@ -133,47 +146,59 @@ NETWORKVIEW.NetworkView = function (options) {
       },
 
       // EDIT NODE function
-      editNode: function (nodeData, callback) {
-        callback(nodeData);
+      editNode: function (data, callback) {
+        editNode(data, cancelNodeEdit, callback);
       },
 
       // EDIT EDGE function
-      editEdge: function (nodeData, callback) {
-        var old = nodeData.id.split(" ");
-        if (nodeData.from !== nodeData.to) {
-          var request = new ROSLIB.ServiceRequest({
-            from_id_old: old[0],
-            to_id_old: old[1],
-            from_id: nodeData.from,
-            to_id: nodeData.to
-          });
-          self.setArcPosService.callService(request, function (result) {
-            console.log(result.message);
-          });
-          nodeData.id = nodeData.from + " " + nodeData.to;
-          nodeData.arrows = 'to';
-          callback(nodeData);
-          self.edges.remove(old[0] + " " + old[1]);
-        }
-        else {
-          console.log("Error: Graph cycles are not allowed");
+      editEdge: function (data, callback) {
+        var old = data.id.split(" ");
+        // Checking if a modification has been realized
+        if (old[0] === data.from && old[1] === data.to) {
+          callback(data);
+        } else {
+          // Check is not a cycle
+          if (data.from !== data.to) {
+            // Check edge not exist
+            if (self.edges.get(data.from + " " + data.to) === null) {
+              var request = new ROSLIB.ServiceRequest({
+                from_id_old: old[0],
+                to_id_old: old[1],
+                from_id: data.from,
+                to_id: data.to
+              });
+              self.setArcPosService.callService(request, function (result) {
+                console.log(result.message);
+              });
+              data.id = data.from + " " + data.to;
+              data.arrows = 'to';
+              callback(data);
+              self.edges.remove(old[0] + " " + old[1]);
+            } else {
+              console.log("Error: The edge already exists");
+              callback();
+            }
+          }
+          else {
+            console.log("Error: Graph cycles are not allowed");
+          }
         }
       },
 
       // DELETE NODE function
-      deleteNode: function (nodeData, callback) {
+      deleteNode: function (data, callback) {
         var request = new ROSLIB.ServiceRequest({
-          node_id: nodeData.nodes[0]
+          node_id: data.nodes[0]
         });
         self.deleteNodeService.callService(request, function (result) {
           console.log(result.message);
         });
-        callback(nodeData);
+        callback(data);
       },
 
       // DELETE EDGE function
-      deleteEdge: function (nodeData, callback) {
-        var ids = nodeData.edges[0].split(" ");
+      deleteEdge: function (data, callback) {
+        var ids = data.edges[0].split(" ");
         var request = new ROSLIB.ServiceRequest({
           from_id: ids[0],
           to_id: ids[1]
@@ -181,7 +206,7 @@ NETWORKVIEW.NetworkView = function (options) {
         self.deleteArcService.callService(request, function (result) {
           console.log(result.message);
         });
-        callback(nodeData);
+        callback(data);
       },
 
       // NODE STYLE
@@ -190,6 +215,71 @@ NETWORKVIEW.NetworkView = function (options) {
       }
     }
   };
+
+  // FUNCTIONS
+  function editNode(data, cancelAction, callback) {
+    document.getElementById('node-label').value = data.label;
+    document.getElementById('node-saveButton').onclick = saveNodeData.bind(this, data, callback);
+    document.getElementById('node-cancelButton').onclick = cancelAction.bind(this, callback);
+    document.getElementById('node-popUp').style.display = 'block';
+  }
+
+  // Callback passed as parameter is ignored
+  function clearNodePopUp() {
+    document.getElementById('node-saveButton').onclick = null;
+    document.getElementById('node-cancelButton').onclick = null;
+    document.getElementById('node-popUp').style.display = 'none';
+  }
+
+  function cancelNodeEdit(callback) {
+    clearNodePopUp();
+    callback(null);
+  }
+
+  // Save to node the new info
+  function saveNodeData(data, callback) {
+    data.label = document.getElementById('node-label').value;
+    var request = new ROSLIB.ServiceRequest({
+      node: {
+        id: data.id,
+        name: data.label
+      }
+    });
+    self.setNodeService.callService(request, function (result) {
+      console.log(result.message);
+    });
+    clearNodePopUp();
+    callback(data);
+  }
+
+  function editEdgeWithoutDrag(data, callback) {
+    // filling in the popup DOM elements
+    document.getElementById('edge-label').value = data.label;
+    document.getElementById('edge-saveButton').onclick = saveEdgeData.bind(this, data, callback);
+    document.getElementById('edge-cancelButton').onclick = cancelEdgeEdit.bind(this, callback);
+    document.getElementById('edge-popUp').style.display = 'block';
+  }
+
+  function clearEdgePopUp() {
+    document.getElementById('edge-saveButton').onclick = null;
+    document.getElementById('edge-cancelButton').onclick = null;
+    document.getElementById('edge-popUp').style.display = 'none';
+  }
+
+  function cancelEdgeEdit(callback) {
+    clearEdgePopUp();
+    callback(null);
+  }
+
+  function saveEdgeData(data, callback) {
+    if (typeof data.to === 'object')
+      data.to = data.to.id
+    if (typeof data.from === 'object')
+      data.from = data.from.id
+    data.label = document.getElementById('edge-label').value;
+    clearEdgePopUp();
+    callback(data);
+  }
 
   this.network = new vis.Network(this.container, this.data, this.options);
 
@@ -343,8 +433,4 @@ NETWORKVIEW.NetworkView.prototype.resetAllNodes = function () {
 NETWORKVIEW.NetworkView.prototype.resetAllNodesStabilize = function () {
   this.resetAllNodes();
   this.stabilize();
-};
-
-NETWORKVIEW.NetworkView.prototype.stabilize = function () {
-  this.network.stabilize();
 };

@@ -19,7 +19,6 @@ add_service_files(
   GetGraphNode.srv
   GetGraphRoute.srv
   ReloadGraph.srv
-  SetNodePos.srv
   Node.srv
   NodeId.srv
   ArcId.srv

@@ -218,6 +218,11 @@ std::string Dijkstra::addNode(graph_msgs::GraphNode node)
 		ROS_ERROR("Dijkstra::addNode: Error: The ID cannot be an empty string");
 		return "Dijkstra::addNode: Error: The ID cannot be an empty string";
 	}
+	if (node.name == "")
+	{
+		ROS_ERROR("Dijkstra::addNode: Error: The name cannot be an empty string");
+		return "Dijkstra::addNode: Error: The name cannot be an empty string";
+	}
 
 	for (int i = 0; i < size; i++)
 	{

@@ -1,8 +1,0 @@
-# Service msg to set the node pos in the graph
-# Node in the graph
-string node_id
-# pose
-graph_msgs/GraphNodePose pose
----
-bool success
-string message

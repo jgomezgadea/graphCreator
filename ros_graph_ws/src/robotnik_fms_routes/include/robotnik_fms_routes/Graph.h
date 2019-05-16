@@ -100,7 +100,7 @@ public:
 	//! Obtiene la posición del nodo indicado
 	int getNodePosition(std::string node_id, geometry_msgs::Pose2D *pos);
 	//! Modifica la posición del nodo indicado
-	std::string setNodePosition(std::string node_id, graph_msgs::GraphNodePose pos);
+	std::string setNode(graph_msgs::GraphNode node_info);
 	//! Elimina el nodo indicado
 	std::string deleteNode(std::string node_id);
 	//! Elimina el arco indicado

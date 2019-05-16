@@ -1,0 +1,6 @@
+# Service msg to add/set a node to the graph
+string from_id
+graph_msgs/GraphArc arc
+---
+bool success
+string message

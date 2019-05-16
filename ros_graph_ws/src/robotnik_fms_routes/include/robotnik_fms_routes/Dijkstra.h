@@ -493,6 +493,8 @@ public:
 	int addArc(std::string from_node, graph_msgs::GraphArc new_arc);
 	//! Modify the pos of an arc
 	int setArcPos(std::string from_id_old, std::string from_id, std::string to_id_old, std::string to_id);
+	//! Modify the arc info
+	int setArc(std::string from_id, graph_msgs::GraphArc arc);
 	//! Gets the arc between two nodes
 	int getArcBetweenNodes(std::string from_node, std::string to_node);
 	//! Gets the index of the node using his ID

@@ -14,6 +14,8 @@ NETWORKVIEW.NetworkView = function (options) {
   this.nodes = new vis.DataSet();
   this.edges = new vis.DataSet();
 
+  var self = this;
+
   // SERVICES
 
   // add_node service
@@ -68,7 +70,6 @@ NETWORKVIEW.NetworkView = function (options) {
   })
 
   // graph callback
-  var self = this;
   this.rosNodesTopic.subscribe(function (message) {
 
     if (self.hasChanged(message)) {
@@ -88,6 +89,7 @@ NETWORKVIEW.NetworkView = function (options) {
       self.stabilize();
       //self.rosNodesTopic.unsubscribe();
     }
+    self.message = message;
 
   });
 
@@ -138,10 +140,12 @@ NETWORKVIEW.NetworkView = function (options) {
             callback(data);
           } else {
             console.log("Error: The edge already exists");
+            callback();
           }
         }
         else {
           console.log("Error: Graph cycles are not allowed");
+          callback();
         }
       },
 
@@ -181,6 +185,7 @@ NETWORKVIEW.NetworkView = function (options) {
           }
           else {
             console.log("Error: Graph cycles are not allowed");
+            callback();
           }
         }
       },
@@ -217,9 +222,29 @@ NETWORKVIEW.NetworkView = function (options) {
   };
 
   // FUNCTIONS
+
   function editNode(data, cancelAction, callback) {
-    document.getElementById('node-label').value = data.label;
+    // Load actual values
+    var node;
+    self.message.nodes.forEach(n => {
+      if (n.id === data.id) {
+        node = n;
+      }
+    });
+    document.getElementById('node-label').value = node.name;
+    document.getElementById('node-zone').value = node.zone;
+    data.zone = node.zone;
+    document.getElementById('node-x').value = node.pose.x;
+    data.x = node.pose.x;
+    document.getElementById('node-y').value = node.pose.y;
+    data.y = node.pose.y;
+    document.getElementById('node-theta').value = node.pose.theta;
+    data.theta = node.pose.theta;
+    document.getElementById('node-frame').value = node.pose.frame_id;
+    data.frame = node.pose.frame_id;
+    // Save new values
     document.getElementById('node-saveButton').onclick = saveNodeData.bind(this, data, callback);
+    // Cancel
     document.getElementById('node-cancelButton').onclick = cancelAction.bind(this, callback);
     document.getElementById('node-popUp').style.display = 'block';
   }
@@ -242,7 +267,14 @@ NETWORKVIEW.NetworkView = function (options) {
     var request = new ROSLIB.ServiceRequest({
       node: {
         id: data.id,
-        name: data.label
+        name: data.label,
+        zone: data.zone,
+        pos: {
+          x: data.x,
+          y: data.y,
+          theta: data.theta,
+          frame: data.frame
+        }
       }
     });
     self.setNodeService.callService(request, function (result) {

@@ -193,9 +193,15 @@ int Graph::addArc(std::string from_node_id, std::string to_node_id, float weight
 */
 int Graph::setArcPos(std::string from_id_old, std::string from_id, std::string to_id_old, std::string to_id)
 {
-    dijkstraGraph->setArcPos(from_id_old, from_id, to_id_old, to_id);
+    return dijkstraGraph->setArcPos(from_id_old, from_id, to_id_old, to_id);
+}
 
-    return 0;
+/*! \fn int Graph::setArc(string from_id, graph_msgs::GraphArc arc)
+ * 	\brief Modify the pos of an arc
+*/
+int Graph::setArc(std::string from_id, graph_msgs::GraphArc arc)
+{
+    return dijkstraGraph->setArc(from_id, arc);
 }
 
 /*! \fn std::vector<graph_msgs::GraphNode> Graph::getNodes()

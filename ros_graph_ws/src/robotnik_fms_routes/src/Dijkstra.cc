@@ -555,20 +555,40 @@ int Dijkstra::setArcPos(std::string from_id_old, std::string from_id, std::strin
 	}
 
 	return 0;
+}
 
-	/*int node_pos = -1; // Id del nodo
+/*! \fn string Dijkstra::setArc(string from_id, graph_msgs::GraphArc arc)
+ * 	\brief Modify the arc info
+*/
+int Dijkstra::setArc(string from_id, graph_msgs::GraphArc arc)
+{
+	int node_pos = -1; //Id del nodo
 
-	
+	if (bEdit)
+	{ // Edición activa
+		ROS_ERROR("Dijkstra::setArc: Error: Graph's edition must be enabled");
+		return -2;
+	}
 
-	node_pos = getNodeIndex(from_node_id);
+	node_pos = getNodeIndex(from_id);
 
 	if (node_pos < 0)
 	{
-		ROS_ERROR("Dijkstra::addArc: Error: Incorrect node id (%s)", from_node_id);
+		ROS_ERROR("Dijkstra::setArc: Error: Incorrect node id (%s)", from_id);
 		return -1;
 	}
 
-	return vNodes[node_pos]->node.arc_list.addNodeAdjacent(new_arc);*/
+	int arc_pos = vNodes[node_pos]->getArcIndex(arc.node_dest);
+
+	if (arc_pos < 0)
+	{
+		ROS_ERROR("Dijkstra::setArc: Error: Arc from %s to %s not exist", from_id, arc.node_dest);
+		return -1;
+	}
+
+	vNodes[node_pos]->node.arc_list[arc_pos] = arc;
+
+	return 0;
 }
 
 /*! \fn int Dijkstra::resetRoutes()

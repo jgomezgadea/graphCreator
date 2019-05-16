@@ -53,6 +53,7 @@
 
 #include <graph_msgs/Node.h>
 #include <graph_msgs/NodeId.h>
+#include <graph_msgs/Arc.h>
 #include <graph_msgs/ArcId.h>
 
 #include <tf/transform_datatypes.h>
@@ -103,8 +104,9 @@ protected:
     ros::ServiceServer set_node_service_server_;    // service server
     ros::ServiceServer delete_node_service_server_; // service server
 
-    ros::ServiceServer add_arc_service_server_;     // TODO
-    ros::ServiceServer set_arc_pos_service_server_; // TODO
+    ros::ServiceServer add_arc_service_server_;     // service server
+    ros::ServiceServer set_arc_pos_service_server_; // service server
+    ros::ServiceServer set_arc_service_server_;     // service server
     ros::ServiceServer delete_arc_service_server_;  // service server
 
     ros::ServiceServer block_node_service_server_;         // service server
@@ -215,6 +217,8 @@ protected:
     bool addArcServiceServerCb(graph_msgs::ArcId::Request &request, graph_msgs::ArcId::Response &response);
     //! Callback for set pos of an arc
     bool setArcPosServiceServerCb(graph_msgs::ArcId::Request &request, graph_msgs::ArcId::Response &response);
+    //! Callback for set info of an arc
+    bool setArcServiceServerCb(graph_msgs::Arc::Request &request, graph_msgs::Arc::Response &response);
     //! Callback for delete an arc
     bool deleteArcServiceServerCb(graph_msgs::ArcId::Request &request, graph_msgs::ArcId::Response &response);
 
@@ -771,6 +775,7 @@ int GraphNode::rosSetup()
 
     add_arc_service_server_ = pnh_.advertiseService("add_arc", &GraphNode::addArcServiceServerCb, this);
     set_arc_pos_service_server_ = pnh_.advertiseService("set_arc_pos", &GraphNode::setArcPosServiceServerCb, this);
+    set_arc_service_server_ = pnh_.advertiseService("set_arc", &GraphNode::setArcServiceServerCb, this);
     delete_arc_service_server_ = pnh_.advertiseService("delete_arc", &GraphNode::deleteArcServiceServerCb, this);
 
     block_node_service_server_ = pnh_.advertiseService("block_node", &GraphNode::blockNodeServiceServerCb, this);
@@ -1782,6 +1787,29 @@ bool GraphNode::setArcPosServiceServerCb(graph_msgs::ArcId::Request &request, gr
         response.success = false;
     }
     response.message = "SetArcPosServiceServer Robot: Setting new arc pos: " + request.from_id + " to " + request.to_id;
+
+    pthread_mutex_unlock(&mutexGraph);
+    return true;
+}
+
+/*! \fn bool GraphNode::setArcServiceServerCb(graph_msgs::Arc::Request &request, graph_msgs::Arc::Response &response)
+* 	\brief Adds a new node to the graph
+    */
+bool GraphNode::setArcServiceServerCb(graph_msgs::Arc::Request &request, graph_msgs::Arc::Response &response)
+{
+    pthread_mutex_lock(&mutexGraph);
+    int msg = graph_route->setArc(request.from_id, request.arc);
+    response.message = "SetArcPosServiceServer Robot: Setting arc info: ";
+    if (msg == 0)
+    {
+        response.message += OK;
+        response.success = true;
+    }
+    else
+    {
+        response.message += "Error setting arc info";
+        response.success = false;
+    }
 
     pthread_mutex_unlock(&mutexGraph);
     return true;

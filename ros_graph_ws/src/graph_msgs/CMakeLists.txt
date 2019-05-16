@@ -21,6 +21,7 @@ add_service_files(
   ReloadGraph.srv
   Node.srv
   NodeId.srv
+  Arc.srv
   ArcId.srv
 )
 

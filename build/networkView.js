@@ -109,17 +109,7 @@ NETWORKVIEW.NetworkView = function (options) {
 
       // ADD NODE function
       addNode: function (data, callback) {
-        var request = new ROSLIB.ServiceRequest({
-          node: {
-            id: data.id,
-            zone: 0,
-            name: data.label
-          }
-        });
-        self.addNodeService.callService(request, function (result) {
-          console.log(result.message);
-        });
-        callback(data);
+        addNode(data, cancelNodeEdit, callback);
       },
 
       // ADD EDGE function
@@ -223,6 +213,26 @@ NETWORKVIEW.NetworkView = function (options) {
 
   // FUNCTIONS
 
+  function addNode(data, cancelAction, callback) {
+    // Load actual values
+    document.getElementById('node-label').value = data.label;
+    document.getElementById('node-zone').value = 0;
+    data.zone = 0;
+    document.getElementById('node-x').value = 0;
+    data.x = 0;
+    document.getElementById('node-y').value = 0;
+    data.y = 0;
+    document.getElementById('node-theta').value = 0;
+    data.theta = 0;
+    document.getElementById('node-frame').value = "map";
+    data.frame = "map";
+    // Save new values
+    document.getElementById('node-saveButton').onclick = saveNodeData.bind(this, data, callback);
+    // Cancel
+    document.getElementById('node-cancelButton').onclick = cancelAction.bind(this, callback);
+    document.getElementById('node-popUp').style.display = 'block';
+  }
+
   function editNode(data, cancelAction, callback) {
     // Load actual values
     var node;
@@ -243,7 +253,7 @@ NETWORKVIEW.NetworkView = function (options) {
     document.getElementById('node-frame').value = node.pose.frame_id;
     data.frame = node.pose.frame_id;
     // Save new values
-    document.getElementById('node-saveButton').onclick = saveNodeData.bind(this, data, callback);
+    document.getElementById('node-saveButton').onclick = editNodeData.bind(this, data, callback);
     // Cancel
     document.getElementById('node-cancelButton').onclick = cancelAction.bind(this, callback);
     document.getElementById('node-popUp').style.display = 'block';
@@ -261,19 +271,52 @@ NETWORKVIEW.NetworkView = function (options) {
     callback(null);
   }
 
-  // Save to node the new info
+  // Save to the new node the info
   function saveNodeData(data, callback) {
     data.label = document.getElementById('node-label').value;
+    data.zone = document.getElementById('node-zone').value;
+    data.x = document.getElementById('node-x').value;
+    data.y = document.getElementById('node-y').value;
+    data.theta = document.getElementById('node-theta').value;
+    data.frame = document.getElementById('node-frame').value;
     var request = new ROSLIB.ServiceRequest({
       node: {
         id: data.id,
         name: data.label,
-        zone: data.zone,
-        pos: {
-          x: data.x,
-          y: data.y,
-          theta: data.theta,
-          frame: data.frame
+        zone: parseInt(data.zone),
+        pose: {
+          x: parseFloat(data.x),
+          y: parseFloat(data.y),
+          theta: parseFloat(data.theta),
+          frame_id: data.frame
+        }
+      }
+    });
+    self.addNodeService.callService(request, function (result) {
+      console.log(result.message);
+    });
+    clearNodePopUp();
+    callback(data);
+  }
+
+  // Edit the node the info
+  function editNodeData(data, callback) {
+    data.label = document.getElementById('node-label').value;
+    data.zone = document.getElementById('node-zone').value;
+    data.x = document.getElementById('node-x').value;
+    data.y = document.getElementById('node-y').value;
+    data.theta = document.getElementById('node-theta').value;
+    data.frame = document.getElementById('node-frame').value;
+    var request = new ROSLIB.ServiceRequest({
+      node: {
+        id: data.id,
+        name: data.label,
+        zone: parseInt(data.zone),
+        pose: {
+          x: parseFloat(data.x),
+          y: parseFloat(data.y),
+          theta: parseFloat(data.theta),
+          frame_id: data.frame
         }
       }
     });

@@ -46,6 +46,13 @@ NETWORKVIEW.NetworkView = function (options) {
     serviceType: options.rosAddArcMsg || 'graph_msgs/ArcId'
   })
 
+  // set_arc service
+  this.setArcService = new ROSLIB.Service({
+    ros: options.ros,
+    name: options.rosSetArcService || '/robotnik_fms_routes_node/set_arc',
+    serviceType: options.rosSetArcMsg || 'graph_msgs/Arc'
+  })
+
   // set_arc_pos service
   this.setArcPosService = new ROSLIB.Service({
     ros: options.ros,
@@ -112,6 +119,22 @@ NETWORKVIEW.NetworkView = function (options) {
         addNode(data, cancelNodeEdit, callback);
       },
 
+      // EDIT NODE function
+      editNode: function (data, callback) {
+        editNode(data, cancelNodeEdit, callback);
+      },
+
+      // DELETE NODE function
+      deleteNode: function (data, callback) {
+        var request = new ROSLIB.ServiceRequest({
+          node_id: data.nodes[0]
+        });
+        self.deleteNodeService.callService(request, function (result) {
+          console.log(result.message);
+        });
+        callback(data);
+      },
+
       // ADD EDGE function
       addEdge: function (data, callback) {
         // Check is not a cycle
@@ -130,18 +153,13 @@ NETWORKVIEW.NetworkView = function (options) {
             callback(data);
           } else {
             console.log("Error: The edge already exists");
-            callback();
+            callback(null);
           }
         }
         else {
           console.log("Error: Graph cycles are not allowed");
-          callback();
+          callback(null);
         }
-      },
-
-      // EDIT NODE function
-      editNode: function (data, callback) {
-        editNode(data, cancelNodeEdit, callback);
       },
 
       // EDIT EDGE function
@@ -170,25 +188,14 @@ NETWORKVIEW.NetworkView = function (options) {
               self.edges.remove(old[0] + " " + old[1]);
             } else {
               console.log("Error: The edge already exists");
-              callback();
+              callback(null);
             }
           }
           else {
             console.log("Error: Graph cycles are not allowed");
-            callback();
+            callback(null);
           }
         }
-      },
-
-      // DELETE NODE function
-      deleteNode: function (data, callback) {
-        var request = new ROSLIB.ServiceRequest({
-          node_id: data.nodes[0]
-        });
-        self.deleteNodeService.callService(request, function (result) {
-          console.log(result.message);
-        });
-        callback(data);
       },
 
       // DELETE EDGE function
@@ -327,33 +334,32 @@ NETWORKVIEW.NetworkView = function (options) {
     callback(data);
   }
 
-  function editEdgeWithoutDrag(data, callback) {
-    // filling in the popup DOM elements
-    document.getElementById('edge-label').value = data.label;
-    document.getElementById('edge-saveButton').onclick = saveEdgeData.bind(this, data, callback);
-    document.getElementById('edge-cancelButton').onclick = cancelEdgeEdit.bind(this, callback);
-    document.getElementById('edge-popUp').style.display = 'block';
-  }
-
   function clearEdgePopUp() {
     document.getElementById('edge-saveButton').onclick = null;
     document.getElementById('edge-cancelButton').onclick = null;
     document.getElementById('edge-popUp').style.display = 'none';
   }
 
-  function cancelEdgeEdit(callback) {
+  function cancelEdgeEdit() {
     clearEdgePopUp();
-    callback(null);
   }
 
-  function saveEdgeData(data, callback) {
-    if (typeof data.to === 'object')
-      data.to = data.to.id
-    if (typeof data.from === 'object')
-      data.from = data.from.id
-    data.label = document.getElementById('edge-label').value;
+  function saveEdgeData(data) {
+    data.max_speed = document.getElementById('edge-speed').value;
+    data.distance = document.getElementById('edge-dist').value;
     clearEdgePopUp();
-    callback(data);
+
+    var request = new ROSLIB.ServiceRequest({
+      from_id: data.from,
+      arc: {
+        node_dest: data.to,
+        max_speed: parseFloat(data.max_speed),
+        distance: parseFloat(data.distance)
+      }
+    });
+    self.setArcService.callService(request, function (result) {
+      console.log(result.message);
+    });
   }
 
   this.network = new vis.Network(this.container, this.data, this.options);
@@ -364,12 +370,35 @@ NETWORKVIEW.NetworkView = function (options) {
     params.event = "[original event]";
     document.getElementById('eventSpan').innerHTML = '<h2>Click event:</h2>' + JSON.stringify(params, null, 4);
     console.log('click event, getNodeAt returns: ' + this.getNodeAt(params.pointer.DOM));
-  });
+  });*/
   this.network.on("doubleClick", function (params) {
-      params.event = "[original event]";
-      document.getElementById('eventSpan').innerHTML = '<h2>doubleClick event:</h2>' + JSON.stringify(params, null, 4);
+    // MODIFY EDGE INFO
+    if (params.edges.length > 0 && params.nodes.length === 0) {
+      var edge = params.edges[0].split(" ");
+      var arc_msg
+      self.message.nodes.forEach(node => {
+        if (node.id == edge[0]) {
+          node.arc_list.forEach(arc => {
+            if (arc.node_dest == edge[1]) {
+              arc_msg = arc
+            }
+          })
+        }
+      });
+      var data = {
+        from: edge[0],
+        to: edge[1]
+      };
+      // filling in the popup DOM elements
+      document.getElementById('edge-speed').value = arc_msg.max_speed;
+      document.getElementById('edge-dist').value = arc_msg.distance;
+      document.getElementById('edge-saveButton').onclick = saveEdgeData.bind(this, data);
+      document.getElementById('edge-cancelButton').onclick = cancelEdgeEdit.bind(this);
+      document.getElementById('edge-popUp').style.display = 'block';
+    }
+
   });
-  this.network.on("oncontext", function (params) {
+  /*this.network.on("oncontext", function (params) {
       params.event = "[original event]";
       document.getElementById('eventSpan').innerHTML = '<h2>oncontext (right click) event:</h2>' + JSON.stringify(params, null, 4);
   });

@@ -58482,7 +58482,7 @@ var ManipulationSystem = function () {
         if (this.edgeBeingEditedId !== undefined) {
           var edge = this.body.edges[this.edgeBeingEditedId];
           this._performEditEdge(edge.from, edge.to);
-          return;
+          return; //Commented to change params and edit pose after
         }
       }
       if (this.guiEnabled === true) {

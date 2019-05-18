@@ -1799,10 +1799,10 @@ bool GraphNode::setArcServiceServerCb(graph_msgs::Arc::Request &request, graph_m
 {
     pthread_mutex_lock(&mutexGraph);
     int msg = graph_route->setArc(request.from_id, request.arc);
-    response.message = "SetArcPosServiceServer Robot: Setting arc info: ";
+    response.message = "SetArcServiceServer Robot: Setting arc info: ";
     if (msg == 0)
     {
-        response.message += OK;
+        response.message += "OK";
         response.success = true;
     }
     else

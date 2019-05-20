@@ -116,76 +116,60 @@ NETWORKVIEW.NetworkView = function (options) {
 
       // ADD NODE function
       addNode: function (data, callback) {
-        addNode(data, cancelNodeEdit, callback);
+        if (document.getElementById('edge-popUp').style.display === "block" ||
+          document.getElementById('node-popUp').style.display === "block") {
+          callback(null);
+        } else {
+          addNode(data, cancelNodeEdit, callback);
+        }
       },
 
       // EDIT NODE function
       editNode: function (data, callback) {
-        editNode(data, cancelNodeEdit, callback);
+        if (document.getElementById('edge-popUp').style.display === "block" ||
+          document.getElementById('node-popUp').style.display === "block") {
+          callback(null);
+        } else {
+          editNode(data, cancelNodeEdit, callback);
+        }
       },
 
       // DELETE NODE function
       deleteNode: function (data, callback) {
-        var request = new ROSLIB.ServiceRequest({
-          node_id: data.nodes[0]
-        });
-        self.deleteNodeService.callService(request, function (result) {
-          console.log(result.message);
-        });
-        callback(data);
+        if (document.getElementById('edge-popUp').style.display === "block" ||
+          document.getElementById('node-popUp').style.display === "block") {
+          callback(null);
+        } else {
+          var request = new ROSLIB.ServiceRequest({
+            node_id: data.nodes[0]
+          });
+          self.deleteNodeService.callService(request, function (result) {
+            console.log(result.message);
+          });
+          callback(data);
+        }
       },
 
       // ADD EDGE function
       addEdge: function (data, callback) {
-        // Check is not a cycle
-        if (data.from !== data.to) {
-          // Check edge not exist
-          if (self.edges.get(data.from + " " + data.to) === null) {
-            var request = new ROSLIB.ServiceRequest({
-              from_id: data.from,
-              to_id: data.to
-            });
-            self.addArcService.callService(request, function (result) {
-              console.log(result.message);
-            });
-            data.arrows = 'to';
-            data.id = data.from + " " + data.to;
-            callback(data);
-          } else {
-            console.log("Error: The edge already exists");
-            callback(null);
-          }
-        }
-        else {
-          console.log("Error: Graph cycles are not allowed");
+        if (document.getElementById('edge-popUp').style.display === "block" ||
+          document.getElementById('node-popUp').style.display === "block") {
           callback(null);
-        }
-      },
-
-      // EDIT EDGE function
-      editEdge: function (data, callback) {
-        var old = data.id.split(" ");
-        // Checking if a modification has been realized
-        if (old[0] === data.from && old[1] === data.to) {
-          callback(data);
         } else {
           // Check is not a cycle
           if (data.from !== data.to) {
             // Check edge not exist
             if (self.edges.get(data.from + " " + data.to) === null) {
               var request = new ROSLIB.ServiceRequest({
-                from_id_old: old[0],
-                to_id_old: old[1],
                 from_id: data.from,
                 to_id: data.to
               });
-              self.setArcPosService.callService(request, function (result) {
+              self.addArcService.callService(request, function (result) {
                 console.log(result.message);
               });
-              data.id = data.from + " " + data.to;
               data.arrows = 'to';
+              data.id = data.from + " " + data.to;
               callback(data);
-              self.edges.remove(old[0] + " " + old[1]);
             } else {
               console.log("Error: The edge already exists");
               callback(null);
@@ -198,17 +182,63 @@ NETWORKVIEW.NetworkView = function (options) {
         }
       },
 
+      // EDIT EDGE function
+      editEdge: function (data, callback) {
+        if (document.getElementById('edge-popUp').style.display === "block" ||
+          document.getElementById('node-popUp').style.display === "block") {
+          callback(null);
+        } else {
+          var old = data.id.split(" ");
+          // Checking if a modification has been realized
+          if (old[0] === data.from && old[1] === data.to) {
+            callback(data);
+          } else {
+            // Check is not a cycle
+            if (data.from !== data.to) {
+              // Check edge not exist
+              if (self.edges.get(data.from + " " + data.to) === null) {
+                var request = new ROSLIB.ServiceRequest({
+                  from_id_old: old[0],
+                  to_id_old: old[1],
+                  from_id: data.from,
+                  to_id: data.to
+                });
+                self.setArcPosService.callService(request, function (result) {
+                  console.log(result.message);
+                });
+                data.id = data.from + " " + data.to;
+                data.arrows = 'to';
+                callback(data);
+                self.edges.remove(old[0] + " " + old[1]);
+              } else {
+                console.log("Error: The edge already exists");
+                callback(null);
+              }
+            }
+            else {
+              console.log("Error: Graph cycles are not allowed");
+              callback(null);
+            }
+          }
+        }
+      },
+
       // DELETE EDGE function
       deleteEdge: function (data, callback) {
-        var ids = data.edges[0].split(" ");
-        var request = new ROSLIB.ServiceRequest({
-          from_id: ids[0],
-          to_id: ids[1]
-        });
-        self.deleteArcService.callService(request, function (result) {
-          console.log(result.message);
-        });
-        callback(data);
+        if (document.getElementById('edge-popUp').style.display === "block" ||
+          document.getElementById('node-popUp').style.display === "block") {
+          callback(null);
+        } else {
+          var ids = data.edges[0].split(" ");
+          var request = new ROSLIB.ServiceRequest({
+            from_id: ids[0],
+            to_id: ids[1]
+          });
+          self.deleteArcService.callService(request, function (result) {
+            console.log(result.message);
+          });
+          callback(data);
+        }
       },
 
       // NODE STYLE

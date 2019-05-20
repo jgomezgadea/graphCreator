@@ -116,6 +116,22 @@ NETWORKVIEW.NetworkView = function (options) {
 
   // Add buttons callback
   this.options = {
+    "edges": {
+      "smooth": {
+        "type": "dynamic",
+        "forceDirection": "none"
+      }
+    },
+    "physics": {
+      "enabled": false,
+      "barnesHut": {
+        "springLength": 130,
+        "springConstant": 0.10,
+        "damping": 0.06
+      },
+      "maxVelocity": 10,
+      "minVelocity": 0.75
+    },
     interaction: { hover: true },
     manipulation: {
       enabled: true,
@@ -438,24 +454,24 @@ NETWORKVIEW.NetworkView = function (options) {
   /*this.network.on("oncontext", function (params) {
       params.event = "[original event]";
       document.getElementById('eventSpan').innerHTML = '<h2>oncontext (right click) event:</h2>' + JSON.stringify(params, null, 4);
-  });
-  this.network.on("dragStart", function (params) {
-      // There's no point in displaying this event on screen, it gets immediately overwritten
-      params.event = "[original event]";
-      console.log('dragStart Event:', params);
-      console.log('dragStart event, getNodeAt returns: ' + this.getNodeAt(params.pointer.DOM));
-  });
-  this.network.on("dragging", function (params) {
-      params.event = "[original event]";
-      document.getElementById('eventSpan').innerHTML = '<h2>dragging event:</h2>' + JSON.stringify(params, null, 4);
-  });
-  this.network.on("dragEnd", function (params) {
-      params.event = "[original event]";
-      document.getElementById('eventSpan').innerHTML = '<h2>dragEnd event:</h2>' + JSON.stringify(params, null, 4);
-      console.log('dragEnd Event:', params);
-      console.log('dragEnd event, getNodeAt returns: ' + this.getNodeAt(params.pointer.DOM));
-  });
-  this.network.on("zoom", function (params) {
+  });*/
+  /*this.network.on("dragStart", function (params) {
+    // There's no point in displaying this event on screen, it gets immediately overwritten
+    self.network.setOptions({ physics: { enabled: true } });
+
+  });*/
+  /*this.network.on("dragging", function (params) {
+    params.event = "[original event]";
+
+    self.network.setOptions({ physics: { enabled: true } });
+    self.network.setOptions({ physics: { enabled: false } });
+  });*/
+  /*this.network.on("dragEnd", function (params) {
+    params.event = "[original event]";
+
+    self.network.setOptions({ physics: { enabled: false } });
+  });*/
+  /*this.network.on("zoom", function (params) {
       document.getElementById('eventSpan').innerHTML = '<h2>zoom event:</h2>' + JSON.stringify(params, null, 4);
   });
   this.network.on("showPopup", function (params) {
@@ -496,6 +512,20 @@ NETWORKVIEW.NetworkView = function (options) {
 
 // Definition of methods
 
+// Toggle physics
+NETWORKVIEW.NetworkView.prototype.togglePhysics = function () {
+  if (document.getElementById('toggle_physics').innerHTML === "Enable physics") {
+    // Enable physics
+    this.network.startSimulation();
+    this.network.setOptions({ physics: { enabled: true } });
+    document.getElementById('toggle_physics').innerHTML = "Disable physics";
+  } else {
+    // Disable physics
+    this.options.physics.enabled = false;
+    this.network.setOptions({ physics: { enabled: false } });
+    document.getElementById('toggle_physics').innerHTML = "Enable physics";
+  }
+}
 
 // Save the graph (serialize on a JSON file)
 NETWORKVIEW.NetworkView.prototype.saveGraph = function () {

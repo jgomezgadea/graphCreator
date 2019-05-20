@@ -49,18 +49,23 @@
       });
 
       network.hidden = true;
+      toggle_physics.hidden = true;
       toggleView(); // TODO Quitar
     }
 
     // Change between map and graph
     function toggleView() {
       if (map.hidden) {
+        // Show map and hide network
         network.hidden = true;
+        toggle_physics.hidden = true;
         map.hidden = false;
         toggle_views.innerHTML = "View graph";
       } else {
+        // Show network and hide map
         map.hidden = true;
         network.hidden = false;
+        toggle_physics.hidden = false;
         networkView.stabilize();
         toggle_views.innerHTML = "View map";
         networkView.network.setSize(canvas_views.clientWidth, (canvas_views.clientWidth * 9) / 16);
@@ -83,6 +88,8 @@
   <button id="toggle_views" type="button" onclick="toggleView()">View graph</button>
 
   <button id="save_graph" type="button" onclick="networkView.saveGraph()">Save graph</button>
+
+  <button id="toggle_physics" type="button" onclick="networkView.togglePhysics()">Enable physics</button>
 
   <div id="canvas_views">
     <!-- MAP view -->

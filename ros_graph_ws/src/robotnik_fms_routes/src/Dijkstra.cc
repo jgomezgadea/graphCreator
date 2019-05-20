@@ -574,7 +574,7 @@ int Dijkstra::setArc(string from_id, graph_msgs::GraphArc arc)
 
 	if (node_pos < 0)
 	{
-		ROS_ERROR("Dijkstra::setArc: Error: Incorrect node id (%s)", from_id);
+		ROS_ERROR("Dijkstra::setArc: Error: Incorrect node id (%s)", from_id.c_str());
 		return -1;
 	}
 
@@ -582,7 +582,7 @@ int Dijkstra::setArc(string from_id, graph_msgs::GraphArc arc)
 
 	if (arc_pos < 0)
 	{
-		ROS_ERROR("Dijkstra::setArc: Error: Arc from %s to %s not exist", from_id, arc.node_dest);
+		ROS_ERROR("Dijkstra::setArc: Error: Arc from %s to %s not exist", from_id.c_str(), arc.node_dest.c_str());
 		return -1;
 	}
 

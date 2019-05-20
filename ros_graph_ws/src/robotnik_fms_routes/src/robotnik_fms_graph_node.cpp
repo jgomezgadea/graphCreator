@@ -59,6 +59,7 @@
 #include <tf/transform_datatypes.h>
 
 #include <std_msgs/Float32.h>
+#include <std_srvs/Trigger.h>
 
 #include <robot_local_control_msgs/RobotStatus.h>
 
@@ -99,6 +100,7 @@ protected:
     ros::ServiceServer route_service_server_;         // service server
     ros::ServiceServer reload_graph_service_server_;  // service server
     ros::ServiceServer get_node_info_service_server_; // service server
+    ros::ServiceServer save_graph_service_server_;    // service server
 
     ros::ServiceServer add_node_service_server_;    // service server
     ros::ServiceServer set_node_service_server_;    // service server
@@ -205,6 +207,8 @@ protected:
     bool reloadGraphServiceServerCb(robotnik_fms_msgs::ReloadGraph::Request &request, robotnik_fms_msgs::ReloadGraph::Response &response);
     // Callback for getting the node info
     bool getNodeInfoServiceServerCb(robotnik_fms_msgs::GetNodeInfo::Request &request, robotnik_fms_msgs::GetNodeInfo::Response &response);
+    //! Callback save graph
+    bool saveGraphServiceServerCb(std_srvs::Trigger::Request &request, std_srvs::Trigger::Response &response);
 
     //! Callback for add a node
     bool addNodeServiceServerCb(graph_msgs::Node::Request &request, graph_msgs::Node::Response &response);
@@ -768,6 +772,7 @@ int GraphNode::rosSetup()
     route_service_server_ = pnh_.advertiseService("get_route", &GraphNode::routeServiceServerCb, this);
     reload_graph_service_server_ = pnh_.advertiseService("reload_graph", &GraphNode::reloadGraphServiceServerCb, this);
     get_node_info_service_server_ = pnh_.advertiseService("get_node_info", &GraphNode::getNodeInfoServiceServerCb, this);
+    save_graph_service_server_ = pnh_.advertiseService("save_graph", &GraphNode::saveGraphServiceServerCb, this);
 
     add_node_service_server_ = pnh_.advertiseService("add_node", &GraphNode::addNodeServiceServerCb, this);
     set_node_service_server_ = pnh_.advertiseService("set_node", &GraphNode::setNodeServiceServerCb, this);
@@ -1920,6 +1925,30 @@ bool GraphNode::getNodeInfoServiceServerCb(robotnik_fms_msgs::GetNodeInfo::Reque
     response.msg = "Node found";
 
     response.node_info.used = graph_route->checkNodeFree(request.node_id, -1);
+    pthread_mutex_unlock(&mutexGraph);
+    return true;
+}
+
+// Callback handler for the service server
+bool GraphNode::saveGraphServiceServerCb(std_srvs::Trigger::Request &request, std_srvs::Trigger::Response &response)
+{
+    pthread_mutex_lock(&mutexGraph);
+
+    std::string res = graph_route->serialize();
+    response.message = "GraphNode::saveGraphServiceServer: ";
+
+    if (res != "OK")
+    {
+        response.success = false;
+        response.message += res;
+
+        pthread_mutex_unlock(&mutexGraph);
+        return false;
+    }
+
+    response.success = true;
+    response.message += res;
+
     pthread_mutex_unlock(&mutexGraph);
     return true;
 }

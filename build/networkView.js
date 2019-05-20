@@ -18,6 +18,13 @@ NETWORKVIEW.NetworkView = function (options) {
 
   // SERVICES
 
+  // save_graph service
+  this.saveGraphService = new ROSLIB.Service({
+    ros: options.ros,
+    name: options.rosSaveGraphService || '/robotnik_fms_routes_node/save_graph',
+    serviceType: options.rosSaveGraphMsg || 'std_srvs/Trigger'
+  })
+
   // add_node service
   this.addNodeService = new ROSLIB.Service({
     ros: options.ros,
@@ -488,6 +495,15 @@ NETWORKVIEW.NetworkView = function (options) {
 
 
 // Definition of methods
+
+
+// Save the graph (serialize on a JSON file)
+NETWORKVIEW.NetworkView.prototype.saveGraph = function () {
+  var request = new ROSLIB.ServiceRequest();
+  this.saveGraphService.callService(request, function (result) {
+    console.log(result.message);
+  });
+}
 
 NETWORKVIEW.NetworkView.prototype.addNode = function (node) {
   this.nodes.add({ id: node.id, label: node.name || "Node " + node.id })

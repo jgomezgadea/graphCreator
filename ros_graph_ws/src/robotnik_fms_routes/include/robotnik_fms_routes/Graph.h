@@ -141,9 +141,10 @@ public:
 	//! Get iResRobot from ID
 	int getResRobotFromId(std::string iIDNode);
 
-private:
 	//! Serializes a json file, saving the graph
 	std::string serialize();
+
+private:
 	//! Deserializes a json file, extracting the graph
 	std::string deserialize();
 };

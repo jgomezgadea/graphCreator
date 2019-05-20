@@ -238,7 +238,7 @@ createjs.deprecate = function(fallbackMethod, name) {
 	"use strict";
 	return function() {
 		var msg = "Deprecated property or method '"+name+"'. See docs for info.";
-		console && (console.warn ? console.warn(msg) : console.log(msg));
+		//console && (console.warn ? console.warn(msg) : console.log(msg)); Warn for deprecated method
 		return fallbackMethod && fallbackMethod.apply(this, arguments);
 	}
 };

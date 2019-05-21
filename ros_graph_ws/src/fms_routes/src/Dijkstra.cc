@@ -9,7 +9,7 @@
 */
 
 #include <ros/ros.h>
-#include <robotnik_fms_routes/Dijkstra.h>
+#include <fms_routes/Dijkstra.h>
 
 using namespace std;
 

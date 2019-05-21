@@ -9,7 +9,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <ros/ros.h>
-#include <robotnik_fms_routes/Graph.h>
+#include <fms_routes/Graph.h>
 
 /*! \fn Graph::Graph(std::string graph_path)
  * 	\brief Constructor

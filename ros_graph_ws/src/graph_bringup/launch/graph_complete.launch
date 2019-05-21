@@ -11,7 +11,7 @@
     <include file="$(find rosbridge_server)/launch/rosbridge_websocket.launch" />
 
     <!-- routes  -->
-    <node pkg="robotnik_fms_routes" type="robotnik_fms_routes_node" name="robotnik_fms_routes_node" output="screen" respawn="false" launch-prefix="$(arg launch_prefix)">
+    <node pkg="fms_routes" type="fms_routes_node" name="fms_routes_node" output="screen" respawn="false" launch-prefix="$(arg launch_prefix)">
         <param name="graph_file" value="$(find graph_bringup)/config/graph.json" type="string" />
         <rosparam command="load" file="$(find graph_bringup)/config/config_routes.yaml" />
     </node>

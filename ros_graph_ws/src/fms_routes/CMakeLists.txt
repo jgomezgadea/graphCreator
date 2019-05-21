@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(robotnik_fms_routes)
+project(fms_routes)
 
 add_compile_options(-std=c++11)
 
@@ -48,24 +48,24 @@ include_directories(
 
 
 ## Declare a C++ executable
-add_executable(robotnik_fms_routes_node
-                        include/robotnik_fms_routes/timer.h
-                        include/robotnik_fms_routes/Dijkstra.h
-                        include/robotnik_fms_routes/Graph.h
-                        src/robotnik_fms_graph_node.cpp
+add_executable(fms_routes_node
+                        include/fms_routes/timer.h
+                        include/fms_routes/Dijkstra.h
+                        include/fms_routes/Graph.h
+                        src/fms_graph_node.cpp
                         src/Dijkstra.cc src/Graph.cc)
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
-add_dependencies(robotnik_fms_routes_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS}  robot_local_control_msgs_generate_msgs_cpp robotnik_msgs_generate_msgs_cpp robotnik_fms_msgs_generate_msgs_cpp)
+add_dependencies(fms_routes_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS}  robot_local_control_msgs_generate_msgs_cpp robotnik_msgs_generate_msgs_cpp robotnik_fms_msgs_generate_msgs_cpp)
 
 ## Specify libraries to link a library or executable target against
-target_link_libraries(robotnik_fms_routes_node
+target_link_libraries(fms_routes_node
    ${catkin_LIBRARIES}
    xerces-c
 )
 
-install(TARGETS robotnik_fms_routes_node
+install(TARGETS fms_routes_node
    ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
    LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
    RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}

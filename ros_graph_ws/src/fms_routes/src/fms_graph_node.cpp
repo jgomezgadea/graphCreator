@@ -1,4 +1,4 @@
-/** \file robotnik_fms_graph_node.cpp
+/** \file fms_graph_node.cpp
  * \author Robotnik Automation S.L.L.
  * \version 1.0
  * \date    2016
@@ -20,7 +20,7 @@
 */
 
 #include <ros/ros.h>
-#include <robotnik_fms_routes/Graph.h>
+#include <fms_routes/Graph.h>
 #include <pthread.h>
 #include <string>
 #include <vector>
@@ -1403,7 +1403,7 @@ bool GraphNode::routeServiceServerCb(robotnik_fms_msgs::GetRoute::Request &reque
 
         if (graph_route->getRoute(request.from_node, request.to_node, &v_nodes, &v_velocities) != 0)
         {
-            ROS_ERROR("GraphNode::routeServiceServerCb: Error getting route between %d and %d", request.from_node, request.to_node);
+            ROS_ERROR("GraphNode::routeServiceServerCb: Error getting route between %s and %s", request.from_node, request.to_node);
             pthread_mutex_unlock(&mutexGraph);
             response.ret = false;
             response.msg = "Route Not Found";
@@ -1528,7 +1528,7 @@ bool GraphNode::checkNode(bool bBlock, std::string idNode, int iRobot, string *m
             // Unblock OK
             if (graph_route->getRobotFromId(node_info.id) == iRobot)
             {
-                *msg = "Node:" + idNode + " Unblock Possible by Robot:%d " + std::to_string(graph_route->getRobotFromId(node_info.id));
+                *msg = "Node:" + idNode + " Unblock Possible by Robot: %s " + std::to_string(graph_route->getRobotFromId(node_info.id));
                 return true;
             }
             else
@@ -1597,7 +1597,7 @@ bool GraphNode::reserveNode(bool bReserve, std::string idNode, int iRobot, strin
             // Unblock OK
             if (graph_route->getRobotFromId(node_info.id) == iRobot)
             {
-                *msg = "Node:" + idNode + " Unreserved OK by Robot:%d " + std::to_string(iRobot);
+                *msg = "Node:" + idNode + " Unreserved OK by Robot: " + std::to_string(iRobot);
                 graph_route->reserveNode(-1, idNode);
                 //node_info->bReserved=false;
                 return true;
@@ -1670,7 +1670,7 @@ bool GraphNode::blockNode(bool bBlock, std::string idNode, int iRobot, string *m
             // Unblock OK
             if (graph_route->getRobotFromId(node_info.id) == iRobot)
             {
-                *msg = "Node:" + idNode + " Unblocked OK by Robot:%d " + std::to_string(iRobot);
+                *msg = "Node:" + idNode + " Unblocked OK by Robot: " + std::to_string(iRobot);
                 //node_info->bBlocked=false;
                 return true;
             }
@@ -1916,7 +1916,7 @@ bool GraphNode::getNodeInfoServiceServerCb(robotnik_fms_msgs::GetNodeInfo::Reque
     {
         response.ret = false;
         response.msg = "Node NOT found";
-        ROS_ERROR("GraphNode::getNodeInfoServiceServerCb: node %d doesn't exist", request.node_id);
+        ROS_ERROR("GraphNode::getNodeInfoServiceServerCb: node %s doesn't exist", request.node_id);
         pthread_mutex_unlock(&mutexGraph);
         return false;
     }
@@ -1956,7 +1956,7 @@ bool GraphNode::saveGraphServiceServerCb(std_srvs::Trigger::Request &request, st
 // MAIN
 int main(int argc, char **argv)
 {
-    ros::init(argc, argv, "robotnik_fms_graph_node");
+    ros::init(argc, argv, "fms_graph_node");
     ros::NodeHandle n;
     GraphNode controller(n);
     controller.start();

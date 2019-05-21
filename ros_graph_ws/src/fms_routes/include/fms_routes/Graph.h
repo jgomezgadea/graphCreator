@@ -13,7 +13,7 @@
 #include <fstream>
 #include <string>
 
-#include <robotnik_fms_routes/Dijkstra.h>
+#include <fms_routes/Dijkstra.h>
 #include <geometry_msgs/Pose2D.h>
 #include <graph_msgs/GraphNodeArray.h>
 

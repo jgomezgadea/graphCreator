@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>robotnik_fms_routes</name>
+  <name>fms_routes</name>
   <version>0.0.0</version>
-  <description>The robotnik_fms_routes package</description>
+  <description>The fms_routes package</description>
 
  
   <maintainer email="jmaparicio@robotnik.es">Jesús Aparicio</maintainer>

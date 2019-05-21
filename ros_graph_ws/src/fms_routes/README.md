@@ -1,4 +1,4 @@
-# robotnik_fms_routes
+# fms_routes
 
 Component that keeps a graph of the positions where the robot can move and the magnets that interconnect them.
 
@@ -9,29 +9,29 @@ Component that keeps a graph of the positions where the robot can move and the m
  
 ## Topic
 ### Publishers
-* /robotnik_fms_routes_node/state (robotnik_fms_routes_node/State)
+* /fms_routes_node/state (fms_routes_node/State)
   * publishes the state of the component
 
 ## Services
-* /robotnik_fms_routes_node/get_route (robotnik_fms_routes_node/GetRoute)
+* /fms_routes_node/get_route (fms_routes_node/GetRoute)
   * finds the shortest path between two nodes and returns the list of nodes & magnets that are in the route
-* /robotnik_fms_routes_node/reload_graph (robotnik_fms_routes_node/ReloadGraph)
+* /fms_routes_node/reload_graph (fms_routes_node/ReloadGraph)
   * reloads the file with the routes graph
-* /robotnik_fms_routes_node/get_node_info (robotnik_fms_routes_node/GetNodeInfo)
+* /fms_routes_node/get_node_info (fms_routes_node/GetNodeInfo)
   * gets the node detailed information
  
  
 ## Bringup
 
 ```
-$> roslaunch robotnik_fms_bringup robotnik_fms_routes.launch
+$> roslaunch robotnik_fms_bringup fms_routes.launch
 ```
 
 ## Examples 
 
 ### Requesting the route from node 1 to node 3:
 ```
-$> rosservice call /robotnik_fms_routes_node/get_route "from_node: 1 to_node: 3"
+$> rosservice call /fms_routes_node/get_route "from_node: 1 to_node: 3"
 ```
 Returns:
 
@@ -73,7 +73,7 @@ magnet_positions:
 
 ### Getting node info:
 ```
-$> rosservice call /robotnik_fms_routes_node/get_node_info "node_id: 1" 
+$> rosservice call /fms_routes_node/get_node_info "node_id: 1" 
 node_info: 
   id: 1
   position: 
@@ -96,11 +96,11 @@ msg: Node found
 ### Reloading the graph:
 Case 1. No param is provided. It will reload the current xml file loaded when startup.
 ```
-$> rosservice call /robotnik_fms_routes_node/reload_graph "file: ''" 
+$> rosservice call /fms_routes_node/reload_graph "file: ''" 
 ret: True
 ```
 Case 2. Absolute path is provided. It will load the new xml graph in memory.
 ```
-$> rosservice call /robotnik_fms_routes_node/reload_graph "file: '/home/user/Desktop/new_graph.xml'" 
+$> rosservice call /fms_routes_node/reload_graph "file: '/home/user/Desktop/new_graph.xml'" 
 > ret: True
 ```

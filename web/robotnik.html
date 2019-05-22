@@ -20,10 +20,12 @@
     /**
      * Setup all visualization elements when the page is loaded.
      */
-    var mapView;
     var nodes;
     var edges;
     var ros;
+    var map_image;
+    var mapView;
+    var networkView;
 
     function init() {
 
@@ -32,25 +34,31 @@
         url: 'ws://localhost:9090'
       });
 
-      mapView = new MAPVIEW.MapView({
+      /*mapView = new MAPVIEW.MapView({
         ros: ros,
         divID: 'map',
         width: canvas_views.clientWidth - 14,
         height: ((canvas_views.clientWidth - 14) * 9) / 16
-      });
+      });*/
 
       networkView = new NETWORKVIEW.NetworkView({
         divID: 'network',
         ros: ros,
-        rosNodesTopic: '/robotnik_fms_routes_node/graph',
+        rosNodesTopic: '/fms_routes_node/graph',
         rosNodesMsg: 'graph_msgs/GraphNodeArray',
-        rosAddNodeService: '/robotnik_fms_routes_node/add_node',
+        rosAddNodeService: '/fms_routes_node/add_node',
         rosAddNodeMsg: 'graph_msgs/Node'
       });
 
       network.hidden = true;
       toggle_physics.hidden = true;
       toggleView(); // TODO Quitar
+
+      /*map_image = convertCanvasToImage(mapView.viewer.scene.canvas);
+      networkView.network.on("beforeDrawing", function (ctx) {
+        map_image = convertCanvasToImage(mapView.viewer.scene.canvas);
+        ctx.drawImage(map_image, -100, -100); //document.getElementById("scream")
+      });*/
     }
 
     // Change between map and graph
@@ -64,6 +72,7 @@
       } else {
         // Show network and hide map
         map.hidden = true;
+        //map.visibility = "hidden";
         network.hidden = false;
         toggle_physics.hidden = false;
         networkView.stabilize();
@@ -73,11 +82,18 @@
     }
 
     // Scale the canvas to web
-    function resizedCanvas() {
-      mapView.scene.canvas.height = (canvas_views.clientWidth * 9) / 16;
-      mapView.scene.canvas.width = canvas_views.clientWidth;
+    /*function resizedCanvas() {
+      mapView.viewer.scene.canvas.height = (canvas_views.clientWidth * 9) / 16;
+      mapView.viewer.scene.canvas.width = canvas_views.clientWidth;
       networkView.network.setSize(canvas_views.clientWidth, (canvas_views.clientWidth * 9) / 16);
     }
+
+    // Convert canvas to image
+    function convertCanvasToImage(canvas) {
+      var image = new Image();
+      image.src = canvas.toDataURL("image/png");
+      return image;
+    }*/
 
   </script>
 </head>
@@ -146,6 +162,7 @@
 
     <!-- NETWORK view -->
     <div id="network"></div>
+    <!--img id="scream" src="http://www.chestysoft.com/images/watermark.png" style="visibility: hidden;" alt="The Scream"-->
     <!--pre id="eventSpan"></pre-->
   </div>
 

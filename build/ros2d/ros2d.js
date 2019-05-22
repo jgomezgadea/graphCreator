@@ -164,10 +164,11 @@ ROS2D.OccupancyGrid = function (options) {
   // set the size
   this.width = message.info.width;
   this.height = message.info.height;
-  canvas.width = this.width;
-  canvas.height = this.height;
+  //canvas.width = this.width;
+  //canvas.height = this.height;
 
-  var imageData = context.createImageData(this.width, this.height);
+  this.imageData = context.createImageData(this.width, this.height);
+
   for (var row = 0; row < this.height; row++) {
     for (var col = 0; col < this.width; col++) {
       // determine the index into the map data
@@ -186,19 +187,20 @@ ROS2D.OccupancyGrid = function (options) {
       // determine the index into the image data array
       var i = (col + (row * this.width)) * 4;
       // r
-      imageData.data[i] = val;
+      this.imageData.data[i] = val;
       // g
-      imageData.data[++i] = val;
+      this.imageData.data[++i] = val;
       // b
-      imageData.data[++i] = val;
+      this.imageData.data[++i] = val;
       // a
-      imageData.data[++i] = 255;
+      this.imageData.data[++i] = 255;
     }
   }
-  context.putImageData(imageData, 0, 0);
+  context.putImageData(this.imageData, 0, 0);
 
   // create the bitmap
-  createjs.Bitmap.call(this, canvas);
+  //createjs.Bitmap.call(this, canvas);
+
   // change Y direction
   this.y = -this.height * message.info.resolution;
 

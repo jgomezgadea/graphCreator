@@ -16,81 +16,96 @@ NETWORKVIEW.NetworkView = function (options) {
 
   var self = this;
 
-  // SERVICES
+
+  /***************************
+   *        SERVICES
+   **************************/
 
   // save_graph service
   this.saveGraphService = new ROSLIB.Service({
     ros: options.ros,
-    name: options.rosSaveGraphService || '/robotnik_fms_routes_node/save_graph',
+    name: options.rosSaveGraphService || '/fms_routes_node/save_graph',
     serviceType: options.rosSaveGraphMsg || 'std_srvs/Trigger'
   })
 
   // add_node service
   this.addNodeService = new ROSLIB.Service({
     ros: options.ros,
-    name: options.rosAddNodeService || '/robotnik_fms_routes_node/add_node',
+    name: options.rosAddNodeService || '/fms_routes_node/add_node',
     serviceType: options.rosAddNodeMsg || 'graph_msgs/Node'
   })
 
   // set_node service
   this.setNodeService = new ROSLIB.Service({
     ros: options.ros,
-    name: options.rosSetNodeService || '/robotnik_fms_routes_node/set_node',
+    name: options.rosSetNodeService || '/fms_routes_node/set_node',
     serviceType: options.rosSetNodeMsg || 'graph_msgs/Node'
   })
 
   // delete_node service
   this.deleteNodeService = new ROSLIB.Service({
     ros: options.ros,
-    name: options.rosDeleteNodeService || '/robotnik_fms_routes_node/delete_node',
+    name: options.rosDeleteNodeService || '/fms_routes_node/delete_node',
     serviceType: options.rosDeleteNodeMsg || 'graph_msgs/NodeId'
   })
 
   // add_arc service
   this.addArcService = new ROSLIB.Service({
     ros: options.ros,
-    name: options.rosAddArcService || '/robotnik_fms_routes_node/add_arc',
+    name: options.rosAddArcService || '/fms_routes_node/add_arc',
     serviceType: options.rosAddArcMsg || 'graph_msgs/ArcId'
   })
 
   // set_arc service
   this.setArcService = new ROSLIB.Service({
     ros: options.ros,
-    name: options.rosSetArcService || '/robotnik_fms_routes_node/set_arc',
+    name: options.rosSetArcService || '/fms_routes_node/set_arc',
     serviceType: options.rosSetArcMsg || 'graph_msgs/Arc'
   })
 
   // set_arc_pos service
   this.setArcPosService = new ROSLIB.Service({
     ros: options.ros,
-    name: options.rosSetArcPosService || '/robotnik_fms_routes_node/set_arc_pos',
+    name: options.rosSetArcPosService || '/fms_routes_node/set_arc_pos',
     serviceType: options.rosSetArcPosMsg || 'graph_msgs/ArcId'
   })
 
   // delete_arc service
   this.deleteArcService = new ROSLIB.Service({
     ros: options.ros,
-    name: options.rosDeleteArcService || '/robotnik_fms_routes_node/delete_arc',
+    name: options.rosDeleteArcService || '/fms_routes_node/delete_arc',
     serviceType: options.rosDeleteArcMsg || 'graph_msgs/ArcId'
   })
 
-  // TOPICS
+
+  /**************************
+  *        TOPICS
+  **************************/
 
   // graph topic
   this.rosNodesTopic = new ROSLIB.Topic({
     ros: options.ros,
-    name: options.rosNodesTopic || '/robotnik_fms_routes_node/graph',
+    name: options.rosNodesTopic || '/fms_routes_node/graph',
     messageType: options.rosNodesMsg || 'graph_msgs/GraphNodeArray'
   })
 
+  // map topic
+  this.rosMapTopic = new ROSLIB.Topic({
+    ros: options.ros,
+    name: options.rosMapTopic || '/map',
+    messageType: options.rosMapMsg || 'nav_msgs/OccupancyGrid'
+  })
+
+
+  /**************************
+  *      CALLBACKS
+  **************************/
+
   // graph callback
   this.rosNodesTopic.subscribe(function (message) {
-
     if (self.hasChanged(message)) {
-
       // Delete actual network
       self.deleteNetwork();
-
       // Fill network with received nodes
       // TODO Puede que no nos lleguen ordenados los id's (ni que estén todos)
       message.nodes.forEach(node => {
@@ -99,23 +114,37 @@ NETWORKVIEW.NetworkView = function (options) {
           self.addEdge(node.id, arc);
         })
       });
-
       self.stabilize();
       //self.rosNodesTopic.unsubscribe();
     }
     self.message = message;
-
   });
 
-  // Create the network
+  // map callback
+  this.rosMapTopic.subscribe(function (message) {
+    self.occupancyGrid = new ROS2D.OccupancyGrid({
+      message: message
+    })
+    self.imageData = imagedata_to_image(self.occupancyGrid.imageData)
+  });
+
+
+  /**************************
+  *  DEFINE & CREATE NETWORK
+  **************************/
+
+  // Define container
   this.container = document.getElementById(this.divID);
+  // Set data
   this.data = {
     nodes: this.nodes,
     edges: this.edges
   };
-
   // Add buttons callback
   this.options = {
+    /*"interaction": {
+      multiselect: true
+    },*/
     "edges": {
       "smooth": {
         "type": "dynamic",
@@ -270,8 +299,13 @@ NETWORKVIEW.NetworkView = function (options) {
       }
     }
   };
+  // Create network
+  this.network = new vis.Network(this.container, this.data, this.options);
 
-  // FUNCTIONS
+
+  /***************************
+  *     NETWORK METHODS
+  **************************/
 
   function addNode(data, cancelAction, callback) {
     // Load actual values
@@ -359,7 +393,7 @@ NETWORKVIEW.NetworkView = function (options) {
     callback(data);
   }
 
-  // Edit the node the info
+  // Edit the node info
   function editNodeData(data, callback) {
     data.label = document.getElementById('node-label').value;
     data.zone = document.getElementById('node-zone').value;
@@ -415,10 +449,30 @@ NETWORKVIEW.NetworkView = function (options) {
     });
   }
 
-  this.network = new vis.Network(this.container, this.data, this.options);
+  function imagedata_to_image(imagedata) {
+    var canvas = document.createElement('canvas');
+    var ctx = canvas.getContext('2d');
+    canvas.width = imagedata.width;
+    canvas.height = imagedata.height;
+    ctx.putImageData(imagedata, 0, 0);
+
+    var image = new Image();
+    image.src = canvas.toDataURL();
+    return image;
+  }
 
 
+  /**************************
+  *      NETWORK EVENTS
+  **************************/
 
+  // TODO activate only if map view active 
+  this.network.on("beforeDrawing", function (ctx) {
+    // DRAW MAP
+    if (self.imageData !== undefined) {
+      ctx.drawImage(self.imageData, 0, 0)
+    }
+  });
   /*this.network.on("click", function (params) {
     params.event = "[original event]";
     document.getElementById('eventSpan').innerHTML = '<h2>Click event:</h2>' + JSON.stringify(params, null, 4);
@@ -449,7 +503,6 @@ NETWORKVIEW.NetworkView = function (options) {
       document.getElementById('edge-cancelButton').onclick = cancelEdgeEdit.bind(this);
       document.getElementById('edge-popUp').style.display = 'block';
     }
-
   });
   /*this.network.on("oncontext", function (params) {
       params.event = "[original event]";
@@ -510,7 +563,9 @@ NETWORKVIEW.NetworkView = function (options) {
 };
 
 
-// Definition of methods
+/***************************
+ * NETWORK PROTOTYPE METHODS
+ **************************/
 
 // Toggle physics
 NETWORKVIEW.NetworkView.prototype.togglePhysics = function () {

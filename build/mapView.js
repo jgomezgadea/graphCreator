@@ -9,12 +9,15 @@ var MAPVIEW = MAPVIEW || {
 MAPVIEW.MapView = function (options) {
   options = options || {}
   var ros = options.ros;
+  var topic = options.topic || '/map'
   var divID = options.divID || 'map';
   var width = options.width || 308;
   var height = options.height || 250;
 
+  var self = this;
+
   // Create the main viewer
-  var viewer = new ROS2D.Viewer({
+  this.viewer = new ROS2D.Viewer({
     divID: divID,
     width: width,
     height: height
@@ -29,16 +32,17 @@ MAPVIEW.MapView = function (options) {
   })
 
   // Setup the map client.
-  var gridClient = new ROS2D.OccupancyGridClient({
+  this.gridClient = new ROS2D.OccupancyGridClient({
     ros: ros,
-    rootObject: viewer.scene,
+    topic: topic,
+    rootObject: self.viewer.scene,
     // Use this property in case of continuous updates			
     continuous: true
   });
   // Scale the canvas to fit to the map
-  gridClient.on('change', function () {
-    viewer.scaleToDimensions(gridClient.currentGrid.width, gridClient.currentGrid.height);
-    viewer.shift(gridClient.currentGrid.pose.position.x, gridClient.currentGrid.pose.position.y);
+  this.gridClient.on('change', function () {
+    self.viewer.scaleToDimensions(self.gridClient.currentGrid.width, self.gridClient.currentGrid.height);
+    self.viewer.shift(self.gridClient.currentGrid.pose.position.x, self.gridClient.currentGrid.pose.position.y);
   });
 
   // Callback functions when there is mouse interaction with a point
@@ -67,12 +71,12 @@ MAPVIEW.MapView = function (options) {
   });
 
   // Add the graph to the viewer
-  viewer.scene.addChild(graph);
+  this.viewer.scene.addChild(graph);
 
-  viewer.scene.addEventListener('stagemousemove', function (event) {
+  this.viewer.scene.addEventListener('stagemousemove', function (event) {
     movedMouse = true;
     pos = { x: event.stageX, y: event.stageY };
-    posRos = viewer.scene.globalToRos(pos.x, pos.y);
+    posRos = self.viewer.scene.globalToRos(pos.x, pos.y);
     // Move point when it's dragged and ctrl pressed
     if (selectedPointIndex !== null && event.nativeEvent.ctrlKey === true) {
       graph.movePoint(selectedPointIndex, posRos);
@@ -83,7 +87,7 @@ MAPVIEW.MapView = function (options) {
     }
   });
 
-  viewer.scene.addEventListener('stagemouseup', function (event) {
+  this.viewer.scene.addEventListener('stagemouseup', function (event) {
     // Stop moving point when mouse up
     selectedPointIndex = null;
     // If we were moving the map, save new map position
@@ -93,7 +97,7 @@ MAPVIEW.MapView = function (options) {
       movingMap = false;
     }
     // Add point when not clicked on the graph ...
-    else if (viewer.scene.mouseInBounds === true && clickedPoint === false) {
+    else if (self.viewer.scene.mouseInBounds === true && clickedPoint === false) {
       // ... only if we aren't doing any other action
       if (event.nativeEvent.shiftKey === false && movedMouse === false) {
         graph.addPoint(posRos);
@@ -102,10 +106,10 @@ MAPVIEW.MapView = function (options) {
     clickedPoint = false;
   });
 
-  viewer.scene.addEventListener('stagemousedown', function (event) {
+  this.viewer.scene.addEventListener('stagemousedown', function (event) {
     movedMouse = false;
     // We can move the map with drag and drop
-    if (event.nativeEvent.ctrlKey !== true && viewer.scene.mouseInBounds === true) {
+    if (event.nativeEvent.ctrlKey !== true && self.viewer.scene.mouseInBounds === true) {
       mapPos.x = pos.x - mapPos.x;
       mapPos.y = pos.y - mapPos.y;
       movingMap = true;
@@ -113,7 +117,7 @@ MAPVIEW.MapView = function (options) {
   })
 
   document.getElementById('map').addEventListener('wheel', function (event) {
-    if (viewer.scene.mouseInBounds === true) {
+    if (self.viewer.scene.mouseInBounds === true) {
       // Start zoom from mouse position
       zoomView.startZoom(pos.x, pos.y);
       // Add zoom
@@ -128,6 +132,6 @@ MAPVIEW.MapView = function (options) {
     }
   })
 
-  return viewer;
+  //return this.viewer;
 
 }

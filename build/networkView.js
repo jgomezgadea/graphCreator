@@ -13,6 +13,7 @@ NETWORKVIEW.NetworkView = function (options) {
   this.message = undefined;
   this.nodes = new vis.DataSet();
   this.edges = new vis.DataSet();
+  this.viewMap = false;
 
   var self = this;
 
@@ -469,7 +470,7 @@ NETWORKVIEW.NetworkView = function (options) {
   // TODO activate only if map view active 
   this.network.on("beforeDrawing", function (ctx) {
     // DRAW MAP
-    if (self.imageData !== undefined) {
+    if (self.imageData !== undefined && self.viewMap == true) {
       ctx.drawImage(self.imageData, 0, 0)
     }
   });
@@ -563,9 +564,21 @@ NETWORKVIEW.NetworkView = function (options) {
 };
 
 
-/***************************
+/*****************************
  * NETWORK PROTOTYPE METHODS
- **************************/
+ ****************************/
+
+// Change between map and graph
+NETWORKVIEW.NetworkView.prototype.showMap = function (view_map) {
+  if (view_map == true) {
+    // Show map and position network nodes
+    this.viewMap = true;
+  } else {
+    // Hide map and stabilize network
+    this.viewMap = false;
+    this.stabilize();
+  }
+}
 
 // Toggle physics
 NETWORKVIEW.NetworkView.prototype.togglePhysics = function () {

@@ -34,13 +34,6 @@
         url: 'ws://localhost:9090'
       });
 
-      /*mapView = new MAPVIEW.MapView({
-        ros: ros,
-        divID: 'map',
-        width: canvas_views.clientWidth - 14,
-        height: ((canvas_views.clientWidth - 14) * 9) / 16
-      });*/
-
       networkView = new NETWORKVIEW.NetworkView({
         divID: 'network',
         ros: ros,
@@ -50,50 +43,32 @@
         rosAddNodeMsg: 'graph_msgs/Node'
       });
 
-      network.hidden = true;
-      toggle_physics.hidden = true;
-      toggleView(); // TODO Quitar
-
-      /*map_image = convertCanvasToImage(mapView.viewer.scene.canvas);
-      networkView.network.on("beforeDrawing", function (ctx) {
-        map_image = convertCanvasToImage(mapView.viewer.scene.canvas);
-        ctx.drawImage(map_image, -100, -100); //document.getElementById("scream")
-      });*/
+      networkView.network.disableEditMode();
+      networkView.network.setSize(canvas_view.clientWidth - 14, ((canvas_view.clientWidth - 14) * 9) / 16);
     }
 
     // Change between map and graph
     function toggleView() {
-      if (map.hidden) {
-        // Show map and hide network
-        network.hidden = true;
+      if (toggle_views.innerHTML == "View map") {
+        // Show map and position network nodes
+        networkView.showMap(true);
+        //TODO dejar: document.getElementById("network").style.background = '#7f7f7f'
         toggle_physics.hidden = true;
-        map.hidden = false;
         toggle_views.innerHTML = "View graph";
       } else {
-        // Show network and hide map
-        map.hidden = true;
-        //map.visibility = "hidden";
-        network.hidden = false;
+        // Hide map and stabilize network
+        networkView.showMap(false);
+        document.getElementById("network").style.background = 'white'
         toggle_physics.hidden = false;
-        networkView.stabilize();
         toggle_views.innerHTML = "View map";
-        networkView.network.setSize(canvas_views.clientWidth, (canvas_views.clientWidth * 9) / 16);
+        networkView.network.setSize(canvas_view.clientWidth, (canvas_view.clientWidth * 9) / 16);
       }
     }
 
     // Scale the canvas to web
-    /*function resizedCanvas() {
-      mapView.viewer.scene.canvas.height = (canvas_views.clientWidth * 9) / 16;
-      mapView.viewer.scene.canvas.width = canvas_views.clientWidth;
-      networkView.network.setSize(canvas_views.clientWidth, (canvas_views.clientWidth * 9) / 16);
+    function resizedCanvas() {
+      networkView.network.setSize(canvas_view.clientWidth, (canvas_view.clientWidth * 9) / 16);
     }
-
-    // Convert canvas to image
-    function convertCanvasToImage(canvas) {
-      var image = new Image();
-      image.src = canvas.toDataURL("image/png");
-      return image;
-    }*/
 
   </script>
 </head>
@@ -101,15 +76,13 @@
 <body onload="init()" onresize="resizedCanvas()">
   <h1>Robotnik 2D map</h1>
 
-  <button id="toggle_views" type="button" onclick="toggleView()">View graph</button>
+  <button id="toggle_views" type="button" onclick="toggleView()">View map</button>
 
   <button id="save_graph" type="button" onclick="networkView.saveGraph()">Save graph</button>
 
   <button id="toggle_physics" type="button" onclick="networkView.togglePhysics()">Enable physics</button>
 
-  <div id="canvas_views">
-    <!-- MAP view -->
-    <div id="map"></div>
+  <div id="canvas_view">
 
     <!-- PopUps for NETWORK view-->
     <div id="node-popUp">
@@ -162,8 +135,7 @@
 
     <!-- NETWORK view -->
     <div id="network"></div>
-    <!--img id="scream" src="http://www.chestysoft.com/images/watermark.png" style="visibility: hidden;" alt="The Scream"-->
-    <!--pre id="eventSpan"></pre-->
+
   </div>
 
   <p>

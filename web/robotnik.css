@@ -2,7 +2,7 @@ body, select {
     font: 10pt sans;
     background-color: ivory;
 }
-#canvas_views {
+#canvas_view {
     /*width: 600px;
     height: 400px;*/
     border: 1px solid lightgray;
@@ -15,10 +15,7 @@ p {
 h4 {
     margin-bottom:3px;
 }
-#map {
-    position: relative;
-    background-color: rgb(127, 127, 127);
-}
+
 #network {
     position: relative;
 }

@@ -13,7 +13,8 @@ NETWORKVIEW.NetworkView = function (options) {
   this.message = undefined;
   this.nodes = new vis.DataSet();
   this.edges = new vis.DataSet();
-  this.viewMap = false;
+  this.viewMap = false; // True if map is showed
+  this.imageScale = 20;  // canvas pixels / ros pixels
 
   var self = this;
 
@@ -126,7 +127,8 @@ NETWORKVIEW.NetworkView = function (options) {
     self.occupancyGrid = new ROS2D.OccupancyGrid({
       message: message
     })
-    self.imageData = imagedata_to_image(self.occupancyGrid.imageData)
+    self.imageData = imagedata_to_image(self.occupancyGrid.imageData);
+    self.imageScale = self.occupancyGrid.imageData.height / self.occupancyGrid.height;
   });
 
 
@@ -147,7 +149,7 @@ NETWORKVIEW.NetworkView = function (options) {
       multiselect: true
     },*/
     "edges": {
-      "smooth": {
+      "smooth": { // TODO: Quitar smooth (arcos rectos) en modo mapa
         "type": "dynamic",
         "forceDirection": "none"
       }
@@ -467,11 +469,10 @@ NETWORKVIEW.NetworkView = function (options) {
   *      NETWORK EVENTS
   **************************/
 
-  // TODO activate only if map view active 
   this.network.on("beforeDrawing", function (ctx) {
-    // DRAW MAP
+    // DRAW MAP if viewMap is true
     if (self.imageData !== undefined && self.viewMap == true) {
-      ctx.drawImage(self.imageData, 0, 0)
+      ctx.drawImage(self.imageData, -self.imageData.width / 2, -self.imageData.height / 2);
     }
   });
   /*this.network.on("click", function (params) {
@@ -520,11 +521,27 @@ NETWORKVIEW.NetworkView = function (options) {
     self.network.setOptions({ physics: { enabled: true } });
     self.network.setOptions({ physics: { enabled: false } });
   });*/
-  /*this.network.on("dragEnd", function (params) {
-    params.event = "[original event]";
+  this.network.on("dragEnd", function (params) {
+    //params.event = "[original event]";
 
-    self.network.setOptions({ physics: { enabled: false } });
-  });*/
+    //self.network.setOptions({ physics: { enabled: false } });
+    /*self.nodes.forEach(node => {
+      console.log(self.network.getPositions(node.id));
+      TODO Actualizar posición nodo en ROS
+    })*/
+    /*network.on("dragEnd", function (params) {
+      for (var i = 0; i < params.nodes.length; i++) {
+        var nodeId = params.nodes[i];
+        nodes.update({ id: nodeId, fixed: { x: true, y: true } });
+      }
+    });
+    network.on('dragStart', function (params) {
+      for (var i = 0; i < params.nodes.length; i++) {
+        var nodeId = params.nodes[i];
+        nodes.update({ id: nodeId, fixed: { x: false, y: false } });
+      }
+    });*/
+  });
   /*this.network.on("zoom", function (params) {
       document.getElementById('eventSpan').innerHTML = '<h2>zoom event:</h2>' + JSON.stringify(params, null, 4);
   });
@@ -573,6 +590,14 @@ NETWORKVIEW.NetworkView.prototype.showMap = function (view_map) {
   if (view_map == true) {
     // Show map and position network nodes
     this.viewMap = true;
+    // Move nodes position to their position on map
+    this.message.nodes.forEach(node => {
+      //console.log(self.network.getPositions(node.id));
+      // TODO Eventos para que se actualicen al añadir/editar nodos
+      this.nodes.update({ id: node.id, x: node.pose.x * this.imageScale, y: -node.pose.y * this.imageScale });
+    });
+    // TODO: centrar al acceder al grafo
+    // TODO: quitar físicas al grafo en modo mapa
   } else {
     // Hide map and stabilize network
     this.viewMap = false;

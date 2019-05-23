@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+<!-- TODO: Fork de github del ros2d y vis original -->
 
 <head>
   <meta charset="utf-8" />
@@ -51,8 +52,9 @@
     function toggleView() {
       if (toggle_views.innerHTML == "View map") {
         // Show map and position network nodes
+        // TODO: Mostrar botón solo cuando el mapa está cargado
         networkView.showMap(true);
-        //TODO dejar: document.getElementById("network").style.background = '#7f7f7f'
+        document.getElementById("network").style.background = '#7f7f7f'
         toggle_physics.hidden = true;
         toggle_views.innerHTML = "View graph";
       } else {

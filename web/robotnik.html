@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html>
-<!-- TODO: Fork de github del ros2d y vis original -->
 
 <head>
   <meta charset="utf-8" />
@@ -52,7 +51,6 @@
     function toggleView() {
       if (toggle_views.innerHTML == "View map") {
         // Show map and position network nodes
-        // TODO: Mostrar botón solo cuando el mapa está cargado
         networkView.showMap(true);
         document.getElementById("network").style.background = '#7f7f7f'
         toggle_physics.hidden = true;
@@ -78,17 +76,19 @@
 <body onload="init()" onresize="resizedCanvas()">
   <h1>Robotnik 2D map</h1>
 
-  <button id="toggle_views" type="button" onclick="toggleView()">View map</button>
+  <button id="toggle_views" type="button" onclick="toggleView()" disabled>View map</button>
 
   <button id="save_graph" type="button" onclick="networkView.saveGraph()">Save graph</button>
 
   <button id="toggle_physics" type="button" onclick="networkView.togglePhysics()">Enable physics</button>
 
+  <!-- TODO añadir botón para activar movimiento de nodos en el mapa (evitará movimiento sin querer) -->
+
   <div id="canvas_view">
 
     <!-- PopUps for NETWORK view-->
     <div id="node-popUp">
-      <span id="node-operation">node</span> <br>
+      <span id="node-operation">Node</span> <br>
       <table style="margin:auto;">
         <tr>
           <td>name</td>
@@ -120,14 +120,14 @@
     </div>
 
     <div id="edge-popUp">
-      <span id="edge-operation">edge</span> <br>
+      <span id="edge-operation">Edge</span> <br>
       <table style="margin:auto;">
         <tr>
-          <td>Max speed</td>
+          <td>max_speed</td>
           <td><input id="edge-speed" value="new value" /></td>
         </tr>
         <tr>
-          <td>Distance</td>
+          <td>distance</td>
           <td><input id="edge-dist" value="new value" /></td>
         </tr>
       </table>

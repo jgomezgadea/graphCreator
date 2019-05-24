@@ -84,14 +84,14 @@ NETWORKVIEW.NetworkView = function (options) {
   *        TOPICS
   **************************/
 
-  // graph topic
+  // GRAPH topic
   this.rosNodesTopic = new ROSLIB.Topic({
     ros: options.ros,
     name: options.rosNodesTopic || '/fms_routes_node/graph',
     messageType: options.rosNodesMsg || 'graph_msgs/GraphNodeArray'
   })
 
-  // map topic
+  // MAP topic
   this.rosMapTopic = new ROSLIB.Topic({
     ros: options.ros,
     name: options.rosMapTopic || '/map',
@@ -103,13 +103,12 @@ NETWORKVIEW.NetworkView = function (options) {
   *      CALLBACKS
   **************************/
 
-  // graph callback
+  // GRAPH callback
   this.rosNodesTopic.subscribe(function (message) {
     if (self.hasChanged(message)) {
       // Delete actual network
       self.deleteNetwork();
       // Fill network with received nodes
-      // TODO Puede que no nos lleguen ordenados los id's (ni que estén todos)
       message.nodes.forEach(node => {
         self.addNode(node);
         node.arc_list.forEach(arc => {
@@ -122,13 +121,15 @@ NETWORKVIEW.NetworkView = function (options) {
     self.message = message;
   });
 
-  // map callback
+  // MAP callback
   this.rosMapTopic.subscribe(function (message) {
     self.occupancyGrid = new ROS2D.OccupancyGrid({
       message: message
     })
     self.imageData = imagedata_to_image(self.occupancyGrid.imageData);
     self.imageScale = self.occupancyGrid.imageData.height / self.occupancyGrid.height;
+    // When map loaded, enables button
+    document.getElementById("toggle_views").disabled = false;
   });
 
 
@@ -149,7 +150,7 @@ NETWORKVIEW.NetworkView = function (options) {
       multiselect: true
     },*/
     "edges": {
-      "smooth": { // TODO: Quitar smooth (arcos rectos) en modo mapa
+      "smooth": {
         "type": "dynamic",
         "forceDirection": "none"
       }
@@ -164,7 +165,10 @@ NETWORKVIEW.NetworkView = function (options) {
       "maxVelocity": 10,
       "minVelocity": 0.75
     },
-    interaction: { hover: true },
+    interaction: {
+      hover: true,
+      selectable: true // TODO hacer que funcione selección múltiple
+    },
     manipulation: {
       enabled: true,
       initiallyActive: true,
@@ -311,7 +315,7 @@ NETWORKVIEW.NetworkView = function (options) {
   **************************/
 
   function addNode(data, cancelAction, callback) {
-    console.log(data); // TODO hacer aquí el guardado de la posición del mapa si viewMap === true
+
     // Load actual values
     document.getElementById('node-label').value = data.label;
 
@@ -320,14 +324,13 @@ NETWORKVIEW.NetworkView = function (options) {
 
     if (self.viewMap) {
       data.x /= self.imageScale;
-      data.y /= -self.imageScale
+      data.y /= -self.imageScale;
     } else {
       data.x = 0;
       data.y = 0;
     }
 
     document.getElementById('node-x').value = data.x;
-
     document.getElementById('node-y').value = data.y;
 
     data.theta = 0;
@@ -407,7 +410,10 @@ NETWORKVIEW.NetworkView = function (options) {
     });
     clearNodePopUp();
     callback(data);
-    // TODO esto da problemas self.nodes.update({ id: data.id, x: data.x * this.imageScale, y: -data.y * this.imageScale });
+    if (self.viewMap) {
+      // Change node position on map
+      self.nodes.update({ id: data.id, x: data.x * self.imageScale, y: -data.y * self.imageScale });
+    }
   }
 
   // Edit the node info
@@ -436,6 +442,10 @@ NETWORKVIEW.NetworkView = function (options) {
     });
     clearNodePopUp();
     callback(data);
+    if (self.viewMap) {
+      // Change node position on map
+      self.nodes.update({ id: data.id, x: data.x * self.imageScale, y: -data.y * self.imageScale });
+    }
   }
 
   function clearEdgePopUp() {
@@ -525,9 +535,8 @@ NETWORKVIEW.NetworkView = function (options) {
       document.getElementById('eventSpan').innerHTML = '<h2>oncontext (right click) event:</h2>' + JSON.stringify(params, null, 4);
   });*/
   /*this.network.on("dragStart", function (params) {
-    // There's no point in displaying this event on screen, it gets immediately overwritten
-    self.network.setOptions({ physics: { enabled: true } });
-
+     TODO en el mapa sin edición, los nodos serán fijos -> nodes.update({ id: node_id, fixed: { x: true, y: true } });
+     TODO en el grafo o mapa con edición, los nodos dejan de ser fijos (obviamente esto y lo de arriba no irá aquí)
   });*/
   /*this.network.on("dragging", function (params) {
     params.event = "[original event]";
@@ -536,25 +545,11 @@ NETWORKVIEW.NetworkView = function (options) {
     self.network.setOptions({ physics: { enabled: false } });
   });*/
   this.network.on("dragEnd", function (params) {
-    //params.event = "[original event]";
-
-    //self.network.setOptions({ physics: { enabled: false } });
-    /*self.nodes.forEach(node => {
-      console.log(self.network.getPositions(node.id));
-      TODO Actualizar posición nodo en ROS
-    })*/
-    /*network.on("dragEnd", function (params) {
-      for (var i = 0; i < params.nodes.length; i++) {
-        var nodeId = params.nodes[i];
-        nodes.update({ id: nodeId, fixed: { x: true, y: true } });
-      }
-    });
-    network.on('dragStart', function (params) {
-      for (var i = 0; i < params.nodes.length; i++) {
-        var nodeId = params.nodes[i];
-        nodes.update({ id: nodeId, fixed: { x: false, y: false } });
-      }
-    });*/
+    // TODO Si está en mapa, guardar nueva posición
+    params.nodes.forEach(node_id => {
+      // TODO guardamos en ROS la nueva posición (self.network.getPositions(node.id))
+      console.log(node_id);
+    })
   });
   /*this.network.on("zoom", function (params) {
       document.getElementById('eventSpan').innerHTML = '<h2>zoom event:</h2>' + JSON.stringify(params, null, 4);
@@ -614,12 +609,10 @@ NETWORKVIEW.NetworkView.prototype.showMap = function (view_map) {
     }
     // Move nodes position to their position on map
     this.message.nodes.forEach(node => {
-      //console.log(self.network.getPositions(node.id));
-      // TODO Eventos para que se actualicen al añadir/editar nodos
       this.nodes.update({ id: node.id, x: node.pose.x * this.imageScale, y: -node.pose.y * this.imageScale });
     });
-    // TODO: centrar al acceder al grafo
-    // TODO: quitar físicas al grafo en modo mapa
+    // Centrar vista en grafo
+    this.network.fit();
   } else {
     // Hide map and stabilize network
     this.viewMap = false;

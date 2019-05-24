@@ -311,18 +311,31 @@ NETWORKVIEW.NetworkView = function (options) {
   **************************/
 
   function addNode(data, cancelAction, callback) {
+    console.log(data); // TODO hacer aquí el guardado de la posición del mapa si viewMap === true
     // Load actual values
     document.getElementById('node-label').value = data.label;
-    document.getElementById('node-zone').value = 0;
+
     data.zone = 0;
-    document.getElementById('node-x').value = 0;
-    data.x = 0;
-    document.getElementById('node-y').value = 0;
-    data.y = 0;
-    document.getElementById('node-theta').value = 0;
+    document.getElementById('node-zone').value = data.zone;
+
+    if (self.viewMap) {
+      data.x /= self.imageScale;
+      data.y /= -self.imageScale
+    } else {
+      data.x = 0;
+      data.y = 0;
+    }
+
+    document.getElementById('node-x').value = data.x;
+
+    document.getElementById('node-y').value = data.y;
+
     data.theta = 0;
-    document.getElementById('node-frame').value = "map";
+    document.getElementById('node-theta').value = data.theta;
+
     data.frame = "map";
+    document.getElementById('node-frame').value = data.frame;
+
     // Save new values
     document.getElementById('node-saveButton').onclick = saveNodeData.bind(this, data, callback);
     // Cancel
@@ -394,6 +407,7 @@ NETWORKVIEW.NetworkView = function (options) {
     });
     clearNodePopUp();
     callback(data);
+    // TODO esto da problemas self.nodes.update({ id: data.id, x: data.x * this.imageScale, y: -data.y * this.imageScale });
   }
 
   // Edit the node info
@@ -590,6 +604,14 @@ NETWORKVIEW.NetworkView.prototype.showMap = function (view_map) {
   if (view_map == true) {
     // Show map and position network nodes
     this.viewMap = true;
+    // Disable smooth edges
+    this.network.setOptions({ edges: { smooth: false } });
+    // Disable physics
+    if (document.getElementById('toggle_physics').innerHTML === "Disable physics") {
+      this.options.physics.enabled = false;
+      this.network.setOptions({ physics: { enabled: false } });
+      document.getElementById('toggle_physics').innerHTML = "Enable physics";
+    }
     // Move nodes position to their position on map
     this.message.nodes.forEach(node => {
       //console.log(self.network.getPositions(node.id));
@@ -601,6 +623,9 @@ NETWORKVIEW.NetworkView.prototype.showMap = function (view_map) {
   } else {
     // Hide map and stabilize network
     this.viewMap = false;
+    // Enable smooth edges
+    this.network.setOptions({ edges: { smooth: { type: "dynamic", forceDirection: "none" } } });
+    // Stabilize nodes
     this.stabilize();
   }
 }

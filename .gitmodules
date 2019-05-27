@@ -1,3 +1,0 @@
-[submodule "ros_graph_ws/src/jsonization"]
-	path = ros_graph_ws/src/jsonization
-	url = https://github.com/RobotnikAutomation/jsonization.git

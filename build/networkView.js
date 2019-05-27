@@ -167,7 +167,7 @@ NETWORKVIEW.NetworkView = function (options) {
     },
     interaction: {
       hover: true,
-      selectable: true // TODO hacer que funcione selección múltiple
+      multiselect: true
     },
     manipulation: {
       enabled: true,
@@ -199,11 +199,13 @@ NETWORKVIEW.NetworkView = function (options) {
           document.getElementById('node-popUp').style.display === "block") {
           callback(null);
         } else {
-          var request = new ROSLIB.ServiceRequest({
-            node_id: data.nodes[0]
-          });
-          self.deleteNodeService.callService(request, function (result) {
-            console.log(result.message);
+          data.nodes.forEach(node => {
+            var request = new ROSLIB.ServiceRequest({
+              node_id: node
+            });
+            self.deleteNodeService.callService(request, function (result) {
+              console.log(result.message);
+            });
           });
           callback(data);
         }
@@ -288,13 +290,15 @@ NETWORKVIEW.NetworkView = function (options) {
           document.getElementById('node-popUp').style.display === "block") {
           callback(null);
         } else {
-          var ids = data.edges[0].split(" ");
-          var request = new ROSLIB.ServiceRequest({
-            from_id: ids[0],
-            to_id: ids[1]
-          });
-          self.deleteArcService.callService(request, function (result) {
-            console.log(result.message);
+          data.edges.forEach(edge => {
+            var ids = edge.split(" ");
+            var request = new ROSLIB.ServiceRequest({
+              from_id: ids[0],
+              to_id: ids[1]
+            });
+            self.deleteArcService.callService(request, function (result) {
+              console.log(result.message);
+            });
           });
           callback(data);
         }
@@ -325,13 +329,12 @@ NETWORKVIEW.NetworkView = function (options) {
     if (self.viewMap) {
       data.x /= self.imageScale;
       data.y /= -self.imageScale;
+      document.getElementById('node-x').value = data.x;
+      document.getElementById('node-y').value = data.y;
     } else {
-      data.x = 0;
-      data.y = 0;
+      document.getElementById('node-x').value = 0;
+      document.getElementById('node-y').value = 0;
     }
-
-    document.getElementById('node-x').value = data.x;
-    document.getElementById('node-y').value = data.y;
 
     data.theta = 0;
     document.getElementById('node-theta').value = data.theta;
@@ -388,8 +391,8 @@ NETWORKVIEW.NetworkView = function (options) {
   function saveNodeData(data, callback) {
     data.label = document.getElementById('node-label').value;
     data.zone = document.getElementById('node-zone').value;
-    data.x = document.getElementById('node-x').value;
-    data.y = document.getElementById('node-y').value;
+    data.ros_x = document.getElementById('node-x').value;
+    data.ros_y = document.getElementById('node-y').value;
     data.theta = document.getElementById('node-theta').value;
     data.frame = document.getElementById('node-frame').value;
     var request = new ROSLIB.ServiceRequest({
@@ -398,8 +401,8 @@ NETWORKVIEW.NetworkView = function (options) {
         name: data.label,
         zone: parseInt(data.zone),
         pose: {
-          x: parseFloat(data.x),
-          y: parseFloat(data.y),
+          x: parseFloat(data.ros_x),
+          y: parseFloat(data.ros_y),
           theta: parseFloat(data.theta),
           frame_id: data.frame
         }
@@ -608,9 +611,11 @@ NETWORKVIEW.NetworkView.prototype.showMap = function (view_map) {
       document.getElementById('toggle_physics').innerHTML = "Enable physics";
     }
     // Move nodes position to their position on map
-    this.message.nodes.forEach(node => {
-      this.nodes.update({ id: node.id, x: node.pose.x * this.imageScale, y: -node.pose.y * this.imageScale });
-    });
+    if (this.message !== undefined) {
+      this.message.nodes.forEach(node => {
+        this.nodes.update({ id: node.id, x: node.pose.x * this.imageScale, y: -node.pose.y * this.imageScale });
+      });
+    }
     // Centrar vista en grafo
     this.network.fit();
   } else {

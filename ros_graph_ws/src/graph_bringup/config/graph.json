@@ -5,29 +5,16 @@
                 {
                     "distance": 1.0,
                     "max_speed": 1.5,
-                    "node_dest": "6379bffb-0deb-45bf-b0a9-b1f2eafcbc3a"
+                    "node_dest": "8b10d820-f9ad-4655-8346-44c14ead4767"
                 }
             ],
-            "id": "2",
-            "name": "Pruebahjkjk",
-            "pose": {
-                "frame_id": "map",
-                "theta": 0.75,
-                "x": 0.0,
-                "y": 1.0,
-                "z": 0.0
-            },
-            "zone": 1
-        },
-        {
-            "arc_list": null,
-            "id": "08a42d17-4da4-4a3c-9ba1-f7b9e15a1dd3",
-            "name": "new",
+            "id": "304938fb-45ee-4c3f-af6f-a5e5d2baa529",
+            "name": "Pick",
             "pose": {
                 "frame_id": "map",
                 "theta": 0.0,
-                "x": 17.106170654296875,
-                "y": -0.3206314444541931,
+                "x": -1.0634593963623047,
+                "y": -1.4102998971939087,
                 "z": 0.0
             },
             "zone": 0
@@ -37,16 +24,16 @@
                 {
                     "distance": 1.0,
                     "max_speed": 1.5,
-                    "node_dest": "fbb6d5ac-d097-4c3b-82f8-15ee3741a0e8"
+                    "node_dest": "182b51b2-cd6b-42c0-91e5-3cd3ad19ade7"
                 }
             ],
-            "id": "6379bffb-0deb-45bf-b0a9-b1f2eafcbc3a",
-            "name": "new",
+            "id": "0f2b8acc-ffa0-4165-b98b-cd302475fc55",
+            "name": "Place",
             "pose": {
                 "frame_id": "map",
                 "theta": 0.0,
-                "x": -6.797177314758301,
-                "y": -6.82056188583374,
+                "x": 18.76844024658203,
+                "y": -1.2771998643875122,
                 "z": 0.0
             },
             "zone": 0
@@ -56,40 +43,69 @@
                 {
                     "distance": 1.0,
                     "max_speed": 1.5,
-                    "node_dest": "b4a7970b-f3ef-4ac5-9abe-636ff9fed09e"
-                }
-            ],
-            "id": "fbb6d5ac-d097-4c3b-82f8-15ee3741a0e8",
-            "name": "new",
-            "pose": {
-                "frame_id": "map",
-                "theta": 0.0,
-                "x": 7.245089054107666,
-                "y": -5.691601753234863,
-                "z": 0.0
-            },
-            "zone": 0
-        },
-        {
-            "arc_list": [
-                {
-                    "distance": 1.0,
-                    "max_speed": 1.5,
-                    "node_dest": "08a42d17-4da4-4a3c-9ba1-f7b9e15a1dd3"
+                    "node_dest": "0f2b8acc-ffa0-4165-b98b-cd302475fc55"
                 },
                 {
                     "distance": 1.0,
                     "max_speed": 1.5,
-                    "node_dest": "fbb6d5ac-d097-4c3b-82f8-15ee3741a0e8"
+                    "node_dest": "d6ce1558-b517-4ed6-a9d3-fd30c0c2d013"
                 }
             ],
-            "id": "b4a7970b-f3ef-4ac5-9abe-636ff9fed09e",
-            "name": "new",
+            "id": "182b51b2-cd6b-42c0-91e5-3cd3ad19ade7",
+            "name": "GoTo 3",
             "pose": {
                 "frame_id": "map",
                 "theta": 0.0,
-                "x": 15.88085651397705,
-                "y": -5.843106269836426,
+                "x": 21.74863052368164,
+                "y": -3.961786985397339,
+                "z": 0.0
+            },
+            "zone": 0
+        },
+        {
+            "arc_list": [
+                {
+                    "distance": 1.0,
+                    "max_speed": 1.5,
+                    "node_dest": "182b51b2-cd6b-42c0-91e5-3cd3ad19ade7"
+                },
+                {
+                    "distance": 1.0,
+                    "max_speed": 1.5,
+                    "node_dest": "8b10d820-f9ad-4655-8346-44c14ead4767"
+                }
+            ],
+            "id": "d6ce1558-b517-4ed6-a9d3-fd30c0c2d013",
+            "name": "GoTo 2",
+            "pose": {
+                "frame_id": "map",
+                "theta": 0.0,
+                "x": 14.618788719177246,
+                "y": -5.762056827545166,
+                "z": 0.0
+            },
+            "zone": 0
+        },
+        {
+            "arc_list": [
+                {
+                    "distance": 1.0,
+                    "max_speed": 1.5,
+                    "node_dest": "d6ce1558-b517-4ed6-a9d3-fd30c0c2d013"
+                },
+                {
+                    "distance": 1.0,
+                    "max_speed": 1.5,
+                    "node_dest": "304938fb-45ee-4c3f-af6f-a5e5d2baa529"
+                }
+            ],
+            "id": "8b10d820-f9ad-4655-8346-44c14ead4767",
+            "name": "GoTo 1",
+            "pose": {
+                "frame_id": "map",
+                "theta": 0.0,
+                "x": -1.0461252927780151,
+                "y": -5.912319660186768,
                 "z": 0.0
             },
             "zone": 0

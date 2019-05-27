@@ -43,8 +43,11 @@
         rosAddNodeMsg: 'graph_msgs/Node'
       });
 
-      networkView.network.disableEditMode();
+      //networkView.network.disableEditMode();
       networkView.network.setSize(canvas_view.clientWidth - 14, ((canvas_view.clientWidth - 14) * 9) / 16);
+
+      // Disable "Enable pose edition" button on graph view
+      edit_node_pos.hidden = true;
     }
 
     // Change between map and graph
@@ -55,12 +58,15 @@
         document.getElementById("network").style.background = '#7f7f7f'
         toggle_physics.hidden = true;
         toggle_views.innerHTML = "View graph";
+        edit_node_pos.hidden = false;
+        edit_node_pos.innerHTML = "Enable pose edition";
       } else {
         // Hide map and stabilize network
         networkView.showMap(false);
         document.getElementById("network").style.background = 'white'
         toggle_physics.hidden = false;
         toggle_views.innerHTML = "View map";
+        edit_node_pos.hidden = true;
         networkView.network.setSize(canvas_view.clientWidth, (canvas_view.clientWidth * 9) / 16);
       }
     }
@@ -82,7 +88,7 @@
 
   <button id="toggle_physics" type="button" onclick="networkView.togglePhysics()">Enable physics</button>
 
-  <!-- TODO añadir botón para activar movimiento de nodos en el mapa (evitará movimiento sin querer) -->
+  <button id="edit_node_pos" type="button" onclick="networkView.poseEdition()">Enable pose edition</button>
 
   <div id="canvas_view">
 

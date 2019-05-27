@@ -146,9 +146,6 @@ NETWORKVIEW.NetworkView = function (options) {
   };
   // Add buttons callback
   this.options = {
-    /*"interaction": {
-      multiselect: true
-    },*/
     "edges": {
       "smooth": {
         "type": "dynamic",
@@ -166,7 +163,7 @@ NETWORKVIEW.NetworkView = function (options) {
       "minVelocity": 0.75
     },
     interaction: {
-      hover: true,
+      //hover: true,
       multiselect: true
     },
     manipulation: {
@@ -327,10 +324,10 @@ NETWORKVIEW.NetworkView = function (options) {
     document.getElementById('node-zone').value = data.zone;
 
     if (self.viewMap) {
-      data.x /= self.imageScale;
-      data.y /= -self.imageScale;
-      document.getElementById('node-x').value = data.x;
-      document.getElementById('node-y').value = data.y;
+      data.ros_x = data.x / self.imageScale;
+      data.ros_y = data.y / -self.imageScale;
+      document.getElementById('node-x').value = data.ros_x;
+      document.getElementById('node-y').value = data.ros_y;
     } else {
       document.getElementById('node-x').value = 0;
       document.getElementById('node-y').value = 0;
@@ -361,9 +358,7 @@ NETWORKVIEW.NetworkView = function (options) {
     document.getElementById('node-zone').value = node.zone;
     data.zone = node.zone;
     document.getElementById('node-x').value = node.pose.x;
-    data.x = node.pose.x;
     document.getElementById('node-y').value = node.pose.y;
-    data.y = node.pose.y;
     document.getElementById('node-theta').value = node.pose.theta;
     data.theta = node.pose.theta;
     document.getElementById('node-frame').value = node.pose.frame_id;
@@ -415,7 +410,7 @@ NETWORKVIEW.NetworkView = function (options) {
     callback(data);
     if (self.viewMap) {
       // Change node position on map
-      self.nodes.update({ id: data.id, x: data.x * self.imageScale, y: -data.y * self.imageScale });
+      self.nodes.update({ id: data.id, x: data.ros_x * self.imageScale, y: -data.ros_y * self.imageScale });
     }
   }
 
@@ -423,8 +418,8 @@ NETWORKVIEW.NetworkView = function (options) {
   function editNodeData(data, callback) {
     data.label = document.getElementById('node-label').value;
     data.zone = document.getElementById('node-zone').value;
-    data.x = document.getElementById('node-x').value;
-    data.y = document.getElementById('node-y').value;
+    data.ros_x = document.getElementById('node-x').value;
+    data.ros_y = document.getElementById('node-y').value;
     data.theta = document.getElementById('node-theta').value;
     data.frame = document.getElementById('node-frame').value;
     var request = new ROSLIB.ServiceRequest({
@@ -433,8 +428,8 @@ NETWORKVIEW.NetworkView = function (options) {
         name: data.label,
         zone: parseInt(data.zone),
         pose: {
-          x: parseFloat(data.x),
-          y: parseFloat(data.y),
+          x: parseFloat(data.ros_x),
+          y: parseFloat(data.ros_y),
           theta: parseFloat(data.theta),
           frame_id: data.frame
         }
@@ -447,7 +442,7 @@ NETWORKVIEW.NetworkView = function (options) {
     callback(data);
     if (self.viewMap) {
       // Change node position on map
-      self.nodes.update({ id: data.id, x: data.x * self.imageScale, y: -data.y * self.imageScale });
+      self.nodes.update({ id: data.id, x: data.ros_x * self.imageScale, y: -data.ros_y * self.imageScale });
     }
   }
 
@@ -538,8 +533,6 @@ NETWORKVIEW.NetworkView = function (options) {
       document.getElementById('eventSpan').innerHTML = '<h2>oncontext (right click) event:</h2>' + JSON.stringify(params, null, 4);
   });*/
   /*this.network.on("dragStart", function (params) {
-     TODO en el mapa sin edición, los nodos serán fijos -> nodes.update({ id: node_id, fixed: { x: true, y: true } });
-     TODO en el grafo o mapa con edición, los nodos dejan de ser fijos (obviamente esto y lo de arriba no irá aquí)
   });*/
   /*this.network.on("dragging", function (params) {
     params.event = "[original event]";
@@ -548,11 +541,29 @@ NETWORKVIEW.NetworkView = function (options) {
     self.network.setOptions({ physics: { enabled: false } });
   });*/
   this.network.on("dragEnd", function (params) {
-    // TODO Si está en mapa, guardar nueva posición
-    params.nodes.forEach(node_id => {
-      // TODO guardamos en ROS la nueva posición (self.network.getPositions(node.id))
-      console.log(node_id);
-    })
+    // If displaying map & edition enabled, save new position on drag end
+    if (self.viewMap === true && document.getElementById('edit_node_pos').innerHTML === "Disable pose edition") {
+      // For each node
+      params.nodes.forEach(node_id => {
+        // Load new position
+        var new_pos = self.network.getPositions(node_id);
+        // Load actual values
+        var node;
+        self.message.nodes.forEach(n => {
+          if (n.id === node_id) {
+            node = n;
+          }
+        });
+        // Modify position
+        node.pose.x = new_pos[node_id].x / self.imageScale;
+        node.pose.y = new_pos[node_id].y / -self.imageScale;
+        // Save node on ROS
+        var request = new ROSLIB.ServiceRequest({ node });
+        self.setNodeService.callService(request, function (result) {
+          console.log(result.message);
+        });
+      })
+    }
   });
   /*this.network.on("zoom", function (params) {
       document.getElementById('eventSpan').innerHTML = '<h2>zoom event:</h2>' + JSON.stringify(params, null, 4);
@@ -610,13 +621,17 @@ NETWORKVIEW.NetworkView.prototype.showMap = function (view_map) {
       this.network.setOptions({ physics: { enabled: false } });
       document.getElementById('toggle_physics').innerHTML = "Enable physics";
     }
-    // Move nodes position to their position on map
+    // Move nodes position to their position on map and set edition false
     if (this.message !== undefined) {
       this.message.nodes.forEach(node => {
-        this.nodes.update({ id: node.id, x: node.pose.x * this.imageScale, y: -node.pose.y * this.imageScale });
+        this.nodes.update(
+          {
+            id: node.id, x: node.pose.x * this.imageScale,
+            y: -node.pose.y * this.imageScale, fixed: true
+          });
       });
     }
-    // Centrar vista en grafo
+    // Center view on graph
     this.network.fit();
   } else {
     // Hide map and stabilize network
@@ -625,6 +640,12 @@ NETWORKVIEW.NetworkView.prototype.showMap = function (view_map) {
     this.network.setOptions({ edges: { smooth: { type: "dynamic", forceDirection: "none" } } });
     // Stabilize nodes
     this.stabilize();
+    // Set node movement true
+    if (this.message !== undefined) {
+      this.message.nodes.forEach(node => {
+        this.nodes.update({ id: node.id, fixed: false });
+      });
+    }
   }
 }
 
@@ -640,6 +661,29 @@ NETWORKVIEW.NetworkView.prototype.togglePhysics = function () {
     this.options.physics.enabled = false;
     this.network.setOptions({ physics: { enabled: false } });
     document.getElementById('toggle_physics').innerHTML = "Enable physics";
+  }
+}
+
+// Toggle edition
+NETWORKVIEW.NetworkView.prototype.poseEdition = function () {
+  if (document.getElementById('edit_node_pos').innerHTML === "Enable pose edition") {
+    // Enable pose edition
+    document.getElementById('edit_node_pos').innerHTML = "Disable pose edition"
+    // Disable fixed nodes
+    if (this.message !== undefined) {
+      this.message.nodes.forEach(node => {
+        this.nodes.update({ id: node.id, fixed: false });
+      });
+    }
+  } else {
+    // Disable pose edition
+    document.getElementById('edit_node_pos').innerHTML = "Enable pose edition"
+    // Enable fixed nodes
+    if (this.message !== undefined) {
+      this.message.nodes.forEach(node => {
+        this.nodes.update({ id: node.id, fixed: true });
+      });
+    }
   }
 }
 
@@ -676,18 +720,17 @@ NETWORKVIEW.NetworkView.prototype.stabilize = function () {
  * @returns bool - true if the graph has changed
  */
 NETWORKVIEW.NetworkView.prototype.hasChanged = function (message) {
-  var changed = false;
   var node_edges;
   // If has different lengths
   if (message.nodes.length !== this.nodes.length) {
-    changed = true;
+    return true;
   }
   // If any node is different
   message.nodes.forEach(node => {
     if (this.nodes.getDataSet().get(node.id) == null) {
-      changed = true;
+      return true;
     } else if (node.name !== this.nodes.getDataSet().get(node.id).label) {
-      changed = true;
+      return true;
     } else {
       // List of edges from this node
       node_edges = this.edges.getDataSet().get({
@@ -697,7 +740,7 @@ NETWORKVIEW.NetworkView.prototype.hasChanged = function (message) {
       })
       // If the node has different arc_list lengths
       if (node.arc_list.length !== node_edges.length) {
-        changed = true
+        return true
       } else {
         // If any arc is different
         node.arc_list.forEach(arc => {
@@ -707,14 +750,14 @@ NETWORKVIEW.NetworkView.prototype.hasChanged = function (message) {
             }
           })
           if (node_edges.length === 0) {
-            changed = true;
+            return true;
           }
         })
       }
     }
   });
   // Else, if the graph and the network are equal
-  return changed;
+  return false;
 }
 
 NETWORKVIEW.NetworkView.prototype.resetAllNodes = function () {

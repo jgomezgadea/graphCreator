@@ -786,7 +786,7 @@ int GraphNode::rosSetup()
     block_node_service_server_ = pnh_.advertiseService("block_node", &GraphNode::blockNodeServiceServerCb, this);
     check_blocked_node_service_server_ = pnh_.advertiseService("get_blocked_node", &GraphNode::getBlockedNodeServiceServerCb, this);
 
-    timerPublish = pnh_.createTimer(ros::Duration(dGraphFreq_), &GraphNode::timerPublishCallback, this);
+    timerPublish = pnh_.createTimer(ros::Duration(1 / dGraphFreq_), &GraphNode::timerPublishCallback, this);
 
     markers_pub_nodes_used = pnh_.advertise<visualization_msgs::MarkerArray>("graph_nodes_used_marker_array", 10);
     markers_pub_graph = pnh_.advertise<visualization_msgs::MarkerArray>("graph_marker_array", 10);
@@ -840,7 +840,7 @@ void GraphNode::rosReadParams()
     pnh_.getParam("RobotStatusTopicName", vRobotStatusTopicName);
     pnh_.param("max_robots", iMaxRobots, 1);
 
-    pnh_.param("graph_public_freq", dGraphFreq_, 2.0);
+    pnh_.param("graph_public_freq", dGraphFreq_, 5.0);
 
     if (dGraphFreq_ <= 0)
         dGraphFreq_ = 1.0;

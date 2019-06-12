@@ -5,6 +5,7 @@ body, select {
 #canvas_view {
     /*width: 600px;
     height: 400px;*/
+    background-color: white;
     border: 1px solid lightgray;
 }
 
@@ -63,7 +64,7 @@ table.legend_table {
       top:350px;
       left:170px;
       z-index:299;
-      width:250px;
+      width:260px;
       height:120px;
       background-color: #f9f9f9;
       border-style:solid;

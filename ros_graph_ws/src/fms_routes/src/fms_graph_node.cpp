@@ -1427,7 +1427,7 @@ bool GraphNode::routeServiceServerCb(robotnik_fms_msgs::GetRoute::Request &reque
     pthread_mutex_unlock(&mutexGraph);
 
     response.ret = true;
-    response.msg = "Route Found from " + request.from_node + " to " + request.to_node + " " + nodes;
+    response.msg = "Route found from " + request.from_node + " to " + request.to_node + ". " + nodes;
 
     ROS_WARN_STREAM("GetRouteResponse");
     ROS_INFO_STREAM("Response nodes size " << response.nodes.size());

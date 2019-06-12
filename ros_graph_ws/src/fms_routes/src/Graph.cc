@@ -301,8 +301,8 @@ int Graph::getRoute(std::string from, std::string to, vector<geometry_msgs::Pose
         if (!getNodePosition(route[i], &pos))
         {
             nodes->push_back(pos);
-            graph_msgs::GraphArc arc;
-            if (getArcBetweenNodes(route[i], route[i + 1], arc) != 0)
+            graph_msgs::GraphArc arc = getArcBetweenNodes(route[i], route[i + 1]);
+            if (arc.node_dest != "")
             {
                 ROS_ERROR("Graph::getRoute: Error getting the route from %d to %d", route[i], route[i + 1]);
             }
@@ -347,8 +347,8 @@ int Graph::getRoute(std::string from, std::string to, vector<graph_msgs::GraphNo
         if (!getNodePosition(route[i], &pos))
         {
             nodes->push_back(pos);
-            graph_msgs::GraphArc arc;
-            if (getArcBetweenNodes(route[i], route[i + 1], arc) != 0)
+            graph_msgs::GraphArc arc = getArcBetweenNodes(route[i], route[i + 1]);
+            if (arc.node_dest != "")
             {
                 ROS_ERROR("Graph::getRoute: Error getting the route from %d to %d", route[i], route[i + 1]);
             }
@@ -397,8 +397,8 @@ int Graph::getRoute(std::string from, std::string to, vector<graph_msgs::GraphNo
 
     for (i = 0; i < (int)(route.size() - 1); i++)
     { // Recorremos los nodos de la ruta hasta el penultimo
-        graph_msgs::GraphArc arc;
-        if (getArcBetweenNodes(route[i], route[i + 1], arc) != 0)
+        graph_msgs::GraphArc arc = getArcBetweenNodes(route[i], route[i + 1]);
+        if (arc.node_dest != "")
         {
             ROS_ERROR("Graph::getRoute: Error getting the route from %d to %d", route[i], route[i + 1]);
         }
@@ -501,45 +501,46 @@ std::string Graph::deleteArc(std::string from_id, std::string to_id)
     return dijkstraGraph->deleteArc(from_id, to_id);
 }
 
-/*! \fn int Graph::getArcBetweenNodes(int from_id, int to_id, graph_msgs::GraphArc arc)
+/*! \fn graph_msgs::GraphArc Graph::getArcBetweenNodes(int from_id, int to_id)
  * 	\brief Obtiene el arco entre nodos
- *  \return 0 if OK
- *  \return -1 si el nodo no existe
+ *  \return arco
 */
-int Graph::getArcBetweenNodes(std::string from_id, std::string to_id, graph_msgs::GraphArc arc)
+graph_msgs::GraphArc Graph::getArcBetweenNodes(std::string from_id, std::string to_id)
 {
     if (dijkstraGraph->isOnEdition())
     {
         ROS_ERROR("Dijkstra::GetNodePosition: Edition must be disabled");
-        return -2;
+        return graph_msgs::GraphArc();
     }
     else
     {
-        graph_msgs::GraphNode node = dijkstraGraph->getNodeFromId(from_id)->node;
-        for (int i = 0; i < node.arc_list.size(); i++)
+        if (dijkstraGraph->getNodeFromId(from_id) != 0)
         {
-            if (node.arc_list[i].node_dest == to_id)
+            graph_msgs::GraphNode node = dijkstraGraph->getNodeFromId(from_id)->node;
+            for (int i = 0; i < node.arc_list.size(); i++)
             {
-                arc = node.arc_list[i];
-                return 0;
+                if (node.arc_list[i].node_dest == to_id)
+                {
+                    return node.arc_list[i];
+                }
             }
+            ROS_ERROR("Dijkstra::GetNodePosition: route to node %d does not exist", to_id);
+            return graph_msgs::GraphArc();
         }
-        ROS_ERROR("Dijkstra::GetNodePosition: route to node %d does not exist", to_id);
-        return -1;
     }
 }
 
 /*! \fn Node* Dijkstra::CheckNodeFree(int idNode, int idRobot)
- * true if node Free, false if used or reserved by a robot
-*/
+    * true if node Free, false if used or reserved by a robot
+    */
 bool Graph::checkNodeFree(std::string idNode, int idRobot)
 {
     return dijkstraGraph->checkNodeFree(idNode, idRobot);
 }
 
 /*! \fn Node* Dijkstra::CheckNodesFree(std::vector<int> idNode, int idRobot)
- * true if node Free, false if used or reserved by a robot
-*/
+    * true if node Free, false if used or reserved by a robot
+    */
 bool Graph::checkNodesFree(std::vector<std::string> vNodesId, int idRobot)
 {
     bool bfree = true;

@@ -108,7 +108,7 @@ public:
 	//! Elimina el arco indicado
 	std::string deleteArc(std::string from_id, std::string to_id);
 	//! Obtiene el arco entre dos nodos
-	int getArcBetweenNodes(std::string from_id, std::string to_id, graph_msgs::GraphArc arc);
+	graph_msgs::GraphArc getArcBetweenNodes(std::string from_id, std::string to_id);
 	//! Get list of the graph nodes
 	std::vector<graph_msgs::GraphNode> getNodes();
 	//! Get msg with the graph nodes
